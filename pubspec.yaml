@@ -1,0 +1,40 @@
+name: pokedex_carbonica
+description: "Pokédex desarrollada en Flutter usando GraphQL y PokeAPI."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Iconos de iOS
+  cupertino_icons: ^1.0.8
+
+  # Cliente GraphQL para Flutter
+  graphql_flutter: ^5.1.2
+
+  # Cache y carga optimizada de imágenes
+  cached_network_image: ^3.2.3
+
+  # Animaciones de carga elegantes
+  flutter_spinkit: ^5.2.0
+
+  # Tipografía moderna (Google Fonts)
+  google_fonts: ^6.2.1
+
+  # Manejo de estados (opcional, recomendado)
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
