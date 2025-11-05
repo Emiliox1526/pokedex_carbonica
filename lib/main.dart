@@ -5,7 +5,7 @@ import 'screens/pokemon_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initHiveForFlutter(); // Requerido por graphql_flutter
+  await initHiveForFlutter();
   runApp(const PokedexApp());
 }
 

@@ -7,26 +7,26 @@ query PokemonDetail($id: Int!) {
     weight
     base_experience
 
-    # 🔹 Habilidades
+    # Habilidades
     pokemon_v2_pokemonabilities {
       pokemon_v2_ability {
         name
       }
     }
 
-    # 🔹 Tipos del Pokémon
+    # Tipos del Pokémon
     pokemon_v2_pokemontypes {
       pokemon_v2_type {
         name
       }
     }
 
-    # 🔹 Sprite principal
+    # Sprite principal
     pokemon_v2_pokemonsprites {
       sprites
     }
 
-    # 🔹 Estadísticas base
+    # Estadísticas base
     pokemon_v2_pokemonstats(order_by: {pokemon_v2_stat: {id: asc}}) {
       base_stat
       pokemon_v2_stat {
@@ -34,7 +34,7 @@ query PokemonDetail($id: Int!) {
       }
     }
 
-    # 🔹 Movimientos completos (sin límite)
+    # Movimientos
     pokemon_v2_pokemonmoves(order_by: {pokemon_v2_move: {name: asc}}) {
       level
       pokemon_v2_move {

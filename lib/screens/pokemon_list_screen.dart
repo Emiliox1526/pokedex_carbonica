@@ -6,7 +6,7 @@ import 'dart:ui';
 
 import 'pokemon_detail_screen.dart';
 
-// Helper functions (assuming they exist elsewhere, like in your original code)
+
 Color hex(String hex) {
   final buffer = StringBuffer();
   if (hex.length == 6 || hex.length == 7) buffer.write('ff');
@@ -38,7 +38,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
 // Tipos seleccionados para el filtro
   final Set<String> selectedTypes = {};
 
-// Función que se usa desde el Drawer para alternar selección de tipo
+
   void toggleType(String type, bool selected) {
     setState(() {
       if (selected) {
@@ -48,6 +48,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
       }
     });
   }
+
   int? _selectedGeneration;
 
 
@@ -71,7 +72,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     return endIds[gen - 1];
   }
 
-  // 🎨 Colores por tipo (remains the same)
+
   static final Map<String, Color> typeColor = {
     'fire': hex('#F57D31'),
     'water': hex('#6493EB'),
@@ -93,7 +94,6 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     'normal': hex('#AAA67F'),
   };
 
-  // iconForType method (remains the same)
   IconData iconForType(String type) {
     switch (type) {
       case 'fire':
@@ -219,7 +219,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                                 .where((s) => s.isNotEmpty)
                                 .toList();
 
-                            // Si al menos un tipo del Pokémon está en selectedTypes, se queda
+
                             return types.any(selectedTypes.contains);
                           }).toList();
                         }
@@ -244,7 +244,6 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                           return const Center(child: Text('Sin resultados', style: TextStyle(color: Colors.white)));
                         }
 
-                        // Replaced PageView.builder with ListView.builder
                         return ListView.builder(
                           itemCount: data.length,
                           physics: const BouncingScrollPhysics(),
@@ -282,7 +281,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                             final primary = types.isNotEmpty ? types.first : 'normal';
                             final baseColor = typeColor[primary] ?? typeColor['normal']!;
 
-                            // Entry animation for each card
+
                             return TweenAnimationBuilder<double>(
                               tween: Tween(begin: 0, end: 1),
                               duration: const Duration(milliseconds: 500),
@@ -336,7 +335,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 }
 
-// Updated _PokemonCard to be simpler for a list view
+// Carta de los Pokemon
 class _PokemonCard extends StatelessWidget {
   const _PokemonCard({
     required this.id,
@@ -361,8 +360,9 @@ class _PokemonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 140, // Fixed height for cards in the list
-      margin: const EdgeInsets.symmetric(vertical: 8), // Vertical spacing
+      // Visual de la carta
+      height: 160,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
@@ -378,16 +378,18 @@ class _PokemonCard extends StatelessWidget {
           ),
         ],
       ),
+
+      // Informacion de la carta
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // Card content arranged in a Row
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  // Left side: Text info
+
+                  // Info del pokemon
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,8 +430,9 @@ class _PokemonCard extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // Imagen del pokemon
                   const SizedBox(width: 16),
-                  // Right side: Image
                   Hero(
                     tag: heroTag,
                     child: imageUrl != null
@@ -443,6 +446,7 @@ class _PokemonCard extends StatelessWidget {
                     )
                         : const Icon(Icons.image_not_supported, size: 60, color: Colors.black26),
                   ),
+
                 ],
               ),
             ),
@@ -453,7 +457,7 @@ class _PokemonCard extends StatelessWidget {
   }
 }
 
-// _TypeChip widget (can be extracted or kept here)
+// Selector del filtro de Tipos del drawer
 class _TypeChip extends StatelessWidget {
   const _TypeChip({required this.label, required this.color, required this.icon});
 
@@ -469,6 +473,7 @@ class _TypeChip extends StatelessWidget {
       splashColor: Colors.white.withOpacity(0.2),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -488,6 +493,7 @@ class _TypeChip extends StatelessWidget {
             ),
           ],
         ),
+
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -504,6 +510,7 @@ class _TypeChip extends StatelessWidget {
             ),
           ],
         ),
+
       ),
     );
   }
@@ -557,6 +564,7 @@ class TypeFilterChips extends StatelessWidget {
   }
 }
 
+//Drawer:
 class GenerationDrawer extends StatelessWidget {
   const GenerationDrawer({
     required this.onSelectGeneration,
@@ -576,6 +584,7 @@ class GenerationDrawer extends StatelessWidget {
   static const _dexDark = Color(0xFF240507);
   static const _dexWhite = Color(0xFFFFFFFF);
 
+  // Visual del drawer
   @override
   Widget build(BuildContext context) {
     final regionBanners = [
@@ -608,7 +617,8 @@ class GenerationDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🔹 Encabezado con Pokébola
+
+                //Titulo
                 Row(
                   children: const [
                     Icon(
@@ -628,18 +638,19 @@ class GenerationDrawer extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 10),
                 Container(height: 1.4, color: _dexWhite),
                 const SizedBox(height: 14),
 
-                // 🔄 Scroll unificado (Configuración + Generación)
+
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 🔹 Configuración
+                        // Configuración
                         const Text(
                           "Configuración",
                           style: TextStyle(
@@ -650,7 +661,6 @@ class GenerationDrawer extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 14),
-
 
 
                         // FILTRO DE TIPOS
@@ -741,12 +751,11 @@ class GenerationDrawer extends StatelessWidget {
 
 
 
-
                         const SizedBox(height: 16),
                         Container(height: 1.4, color: _dexWhite),
                         const SizedBox(height: 14),
 
-                        // 🔹 Generación
+                        // FILTRO POR GENERACION
                         const Text(
                           "Generación",
                           style: TextStyle(
@@ -758,7 +767,8 @@ class GenerationDrawer extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
 
-                        // 🔹 Lista de regiones (sin scroll independiente)
+
+                        //Lista:
                         ListView.separated(
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
@@ -809,7 +819,7 @@ class GenerationDrawer extends StatelessWidget {
                                             const SizedBox(),
                                           ),
 
-                                        // 🔹 Degradado lateral leve
+
                                         const DecoratedBox(
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
@@ -824,7 +834,7 @@ class GenerationDrawer extends StatelessWidget {
                                           ),
                                         ),
 
-                                        // 🔹 Contenido: barra + texto + chevron
+
                                         Positioned.fill(
                                           child: Row(
                                             children: [
@@ -878,6 +888,9 @@ class GenerationDrawer extends StatelessWidget {
                             );
                           },
                         ),
+
+
+
                       ],
                     ),
                   ),
