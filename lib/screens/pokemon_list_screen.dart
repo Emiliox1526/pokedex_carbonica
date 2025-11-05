@@ -35,7 +35,23 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   final Color _bg1 = hex('#9e1932');
   final Color _bg2 = hex('#520317');
   String _searchText = '';
+// Tipos seleccionados para el filtro
+  final Set<String> selectedTypes = {};
+
+// Función que se usa desde el Drawer para alternar selección de tipo
+  void toggleType(String type, bool selected) {
+    setState(() {
+      if (selected) {
+        selectedTypes.add(type.toLowerCase());
+      } else {
+        selectedTypes.remove(type.toLowerCase());
+      }
+    });
+  }
   int? _selectedGeneration;
+
+
+
   @override
   void initState() {
     super.initState();
@@ -131,7 +147,12 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           });
           Navigator.of(context).maybePop();
         },
+        typeColor: typeColor,
+        selectedTypes: selectedTypes,
+        onToggleType: toggleType,
+        iconForType: iconForType,
       ),
+
       body: Stack(
         children: [
           // Static gradient background
@@ -191,7 +212,17 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                             return name.contains(_searchText) || id.contains(_searchText);
                           }).toList();
                         }
-                        
+                        if (selectedTypes.isNotEmpty) {
+                          data = data.where((p) {
+                            final types = ((p['pokemon_v2_pokemontypes'] as List?) ?? [])
+                                .map((t) => (t['pokemon_v2_type']?['name'] as String?)?.toLowerCase() ?? '')
+                                .where((s) => s.isNotEmpty)
+                                .toList();
+
+                            // Si al menos un tipo del Pokémon está en selectedTypes, se queda
+                            return types.any(selectedTypes.contains);
+                          }).toList();
+                        }
                         if (data.isEmpty) {
                           return const Center(
                             child: Text(
@@ -477,10 +508,68 @@ class _TypeChip extends StatelessWidget {
     );
   }
 }
+class TypeFilterChips extends StatelessWidget {
+  const TypeFilterChips({
+    super.key,
+    required this.selected,
+    required this.onToggle,
+    required this.typeColor,
+  });
+
+  final Set<String> selected;
+  final void Function(String type, bool selected) onToggle;
+  final Map<String, Color> typeColor;
+
+  static const List<String> kTypes = [
+    'normal','fire','water','grass','electric','ice','fighting','poison',
+    'ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final t in kTypes)
+                FilterChip(
+                  label: Text(t[0].toUpperCase() + t.substring(1)),
+                  selected: selected.contains(t),
+                  onSelected: (sel) => onToggle(t, sel),
+                  backgroundColor: Colors.grey.shade200,
+                  selectedColor: typeColor[t] ?? Colors.blue.shade300,
+                  labelStyle: TextStyle(
+                    color: selected.contains(t) ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class GenerationDrawer extends StatelessWidget {
-  const GenerationDrawer({required this.onSelectGeneration});
+  const GenerationDrawer({
+    required this.onSelectGeneration,
+    required this.typeColor,
+    required this.selectedTypes,
+    required this.onToggleType,
+    required this.iconForType,
+  });
   final ValueChanged<int> onSelectGeneration;
+  final Map<String, Color> typeColor;
+  final Set<String> selectedTypes;
+  final IconData Function(String type) iconForType;
+  final void Function(String type, bool selected) onToggleType;
 
   static const _dexBurgundy = Color(0xFF7A0A16);
   static const _dexDeep = Color(0xFF4E0911);
@@ -542,132 +631,255 @@ class GenerationDrawer extends StatelessWidget {
                 const SizedBox(height: 10),
                 Container(height: 1.4, color: _dexWhite),
                 const SizedBox(height: 14),
-                Text(
-                  "Configuracion",
-                  style: TextStyle(
-                    color: _dexWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const SizedBox(height: 10),
-                Container(height: 1.4, color: _dexWhite),
-                const SizedBox(height: 14),
-                Text(
-                  "Generacion",
-                  style: TextStyle(
-                    color: _dexWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 14),
 
-                // Lista de regiones
+                // 🔄 Scroll unificado (Configuración + Generación)
                 Expanded(
-                  child: ListView.separated(
+                  child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    itemCount: regionBanners.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final region = regionBanners[index];
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => onSelectGeneration(index == 0 ? 0 : index),
-                          child: Container(
-                            height: 82,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xCC7A0A16),
-                                  Color(0xCC4E0911),
-                                ],
-                              ),
-                              border: Border.all(color: _dexWhite, width: 1.2),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black54, blurRadius: 12, offset: Offset(0, 6)),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  // 🔹 Imagen limpia (sin filtros oscuros)
-                                  if ((region["image"] as String).isNotEmpty)
-                                    Image.network(
-                                      region["image"]!,
-                                      fit: BoxFit.cover,
-                                      filterQuality: FilterQuality.high,
-                                      errorBuilder: (_, __, ___) => const SizedBox(),
-                                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 🔹 Configuración
+                        const Text(
+                          "Configuración",
+                          style: TextStyle(
+                            color: _dexWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
 
-                                  // (opcional) Degradado lateral muy leve para texto legible
-                                  const DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.centerLeft,
-                                        end: Alignment.centerRight,
-                                        colors: [
-                                          Color(0x1A000000), // 10% negro
-                                          Colors.transparent,
-                                          Color(0x1A000000),
-                                        ],
+
+
+                        // FILTRO DE TIPOS
+                        GridView.count(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 2.7,
+                          children: [
+                            for (final t in [
+                              'normal','fire','water','grass','electric','ice',
+                              'fighting','poison','ground','flying','psychic',
+                              'bug','rock','ghost','dragon','dark','steel','fairy',
+                            ])
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(
+                                  begin: selectedTypes.contains(t) ? 1.0 : 0.0,
+                                  end: selectedTypes.contains(t) ? 1.0 : 0.0,
+                                ),
+                                duration: const Duration(milliseconds: 250),
+                                builder: (context, value, child) {
+                                  final color = typeColor[t] ?? Colors.grey;
+                                  final icon = iconForType(t);
+                                  final base = Color.lerp(Colors.white, color, value)!;
+
+                                  return GestureDetector(
+                                    onTap: () => onToggleType(t, !selectedTypes.contains(t)),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      curve: Curves.easeOutCubic,
+                                      decoration: BoxDecoration(
+                                        color: selectedTypes.contains(t)
+                                            ? base
+                                            : Colors.white.withOpacity(0.9),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: selectedTypes.contains(t)
+                                              ? color
+                                              : Colors.grey.shade300,
+                                          width: 1.2,
+                                        ),
+                                        boxShadow: selectedTypes.contains(t)
+                                            ? [
+                                          BoxShadow(
+                                            color: color.withOpacity(0.5),
+                                            blurRadius: 10,
+                                            spreadRadius: 1,
+                                          ),
+                                        ]
+                                            : [],
+                                      ),
+                                      transform: Matrix4.identity()
+                                        ..scale(selectedTypes.contains(t) ? 1.05 : 1.0),
+                                      child: Center(
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              icon,
+                                              size: 16,
+                                              color: selectedTypes.contains(t)
+                                                  ? Colors.white
+                                                  : color.withOpacity(0.9),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              t[0].toUpperCase() + t.substring(1),
+                                              style: TextStyle(
+                                                color: selectedTypes.contains(t)
+                                                    ? Colors.white
+                                                    : Colors.black87,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.2,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
 
-                                  // 🔹 Contenido: barra blanca lateral + texto + chevron
-                                  Positioned.fill(
-                                    child: Row(
+
+
+
+                        const SizedBox(height: 16),
+                        Container(height: 1.4, color: _dexWhite),
+                        const SizedBox(height: 14),
+
+                        // 🔹 Generación
+                        const Text(
+                          "Generación",
+                          style: TextStyle(
+                            color: _dexWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // 🔹 Lista de regiones (sin scroll independiente)
+                        ListView.separated(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: regionBanners.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final region = regionBanners[index];
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () =>
+                                    onSelectGeneration(index == 0 ? 0 : index),
+                                child: Container(
+                                  height: 82,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xCC7A0A16),
+                                        Color(0xCC4E0911),
+                                      ],
+                                    ),
+                                    border:
+                                    Border.all(color: _dexWhite, width: 1.2),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black54,
+                                        blurRadius: 12,
+                                        offset: Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Stack(
+                                      fit: StackFit.expand,
                                       children: [
-                                        Container(
-                                          width: 6,
-                                          margin: const EdgeInsets.symmetric(vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: _dexWhite.withOpacity(.85),
-                                            borderRadius: BorderRadius.circular(8),
+                                        // 🔹 Imagen limpia
+                                        if ((region["image"] as String).isNotEmpty)
+                                          Image.network(
+                                            region["image"]!,
+                                            fit: BoxFit.cover,
+                                            filterQuality: FilterQuality.high,
+                                            errorBuilder: (_, __, ___) =>
+                                            const SizedBox(),
                                           ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            region["title"]!,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: _dexWhite,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 15,
-                                              letterSpacing: .4,
-                                              shadows: [
-                                                Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 2),
+
+                                        // 🔹 Degradado lateral leve
+                                        const DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                              colors: [
+                                                Color(0x1A000000),
+                                                Colors.transparent,
+                                                Color(0x1A000000),
                                               ],
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        const Icon(Icons.chevron_right_rounded, color: _dexWhite, size: 22),
-                                        const SizedBox(width: 8),
+
+                                        // 🔹 Contenido: barra + texto + chevron
+                                        Positioned.fill(
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 6,
+                                                margin: const EdgeInsets.symmetric(
+                                                    vertical: 12),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                  _dexWhite.withOpacity(.85),
+                                                  borderRadius:
+                                                  BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Text(
+                                                  region["title"]!,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: _dexWhite,
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 15,
+                                                    letterSpacing: .4,
+                                                    shadows: [
+                                                      Shadow(
+                                                        color: Colors.black45,
+                                                        offset: Offset(0, 1),
+                                                        blurRadius: 2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Icon(
+                                                Icons.chevron_right_rounded,
+                                                color: _dexWhite,
+                                                size: 22,
+                                              ),
+                                              const SizedBox(width: 8),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -676,6 +888,8 @@ class GenerationDrawer extends StatelessWidget {
         ),
       ),
     );
+
+
   }
 }
 

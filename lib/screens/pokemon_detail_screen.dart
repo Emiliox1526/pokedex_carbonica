@@ -16,7 +16,18 @@ class PokemonDetailScreen extends StatelessWidget {
   final int pokemonId;
   final String heroTag;
   final Map<String, dynamic>? initialPokemon;
-
+  Color _getClassColor(String damageClass) {
+    switch (damageClass.toLowerCase()) {
+      case 'physical':
+        return const Color(0xFFDD5E56);
+      case 'special':
+        return const Color(0xFF4B7BF5);
+      case 'status':
+        return const Color(0xFF9A8CFC);
+      default:
+        return Colors.grey;
+    }
+  }
   static const Map<String, Color> _typeColor = {
     'fire': Color(0xFFF57D31),
     'water': Color(0xFF6493EB),
@@ -135,12 +146,17 @@ class PokemonDetailScreen extends StatelessWidget {
           final moves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? [])
               .map((m) => {
             'name': m['pokemon_v2_move']?['name'] as String? ?? '',
+            'type': m['pokemon_v2_move']?['pokemon_v2_type']?['name'] as String? ?? '',
+            'damage_class': m['pokemon_v2_move']?['pokemon_v2_movedamageclass']?['name'] as String? ?? '',
             'level': m['level'] as int?,
           })
               .where((m) => (m['name'] as String).isNotEmpty)
-              .take(10)
               .toList();
+          final uniqueMoves = {
+            for (var move in moves) move['name'] as String: move,
+          }.values.toList();
 
+          final displayedMoves = uniqueMoves.take(12).toList();
           final height = (pokemon['height'] as int?) ?? 0;
           final weight = (pokemon['weight'] as int?) ?? 0;
           final baseExperience = (pokemon['base_experience'] as int?) ?? 0;
@@ -283,18 +299,120 @@ class PokemonDetailScreen extends StatelessWidget {
                                   const SizedBox(height: 12),
                                 ],
                               ],
-                              if (moves.isNotEmpty) ...[
-                                const SizedBox(height: 12),
-                                _SectionHeader('Movimientos destacados'),
-                                const SizedBox(height: 8),
-                                for (final move in moves) ...[
-                                  _MoveTile(
-                                    name: (move['name'] as String).replaceAll('-', ' '),
-                                    level: move['level'] as int?,
+
+                              if (uniqueMoves.isNotEmpty) ...[
+                                const SizedBox(height: 28),
+                                _SectionHeader('Lista de movimientos'),
+                                const SizedBox(height: 16),
+
+                                // Encabezado de tabla
+                                Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(14),
+                                      topRight: Radius.circular(14),
+                                    ),
                                   ),
-                                  const SizedBox(height: 6),
-                                ],
+                                  child: Row(
+                                    children: const [
+                                      Expanded(flex: 3, child: Text('Movimiento', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      Expanded(flex: 2, child: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      Expanded(flex: 2, child: Text('Clase', style: TextStyle(fontWeight: FontWeight.bold))),
+                                    ],
+                                  ),
+                                ),
+
+                                // Cuerpo
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: const BorderRadius.only(
+                                      bottomLeft: Radius.circular(14),
+                                      bottomRight: Radius.circular(14),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      for (final move in uniqueMoves.take(40))
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                // Movimiento
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    ((move['name'] ?? '') as String).replaceAll('-', ' '),
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 15,
+                                                      height: 1.2,
+                                                    ),
+                                                  ),
+                                                ),
+
+                                                // Tipo
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: _TypeTag(
+                                                      label: ((move['type'] ?? '') as String).toUpperCase(),
+                                                      color: _typeColor[(move['type'] ?? '') as String] ?? Colors.grey,
+                                                      icon: _iconForType(((move['type'] ?? '') as String)),
+                                                    ),
+                                                  ),
+                                                ),
+
+                                                // Clase (chip visual)
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                      decoration: BoxDecoration(
+                                                        color: _getClassColor((move['damage_class'] ?? '') as String),
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      child: Text(
+                                                        ((move['damage_class'] ?? '—') as String).toUpperCase(),
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.w700,
+                                                          fontSize: 12,
+                                                          color: Colors.white,
+                                                          letterSpacing: 0.3,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ],
+
                             ],
                           ),
                         ),
@@ -607,4 +725,5 @@ class _ErrorBanner extends StatelessWidget {
       ),
     );
   }
+
 }

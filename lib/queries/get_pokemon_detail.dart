@@ -6,18 +6,46 @@ query PokemonDetail($id: Int!) {
     height
     weight
     base_experience
+
+    # 🔹 Habilidades
     pokemon_v2_pokemonabilities {
-      pokemon_v2_ability { name }
+      pokemon_v2_ability {
+        name
+      }
     }
-    pokemon_v2_pokemontypes { pokemon_v2_type { name } }
-    pokemon_v2_pokemonsprites { sprites }
+
+    # 🔹 Tipos del Pokémon
+    pokemon_v2_pokemontypes {
+      pokemon_v2_type {
+        name
+      }
+    }
+
+    # 🔹 Sprite principal
+    pokemon_v2_pokemonsprites {
+      sprites
+    }
+
+    # 🔹 Estadísticas base
     pokemon_v2_pokemonstats(order_by: {pokemon_v2_stat: {id: asc}}) {
       base_stat
-      pokemon_v2_stat { name }
+      pokemon_v2_stat {
+        name
+      }
     }
-    pokemon_v2_pokemonmoves(limit: 12, order_by: {level: asc_nulls_last, pokemon_v2_move: {name: asc}}) {
+
+    # 🔹 Movimientos completos (sin límite)
+    pokemon_v2_pokemonmoves(order_by: {pokemon_v2_move: {name: asc}}) {
       level
-      pokemon_v2_move { name }
+      pokemon_v2_move {
+        name
+        pokemon_v2_type {
+          name
+        }
+        pokemon_v2_movedamageclass {
+          name
+        }
+      }
     }
   }
 }
