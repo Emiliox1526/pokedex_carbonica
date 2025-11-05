@@ -34,6 +34,7 @@ class PokemonListScreen extends StatefulWidget {
 class _PokemonListScreenState extends State<PokemonListScreen> {
   final Color _bg1 = hex('#9e1932');
   final Color _bg2 = hex('#520317');
+  String _searchText = '';
   int? _selectedGeneration;
   @override
   void initState() {
@@ -126,8 +127,9 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
       drawer: GenerationDrawer(
         onSelectGeneration: (int gen) {
           setState(() {
-            _selectedGeneration = gen;
+            _selectedGeneration = (gen == 0) ? null : gen;
           });
+          Navigator.of(context).maybePop();
         },
       ),
       body: Stack(
@@ -159,7 +161,13 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                         style: const TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ),
-                  _SearchBar(),
+                  _SearchBar(
+                    onChanged: (value) {
+                      setState(() {
+                        _searchText = value.toLowerCase().trim();
+                      });
+                    },
+                  ),
                   const SizedBox(height: 24),
                   Expanded(
                     child: Query(
@@ -175,6 +183,23 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                         }
 
                         List data = result.data?['pokemon_v2_pokemon'] ?? [];
+
+                        if (_searchText.isNotEmpty) {
+                          data = data.where((p) {
+                            final name = (p['name'] as String?)?.toLowerCase() ?? '';
+                            final id = (p['id'] as int?)?.toString() ?? '';
+                            return name.contains(_searchText) || id.contains(_searchText);
+                          }).toList();
+                        }
+                        
+                        if (data.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              'No se encontraron Pokémon',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }
 
                         if (_selectedGeneration != null) {
                           final start = _startIdFor(_selectedGeneration!);
@@ -240,6 +265,19 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                                   ),
                                 );
                               },
+                            child: GestureDetector(
+                            onTap: () {
+                            Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                            builder: (_) => PokemonDetailScreen(
+                            pokemonId: id,
+                            heroTag: heroTag,
+                            initialPokemon: p,
+                            ),
+                            ),
+                            );
+                            },
                               child: _PokemonCard(
                                 id: idStr,
                                 name: name,
@@ -250,6 +288,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                                 typeColor: typeColor,
                                 iconForType: iconForType,
                               ),
+                            ),
                             );
                           },
                         );
@@ -370,7 +409,6 @@ class _PokemonCard extends StatelessWidget {
                       width: 120,
                       height: 120,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.hide_image, size: 60, color: Colors.black26),
                     )
                         : const Icon(Icons.image_not_supported, size: 60, color: Colors.black26),
                   ),
@@ -452,15 +490,16 @@ class GenerationDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final regionBanners = [
-      {"title": "Generación I — Kanto", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/kanto.png"},
-      {"title": "Generación II — Johto", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/johto.png"},
-      {"title": "Generación III — Hoenn", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/hoenn.png"},
-      {"title": "Generación IV — Sinnoh", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/sinnoh.png"},
-      {"title": "Generación V — Unova", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/unova.png"},
-      {"title": "Generación VI — Kalos", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/kalos.png"},
-      {"title": "Generación VII — Alola", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/alola.png"},
-      {"title": "Generación VIII — Galar", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/galar.png"},
-      {"title": "Generación IX — Paldea", "image": "https://www.pokemon.com/static-assets/content-assets/cms2/img/misc/_tiles/pokemon-center/2023/03272023/inline/paldea.png"},
+      {"title": "", "image": "lib/assets/AllGenerations.png"},
+      {"title": "", "image": "lib/assets/kanto.png"},
+      {"title": "", "image": "lib/assets/johto.png"},
+      {"title": "", "image": "lib/assets/hoenn.png"},
+      {"title": "", "image": "lib/assets/sinnoh.png"},
+      {"title": "", "image": "lib/assets/unova.png"},
+      {"title": "", "image": "lib/assets/kalos.png"},
+      {"title": "", "image": "lib/assets/alola.png"},
+      {"title": "", "image": "lib/assets/galar.png"},
+      {"title": "", "image": "lib/assets/paldea.png"},
     ];
 
     return Drawer(
@@ -526,6 +565,7 @@ class GenerationDrawer extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
+
                 // Lista de regiones
                 Expanded(
                   child: ListView.separated(
@@ -538,7 +578,7 @@ class GenerationDrawer extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
-                          onTap: () => onSelectGeneration(index + 1),
+                          onTap: () => onSelectGeneration(index == 0 ? 0 : index),
                           child: Container(
                             height: 82,
                             decoration: BoxDecoration(
@@ -561,24 +601,31 @@ class GenerationDrawer extends StatelessWidget {
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  ColorFiltered(
-                                    colorFilter: const ColorFilter.mode(Color(0x80240507), BlendMode.darken),
-                                    child: Image.network(
+                                  // 🔹 Imagen limpia (sin filtros oscuros)
+                                  if ((region["image"] as String).isNotEmpty)
+                                    Image.network(
                                       region["image"]!,
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.high,
                                       errorBuilder: (_, __, ___) => const SizedBox(),
                                     ),
-                                  ),
+
+                                  // (opcional) Degradado lateral muy leve para texto legible
                                   const DecoratedBox(
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.centerLeft,
                                         end: Alignment.centerRight,
-                                        colors: [Color(0x66000000), Colors.transparent, Color(0x66000000)],
+                                        colors: [
+                                          Color(0x1A000000), // 10% negro
+                                          Colors.transparent,
+                                          Color(0x1A000000),
+                                        ],
                                       ),
                                     ),
                                   ),
+
+                                  // 🔹 Contenido: barra blanca lateral + texto + chevron
                                   Positioned.fill(
                                     child: Row(
                                       children: [
@@ -616,6 +663,7 @@ class GenerationDrawer extends StatelessWidget {
                                 ],
                               ),
                             ),
+
                           ),
                         ),
                       );
