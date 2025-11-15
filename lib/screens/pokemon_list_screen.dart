@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../queries/get_pokemon_list.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
-
+import '../providers/pokemon_list_provider.dart';
 import 'pokemon_detail_screen.dart';
 
 
@@ -24,55 +24,29 @@ extension ColorUtil on Color {
 }
 
 
-class PokemonListScreen extends StatefulWidget {
+class PokemonListScreen extends StatelessWidget {
   const PokemonListScreen({super.key});
 
   @override
-  State<PokemonListScreen> createState() => _PokemonListScreenState();
+  Widget build(BuildContext context) {
+    final client = GraphQLProvider.of(context).value;
+    return ChangeNotifierProvider(
+      create: (_) => PokemonListProvider(client: client)..loadInitial(),
+      child: const _PokemonListView(),
+    );
+  }
+}
+class _PokemonListView extends StatefulWidget {
+  const _PokemonListView();
+
+  @override
+  State<_PokemonListView> createState() => _PokemonListViewState();
 }
 
-class _PokemonListScreenState extends State<PokemonListScreen> {
+class _PokemonListViewState extends State<_PokemonListView> {
   final Color _bg1 = hex('#9e1932');
   final Color _bg2 = hex('#520317');
-  String _searchText = '';
-// Tipos seleccionados para el filtro
-  final Set<String> selectedTypes = {};
-
-
-  void toggleType(String type, bool selected) {
-    setState(() {
-      if (selected) {
-        selectedTypes.add(type.toLowerCase());
-      } else {
-        selectedTypes.remove(type.toLowerCase());
-      }
-    });
-  }
-
-  int? _selectedGeneration;
-
-
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-  int _startIdFor(int gen) {
-    const startIds = [1, 152, 252, 387, 494, 650, 722, 810, 906];
-    return startIds[gen - 1];
-  }
-
-  int _endIdFor(int gen) {
-    const endIds = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
-    return endIds[gen - 1];
-  }
-
-
+  late final ScrollController _scrollController;
   static final Map<String, Color> typeColor = {
     'fire': hex('#F57D31'),
     'water': hex('#6493EB'),
@@ -136,21 +110,45 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final provider = context.read<PokemonListProvider>();
+    if (_scrollController.position.pixels + 300 >=
+        _scrollController.position.maxScrollExtent) {
+      provider.fetchMore();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PokemonListProvider>();
     return Scaffold(
       backgroundColor: hex('#F5F7F9'),
-      drawer: GenerationDrawer(
-        onSelectGeneration: (int gen) {
-          setState(() {
-            _selectedGeneration = (gen == 0) ? null : gen;
-          });
-          Navigator.of(context).maybePop();
+      drawer: Consumer<PokemonListProvider>(
+        builder: (context, state, _) {
+          return GenerationDrawer(
+            onSelectGeneration: (int gen) {
+              state.selectGeneration(gen == 0 ? null : gen);
+              Navigator.of(context).maybePop();
+            },
+            typeColor: typeColor,
+            selectedTypes: state.selectedTypes,
+            onToggleType: state.toggleType,
+            iconForType: iconForType,
+          );
         },
-        typeColor: typeColor,
-        selectedTypes: selectedTypes,
-        onToggleType: toggleType,
-        iconForType: iconForType,
       ),
 
       body: Stack(
@@ -174,56 +172,34 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 12),
-                  if (_selectedGeneration != null)
+                  if (provider.selectedGeneration != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
-                        'Mostrando: Generación $_selectedGeneration',
+                        'Mostrando: Generación ${provider.selectedGeneration}',
                         style: const TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ),
                   _SearchBar(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchText = value.toLowerCase().trim();
-                      });
-                    },
+                    onChanged: provider.updateSearch,
                   ),
                   const SizedBox(height: 24),
                   Expanded(
-                    child: Query(
-                      options: QueryOptions(
-                        document: gql(getPokemonListQuery),
-                      ),
-                      builder: (result, {fetchMore, refetch}) {
-                        if (result.isLoading) {
+                    child: Builder(
+                      builder: (context) {
+                        if (provider.isInitialLoading) {
                           return const Center(child: CircularProgressIndicator(color: Colors.white));
                         }
-                        if (result.hasException) {
-                          return Center(child: Text('Error: \n${result.exception}', style: const TextStyle(color: Colors.white)));
+                        if (provider.errorMessage != null) {
+                          return Center(
+                            child: Text(
+                              'Error:\n${provider.errorMessage}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
                         }
-
-                        List data = result.data?['pokemon_v2_pokemon'] ?? [];
-
-                        if (_searchText.isNotEmpty) {
-                          data = data.where((p) {
-                            final name = (p['name'] as String?)?.toLowerCase() ?? '';
-                            final id = (p['id'] as int?)?.toString() ?? '';
-                            return name.contains(_searchText) || id.contains(_searchText);
-                          }).toList();
-                        }
-                        if (selectedTypes.isNotEmpty) {
-                          data = data.where((p) {
-                            final types = ((p['pokemon_v2_pokemontypes'] as List?) ?? [])
-                                .map((t) => (t['pokemon_v2_type']?['name'] as String?)?.toLowerCase() ?? '')
-                                .where((s) => s.isNotEmpty)
-                                .toList();
-
-
-                            return types.any(selectedTypes.contains);
-                          }).toList();
-                        }
-                        if (data.isEmpty) {
+                        if (provider.pokemons.isEmpty) {
                           return const Center(
                             child: Text(
                               'No se encontraron Pokémon',
@@ -232,24 +208,23 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                           );
                         }
 
-                        if (_selectedGeneration != null) {
-                          final start = _startIdFor(_selectedGeneration!);
-                          final end = _endIdFor(_selectedGeneration!);
-                          data = data.where((p) {
-                            final id = p['id'] as int? ?? 0;
-                            return id >= start && id <= end;
-                          }).toList();
-                        }
-                        if (data.isEmpty) {
-                          return const Center(child: Text('Sin resultados', style: TextStyle(color: Colors.white)));
-                        }
+                        final data = provider.pokemons;
 
                         return ListView.builder(
-                          itemCount: data.length,
+                          controller: _scrollController,
+                          itemCount: data.length + (provider.isLoadingMore ? 1 : 0),
                           physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 24), // Padding at the bottom of the list
+                          padding: const EdgeInsets.only(bottom: 24),
                           itemBuilder: (context, index) {
-                            final p = data[index] as Map<String, dynamic>;
+                            if (index >= data.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Center(
+                                  child: CircularProgressIndicator(color: Colors.white),
+                                ),
+                              );
+                            }
+                            final p = data[index];
                             final String name = (p['name'] as String?)?.toUpperCase() ?? 'POKÉMON';
                             final int id = p['id'] as int? ?? 0;
                             final String idStr = '#${id.toString().padLeft(3, '0')}';
@@ -811,7 +786,7 @@ class GenerationDrawer extends StatelessWidget {
                                       children: [
                                         // 🔹 Imagen limpia
                                         if ((region["image"] as String).isNotEmpty)
-                                          Image.network(
+                                          Image.asset(
                                             region["image"]!,
                                             fit: BoxFit.cover,
                                             filterQuality: FilterQuality.high,
