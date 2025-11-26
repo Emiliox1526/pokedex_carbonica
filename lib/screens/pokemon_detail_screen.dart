@@ -204,8 +204,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
                 colors: [baseColor, secondaryColor],
               ),
             ),
@@ -259,52 +259,70 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 18),
-                          Row(
-                            children: [
-                              for (final type in types) ...[
-                                _TypeTag(
-                                  label: type.toUpperCase(),
-                                  color: _typeColor[type] ?? _typeColor['normal']!,
-                                  icon: _iconForType(type),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                            ],
-                          ),
+
                           const SizedBox(height: 18),
                           Center(
-                            child: Hero(
-                              tag: widget.heroTag,
-                              child: Container(
-                                width: 220,
-                                height: 220,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.25),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 12),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                Hero(
+                                  tag: widget.heroTag,
+                                  child: Container(
+                                    width: 220,
+                                    height: 220,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.25),
+                                          blurRadius: 24,
+                                          offset: const Offset(0, 12),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: ClipOval(
-                                  child: imageUrl != null
-                                      ? Image.network(
-                                    imageUrl,
-                                    fit: BoxFit.contain,
-                                  )
-                                      : Container(
-                                    color: Colors.white.withOpacity(0.18),
-                                    child: const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: Colors.white,
-                                      size: 72,
+                                    child: ClipOval(
+                                      child: imageUrl != null
+                                          ? Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.contain,
+                                      )
+                                          : Container(
+                                        color: Colors.white.withOpacity(0.18),
+                                        child: const Icon(
+                                          Icons.image_not_supported_outlined,
+                                          color: Colors.white,
+                                          size: 64,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+
+                                // CHIP IZQUIERDO
+
+                                Positioned(
+                                  left: -100,
+                                  child: _TypeColumn(
+                                    icon: _iconForType(primaryType),
+                                    color: baseColor,
+                                    label: primaryType,
+                                  ),
+                                ),
+                                if (secondaryTypeName != null)
+                                  Positioned(
+                                    right: -100,
+                                    child: _TypeColumn(
+                                      icon: _iconForType(secondaryTypeName),
+                                      color: secondaryColor,
+                                      label: secondaryTypeName!,
+                                    ),
+                                  ),
+
+                              ],
                             ),
+
+
                           ),
                           const SizedBox(height: 24),
                           _TabsCard(
@@ -863,6 +881,104 @@ class _TabsCard extends StatelessWidget {
     );
   }
 }
+class _TypeColumn extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  const _TypeColumn({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _TypeChip(
+          icon: icon,
+          color: color,
+        ),
+        const SizedBox(height: 8),
+        _TypeLabelChip(
+          label: label,
+        ),
+      ],
+    );
+  }
+}
+class _TypeLabelChip extends StatelessWidget {
+  final String label;
+
+  const _TypeLabelChip({
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.9), width: 2),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _TypeChip({
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 62,
+      height: 62,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+          child: Icon(
+            icon,
+            size: 22,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _TabButton extends StatelessWidget {
   const _TabButton({
@@ -881,23 +997,13 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Color del icono
     final fg = selected ? Colors.white : Colors.black87;
-    final bg = selected ? color : Colors.white;
-    final shadow = selected
-        ? [
-      BoxShadow(
-        color: color.withOpacity(.45),
-        blurRadius: 14,
-        offset: const Offset(0, 6),
-      ),
-    ]
-        : [
-      BoxShadow(
-        color: Colors.black.withOpacity(.06),
-        blurRadius: 6,
-        offset: const Offset(0, 3),
-      ),
-    ];
+
+    // El pill ya NO es todo verde; solo un highlight suave
+    final bg = selected ? color.withOpacity(.18) : Colors.white;
+
+    // Sombra más fuerte cuando está seleccionado
 
     return GestureDetector(
       onTap: onTap,
@@ -908,7 +1014,7 @@ class _TabButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: shadow,
+
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -918,8 +1024,13 @@ class _TabButton extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? Colors.black.withOpacity(.9) : Colors.black87,
-                border: Border.all(color: color, width: 3),
+                // El círculo sí se pinta del color principal cuando está seleccionado
+                color: selected ? color : Colors.white,
+                border: Border.all(
+                  // Anillo solo cuando NO está seleccionado
+                  color: selected ? Colors.transparent : color,
+                  width: 3,
+                ),
               ),
               child: Icon(icon, size: 22, color: fg),
             ),
@@ -939,70 +1050,8 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
 
-  final String title;
 
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        letterSpacing: .4,
-      ),
-    );
-  }
-}
-
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: Colors.grey.shade700),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _AboutBlock extends StatelessWidget {
   final IconData icon;
