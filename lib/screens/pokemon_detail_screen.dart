@@ -2308,99 +2308,101 @@ class _EvolutionNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = name.replaceAll('-', ' ').split(' ').map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
-    final artworkUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
-    
+    final displayName = name
+        .replaceAll('-', ' ')
+        .split(' ')
+        .map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w)
+        .join(' ');
+
+    final artworkUrl =
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+
     final primaryType = types.isNotEmpty ? types.first : 'normal';
     final secondaryType = types.length > 1 ? types[1] : primaryType;
-    
+
     final primaryColor = _kTypeColor[primaryType] ?? _kTypeColor['normal']!;
-    final secondaryColor = _kTypeColor[secondaryType] ?? primaryColor;
+    final secondaryColor =
+        _kTypeColor[secondaryType] ?? _kTypeColor['normal']!;
 
     return Column(
       children: [
-        // Name
+        // NAME
         Text(
           displayName,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
+
         // ID
         Text(
-          '#${id.toString().padLeft(3, '0')}',
-          style: TextStyle(color: Colors.grey.shade500),
-        ),
-        const SizedBox(height: 8),
-        // Image with gradient border and type icons
-        GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => PokemonDetailScreen(
-              pokemonId: id,
-              heroTag: 'pokemon_$id',
-              initialPokemon: null,
-            )));
-          },
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Image with gradient circular border
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [primaryColor, secondaryColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                  child: ClipOval(
-                    child: Image.network(
-                      artworkUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Left type icon
-              Positioned(
-                left: -16,
-                top: 44,
-                child: _TypeIconCircle(type: primaryType),
-              ),
-              // Right type icon (only if Pokemon has two different types)
-              if (types.length > 1)
-                Positioned(
-                  right: -16,
-                  top: 44,
-                  child: _TypeIconCircle(type: secondaryType),
-                ),
-            ],
+          '#${id.toString().padLeft(3, "0")}',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade600,
           ),
+        ),
+        const SizedBox(height: 12),
+
+        // IMAGE WITH GRADIENT BORDER
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(130),
+                shape: BoxShape.rectangle,
+                gradient: LinearGradient(
+                  colors: [primaryColor, secondaryColor],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                padding: const EdgeInsets.all(12), // 👈 reduce SOLO la imagen
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(130),
+                  color: Colors.white,
+                ),
+                child: ClipOval(
+                  child: Image.network(
+                    artworkUrl,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+
+            // LEFT type icon
+            Positioned(
+              left: -45,
+              top: 50,
+              child: _TypeIconCircle(type: primaryType),
+            ),
+
+// RIGHT type icon — ahora SIEMPRE aparece
+            Positioned(
+              right: -45,
+              top: 50,
+              child: _TypeIconCircle(type: secondaryType),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-// Type icon circle for evolution nodes
+
 class _TypeIconCircle extends StatelessWidget {
   final String type;
 
@@ -2408,33 +2410,26 @@ class _TypeIconCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = _kTypeColor[type] ?? _kTypeColor['normal']!;
-    
+    final color = _kTypeColor[type] ?? _kTypeColor['normal']!;
+
     return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
+      width: 60,   // antes 44
+      height: 60,  // antes 44
+      decoration: const BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Center(
         child: Container(
-          width: 24,
-          height: 24,
+          width: 42,   // antes 30
+          height: 42,  // antes 30
           decoration: BoxDecoration(
-            color: typeColor,
             shape: BoxShape.circle,
+            color: color,
           ),
           child: Icon(
             _getTypeIcon(type),
-            size: 14,
+            size: 24,   // antes 18
             color: Colors.white,
           ),
         ),
@@ -2443,11 +2438,27 @@ class _TypeIconCircle extends StatelessWidget {
   }
 }
 
-// Evolution transition widget (level circle + arrow)
+
 class _EvolutionTransition extends StatelessWidget {
   final int? minLevel;
   final String? triggerName;
   final String? itemName;
+  String _getTriggerLabel(String? trigger) {
+    if (trigger == null) return '—';
+
+    switch (trigger) {
+      case 'level-up':
+        return 'Lv.';
+      case 'trade':
+        return 'Trade';
+      case 'use-item':
+        return 'Item';
+      case 'shed':
+        return 'Shed';
+      default:
+        return trigger;
+    }
+  }
 
   const _EvolutionTransition({
     this.minLevel,
@@ -2456,7 +2467,6 @@ class _EvolutionTransition extends StatelessWidget {
   });
 
   String _getItemSpriteUrl(String itemName) {
-    // Format item name for URL (replace spaces with hyphens, lowercase)
     final formattedName = itemName.toLowerCase().replaceAll(' ', '-');
     return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/$formattedName.png';
   }
@@ -2465,88 +2475,80 @@ class _EvolutionTransition extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUseItem = triggerName == 'use-item' && itemName != null;
     final isLevelUp = triggerName == 'level-up' || (minLevel != null && minLevel! > 0);
-    
+
     return Column(
       children: [
-        const SizedBox(height: 8),
-        // Circle with level or item
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
+
+        // Puedes ajustar este también si quieres
+        const SizedBox(height: 4),
+
+        // 🔴 CÍRCULO ROJO — ahora con desplazamiento vertical ajustable
+        Transform.translate(
+          offset: const Offset(0, -20),
+          child: Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.red.shade600,
+              border: Border.all(color: Colors.white, width: 6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: isUseItem
+                  ? ClipOval(
+                child: Image.network(
+                  _getItemSpriteUrl(itemName!),
+                  fit: BoxFit.contain,
+                ),
+              )
+                  : Text(
+                isLevelUp && minLevel != null
+                    ? 'Lv.${minLevel!}'
+                    : _getTriggerLabel(triggerName),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        // 🔻 Flecha — también ajustable en TOP sin variables
+        Transform.translate(
+          offset: const Offset(0, -30), // 🔼 SUBE / 🔽 BAJA — AJÚSTALO
+          child: Icon(
+            Icons.arrow_downward,
+            size: 42,
             color: Colors.red.shade600,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+            shadows: [
+              Shadow(
+                color: Colors.red.shade600,
+                blurRadius: 2,
               ),
             ],
           ),
-          child: Center(
-            child: isUseItem
-                ? ClipOval(
-                    child: Image.network(
-                      _getItemSpriteUrl(itemName!),
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.diamond,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  )
-                : Text(
-                    isLevelUp && minLevel != null && minLevel > 0
-                        ? 'Lv.$minLevel'
-                        : _getTriggerLabel(triggerName),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-          ),
+
         ),
-        const SizedBox(height: 6),
-        // Arrow
-        Icon(Icons.arrow_downward, size: 32, color: Colors.red.shade600),
-        const SizedBox(height: 8),
+
+        Transform.translate(
+          offset: const Offset(0, -30), // 🔼 SUBE el siguiente item
+          child: Container(), // widget vacío para mantener estructura
+        ),
       ],
     );
-  }
 
-  String _getTriggerLabel(String? trigger) {
-    switch (trigger) {
-      case 'trade':
-        return 'Trade';
-      case 'shed':
-        return 'Shed';
-      case 'spin':
-        return 'Spin';
-      case 'tower-of-darkness':
-        return 'Tower';
-      case 'tower-of-waters':
-        return 'Tower';
-      case 'three-critical-hits':
-        return '3 Crits';
-      case 'take-damage':
-        return 'Damage';
-      case 'other':
-        return 'Special';
-      case 'agile-style-move':
-        return 'Agile';
-      case 'strong-style-move':
-        return 'Strong';
-      case 'recoil-damage':
-        return 'Recoil';
-      default:
-        return 'Evolve';
-    }
   }
 }
 
