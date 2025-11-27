@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
@@ -423,13 +424,13 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             };
           }).toList();
 
-          // Stats - CORREGIDO
+          // Stats - Extract base stats from pokemon_v2_pokemonstats
           final rawStats = (pokemon['pokemon_v2_pokemonstats'] as List?) ?? [];
           final List<Map<String, dynamic>> stats = [];
           for (final s in rawStats) {
             final statObj = s['pokemon_v2_stat'];
-            final statName = statObj? ['name'] as String?  ?? '';
-            final baseStat = s['base_stat'] as int?  ?? 0;
+            final statName = statObj?['name'] as String? ?? '';
+            final baseStat = s['base_stat'] as int? ?? 0;
             if (statName.isNotEmpty) {
               stats.add({
                 'name': formatStatName(statName),
@@ -451,15 +452,23 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             };
           }).where((m) => (m['name'] as String).isNotEmpty).toList();
 
-          // unique moves keyed by name (keep first)
-          final uniqueMoves = {
-            for (var move in rawMoves) move['name'] as String: move,
-          }.values.map((e) => Map<String, dynamic>.from(e)).toList();
+          // Use rawMoves directly to preserve all move variants (different learn methods)
+          // This ensures filters by method (level-up, machine, egg, tutor) work correctly
+          final movesList = rawMoves.map((e) => Map<String, dynamic>.from(e)).toList();
 
           // Height / Weight / baseExp
-          final height = (pokemon['height'] as int?) ?? 0;
-          final weight = (pokemon['weight'] as int?) ?? 0;
+          // Note: height is in decimeters (dm), weight is in hectograms (hg)
+          // Convert to meters and kg by dividing by 10
+          final heightDm = (pokemon['height'] as int?) ?? 0; // decimeters
+          final weightHg = (pokemon['weight'] as int?) ?? 0; // hectograms
+          final heightMeters = heightDm / 10.0; // convert dm to meters
+          final weightKg = weightHg / 10.0; // convert hg to kg
           final baseExperience = (pokemon['base_experience'] as int?) ?? 0;
+          
+          // Debug logging for height/weight validation (only in debug mode)
+          if (kDebugMode) {
+            debugPrint('Pokemon ${pokemon['name']}: height=$heightDm dm (${heightMeters}m), weight=$weightHg hg (${weightKg}kg)');
+          }
 
           // Evolution species (from initial query)
           final speciesObj = pokemon['pokemon_v2_pokemonspecy'] as Map<String, dynamic>?;
@@ -650,13 +659,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               tabIndex: _selectedTab,
                               baseColor: baseColor,
                               secondaryColor: secondaryColor,
-                              height: height,
-                              weight: weight,
                               baseExperience: baseExperience,
                               abilities: abilities,
                               stats: stats,
                               totalStats: totalStats,
-                              uniqueMoves: uniqueMoves,
+                              uniqueMoves: movesList,
                               evolutionSpecies: evolutionSpecies,
                               speciesName: (pokemon['name'] as String?) ?? '',
                               isFavorite: _isFavorite,
@@ -677,13 +684,13 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               onLoadMoreMoves: () => setState(() => _movesLimit += 20),
                               onlyLevelUp: _onlyLevelUp,
                               onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
-                              movesList: uniqueMoves,
+                              movesList: movesList,
                               pokemonName: pokemonName,
                               pokemonId: pokemon['id'] as int,
                               computeMatchups: (types) => _computeMatchups(types),
-                              // small artifacts for About tab
-                              heightMeters: (height / 10),
-                              weightKg: (weight / 10),
+                              // Height in meters, weight in kg (converted from dm and hg)
+                              heightMeters: heightMeters,
+                              weightKg: weightKg,
                             ),
                           ),
                         ],
@@ -713,8 +720,6 @@ Widget _buildTabBody({
   required int tabIndex,
   required Color baseColor,
   required Color secondaryColor,
-  required int height,
-  required int weight,
   required int baseExperience,
   required List<Map<String, dynamic>> abilities,
   required List<Map<String, dynamic>> stats,
