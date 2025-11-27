@@ -12,6 +12,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../queries/get_pokemon_detail.dart';
 import '../widgets/pokemon_options_modal.dart';
 
+// Shared type color map used across the detail screen
+const Map<String, Color> _kTypeColor = {
+  "normal": Color(0xFF9BA0A8),
+  "fire": Color(0xFFFF6B3D),
+  "water": Color(0xFF4C90FF),
+  "electric": Color(0xFFFFD037),
+  "grass": Color(0xFF6BD64A),
+  "ice": Color(0xFF64DDF8),
+  "fighting": Color(0xFFE34343),
+  "poison": Color(0xFFB24ADD),
+  "ground": Color(0xFFE2B36B),
+  "flying": Color(0xFFA890F7),
+  "psychic": Color(0xFFFF4888),
+  "bug": Color(0xFF88C12F),
+  "rock": Color(0xFFC9B68B),
+  "ghost": Color(0xFF6F65D8),
+  "dragon": Color(0xFF7366FF),
+  "dark": Color(0xFF5A5A5A),
+  "steel": Color(0xFF8AA4C1),
+  "fairy": Color(0xFFFF78D5),
+};
+
 class PokemonDetailScreen extends StatefulWidget {
   const PokemonDetailScreen({
     super.key,
@@ -110,26 +132,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     );
   }
 
-  static const Map<String, Color> _typeColor = {
-    "normal": Color(0xFF9BA0A8), // más limpio
-    "fire": Color(0xFFFF6B3D), // más vivo
-    "water": Color(0xFF4C90FF), // más brillante
-    "electric": Color(0xFFFFD037), // más saturado
-    "grass": Color(0xFF6BD64A), // verde Pokémon clásico
-    "ice": Color(0xFF64DDF8), // celeste brillante
-    "fighting": Color(0xFFE34343), // rojo fuerte
-    "poison": Color(0xFFB24ADD), // morado más vivo
-    "ground": Color(0xFFE2B36B), // arena vibrante
-    "flying": Color(0xFFA890F7), // lavanda brillante
-    "psychic": Color(0xFFFF4888), // rosa fuerte
-    "bug": Color(0xFF88C12F), // verde más saturado
-    "rock": Color(0xFFC9B68B), // beige cálido
-    "ghost": Color(0xFF6F65D8), // púrpura fuerte
-    "dragon": Color(0xFF7366FF), // azul-púrpura intenso
-    "dark": Color(0xFF5A5A5A), // gris más profundo (no negro)
-    "steel": Color(0xFF8AA4C1), // metálico vivo
-    "fairy": Color(0xFFFF78D5), // rosado brillante
-  };
+  static const Map<String, Color> _typeColor = _kTypeColor;
 
   IconData _iconForType(String type) {
     switch (type) {
@@ -1000,31 +1003,9 @@ Widget _buildTabBody({
                   }
                 }
                 
-                // Type color map (same as in main class)
-                const Map<String, Color> typeColor = {
-                  "normal": Color(0xFF9BA0A8),
-                  "fire": Color(0xFFFF6B3D),
-                  "water": Color(0xFF4C90FF),
-                  "electric": Color(0xFFFFD037),
-                  "grass": Color(0xFF6BD64A),
-                  "ice": Color(0xFF64DDF8),
-                  "fighting": Color(0xFFE34343),
-                  "poison": Color(0xFFB24ADD),
-                  "ground": Color(0xFFE2B36B),
-                  "flying": Color(0xFFA890F7),
-                  "psychic": Color(0xFFFF4888),
-                  "bug": Color(0xFF88C12F),
-                  "rock": Color(0xFFC9B68B),
-                  "ghost": Color(0xFF6F65D8),
-                  "dragon": Color(0xFF7366FF),
-                  "dark": Color(0xFF5A5A5A),
-                  "steel": Color(0xFF8AA4C1),
-                  "fairy": Color(0xFFFF78D5),
-                };
-                
                 // Build type chip widget
                 Widget buildTypeChip(String typeName) {
-                  final color = typeColor[typeName] ?? Colors.grey;
+                  final color = _kTypeColor[typeName] ?? Colors.grey;
                   return Container(
                     margin: const EdgeInsets.only(right: 6, bottom: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
