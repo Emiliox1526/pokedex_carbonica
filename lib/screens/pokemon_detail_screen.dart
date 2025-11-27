@@ -685,6 +685,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 }
 
 // ----------------- Tab Body (top-level helper) -----------------
+// Stats bar background color (pink/magenta)
+const Color _kStatBarBackgroundColor = Color(0xFFF5B5C8);
+
+// Maximum number of abilities to display in the About tab
+const int _kMaxAbilitiesToShow = 2;
+
 // This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
@@ -721,192 +727,243 @@ Widget _buildTabBody({
   required Map<String, double> Function(List<String>) computeMatchups,
   required double heightMeters,
   required double weightKg,
+  String? description,
 }) {
   switch (tabIndex) {
     case 0:
-    // ABOUT
+    // ABOUT - Redesigned to match reference design
+      // Helper to get abbreviated stat name
+      String getAbbreviatedStatName(String name) {
+        switch (name) {
+          case 'HP':
+            return 'HP';
+          case 'Attack':
+            return 'ATK';
+          case 'Defense':
+            return 'DEF';
+          case 'Sp. Attack':
+            return 'SATK';
+          case 'Sp. Defense':
+            return 'SDEF';
+          case 'Speed':
+            return 'SPD';
+          default:
+            return name;
+        }
+      }
+
+      // Get abilities names for display
+      final abilityNames = abilities
+          .where((ab) => !(ab['is_hidden'] as bool))
+          .map((ab) => _capitalizeLocal(ab['name'] as String))
+          .toList();
+
       return _DetailCard(
         key: key,
         background: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
+            // Title "About" centered
             Center(
               child: Text(
                 'About',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
-            // Identity row: height / weight / egg groups (egg groups not available here; placeholder)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            // Main info row: Weight | Height | Abilities (separated by vertical lines)
+            IntrinsicHeight(
               child: Row(
                 children: [
+                  // Weight column
                   Expanded(
-                    child: _AboutInfoCard(
-                      title: 'Height',
-                      content: '${heightMeters.toStringAsFixed(1)} m',
-                      icon: Icons.height,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _AboutInfoCard(
-                      title: 'Weight',
-                      content: '${weightKg.toStringAsFixed(1)} kg',
-                      icon: Icons.monitor_weight_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _AboutInfoCard(
-                      title: 'Base Exp',
-                      content: baseExperience.toString(),
-                      icon: Icons.star_border,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // Abilities
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Abilities', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  for (final ab in abilities)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        leading: Icon(
-                          (ab['is_hidden'] as bool) ? Icons.visibility_off : Icons.auto_awesome,
-                          color: (ab['is_hidden'] as bool) ? Colors.grey : baseColor,
-                        ),
-                        title: Row(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Icon(Icons.balance, size: 18, color: Colors.grey.shade700),
+                            const SizedBox(width: 6),
                             Text(
-                              _capitalizeLocal(ab['name'] as String),
-                              style: const TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(width: 8),
-                            if (ab['is_hidden'] as bool)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black87,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Text('Hidden', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              '${weightKg.toStringAsFixed(1)} kg',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
                               ),
+                            ),
                           ],
                         ),
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              (ab['short_effect'] as String).isNotEmpty ? (ab['short_effect'] as String) : 'No description available.',
-                              style: TextStyle(color: Colors.black.withOpacity(.7)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // Stats visualization: radar chart + list
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  const Text('Base Stats', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 220,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _RadarChart(
-                            data: stats.map((s) => (s['value'] as int).toDouble()).toList(),
-                            labels: stats.map((s) => (s['name'] as String)).toList(),
-                            maxValue: 255.0,
-                            fillColor: baseColor.withOpacity(.18),
-                            strokeColor: baseColor,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Weight',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Total: $totalStats', style: const TextStyle(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 8),
-                              for (final s in stats)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      Expanded(child: Text((s['name'] as String))),
-                                      Text('${(s['value'] as int)}'),
-                                    ],
-                                  ),
-                                )
-                            ],
-                          ),
-                        )
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Linear progress bars for each stat
+                  // Vertical divider
+                  Container(
+                    width: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                  // Height column
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.straighten, size: 18, color: Colors.grey.shade700),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${heightMeters.toStringAsFixed(1)} m',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Height',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Vertical divider
+                  Container(
+                    width: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                  // Abilities column
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            for (final name in abilityNames.take(_kMaxAbilitiesToShow))
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Moves',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Description section (shown if description is provided)
+            if (description != null && description.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 24.0),
+                child: Text(
+                  description,
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+            // Base Stats section
+            Center(
+              child: Text(
+                'Base Stats',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Stats list with progress bars
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
                   for (final s in stats)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Row(
                         children: [
+                          // Stat label (abbreviated)
                           SizedBox(
-                            width: 80,
+                            width: 45,
                             child: Text(
-                              (s['name'] as String),
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                              getAbbreviatedStatName(s['name'] as String),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: ((s['value'] as int) / 255).clamp(0.0, 1.0),
-                                backgroundColor: Colors.grey.shade200,
-                                valueColor: AlwaysStoppedAnimation<Color>(baseColor),
-                                minHeight: 8,
+                          // Vertical separator line
+                          Container(
+                            width: 1,
+                            height: 16,
+                            color: Colors.grey.shade300,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          // Stat value (padded with zeros)
+                          SizedBox(
+                            width: 32,
+                            child: Text(
+                              (s['value'] as int).toString().padLeft(3, '0'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          SizedBox(
-                            width: 30,
-                            child: Text(
-                              '${(s['value'] as int)}',
-                              textAlign: TextAlign.right,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                          // Progress bar with two colors
+                          Expanded(
+                            child: _TwoColorProgressBar(
+                              value: (s['value'] as int) / 255,
+                              fillColor: baseColor,
+                              backgroundColor: _kStatBarBackgroundColor,
                             ),
                           ),
                         ],
@@ -1645,6 +1702,41 @@ class _ErrorBanner extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// Two-color progress bar widget for stats
+class _TwoColorProgressBar extends StatelessWidget {
+  final double value;
+  final Color fillColor;
+  final Color backgroundColor;
+
+  const _TwoColorProgressBar({
+    required this.value,
+    required this.fillColor,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final clampedValue = value.clamp(0.0, 1.0);
+    return Container(
+      height: 4,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(2),
+        color: backgroundColor,
+      ),
+      child: FractionallySizedBox(
+        alignment: Alignment.centerLeft,
+        widthFactor: clampedValue,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            color: fillColor,
+          ),
+        ),
       ),
     );
   }
