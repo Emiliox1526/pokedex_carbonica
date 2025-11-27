@@ -1497,25 +1497,58 @@ class _RadarPainter extends CustomPainter {
     pathData.close();
 
     // Gradiente más fuerte
+    final vividBase = HSLColor.fromColor(baseColor)
+        .withSaturation((HSLColor.fromColor(baseColor).saturation * 1.4).clamp(0.0, 1.0))
+        .withLightness((HSLColor.fromColor(baseColor).lightness * 1.15).clamp(0.0, 1.0))
+        .toColor();
+
+    final vividSecondary = HSLColor.fromColor(secondaryColor)
+        .withSaturation((HSLColor.fromColor(secondaryColor).saturation * 1.4).clamp(0.0, 1.0))
+        .withLightness((HSLColor.fromColor(secondaryColor).lightness * 1.15).clamp(0.0, 1.0))
+        .toColor();
+
+    final vividMiddle = Color.fromARGB(
+      255,
+      ((vividBase.red   * 0.5) + (vividSecondary.red   * 0.5)).toInt(),
+      ((vividBase.green * 0.5) + (vividSecondary.green * 0.5)).toInt(),
+      ((vividBase.blue  * 0.5) + (vividSecondary.blue  * 0.5)).toInt(),
+    );
+
     final paintGradientFill = Paint()
       ..shader = ui.Gradient.linear(
-        Offset(cx - radius * 1.2, cy - radius * 1.2),
-        Offset(cx + radius * 1.2, cy + radius * 1.2),
+        Offset(cx - radius * 0.35, cy - radius * 0.35),
+        Offset(cx + radius * 0.35, cy + radius * 0.35),
         [
-          baseColor.withOpacity(1.0),
-          Color.lerp(baseColor, secondaryColor, 0.5)!.withOpacity(0.95),
-          secondaryColor.withOpacity(1.0),
+          vividBase.withOpacity(0.98),
+          vividMiddle.withOpacity(0.96),
+          vividSecondary.withOpacity(0.98),
         ],
-        [
-          0.0,
-          0.5,
-          1.0,
-        ],
+        [0.0, 0.5, 1.0],
       )
       ..style = PaintingStyle.fill;
 
+
+
     // 1. Área del polígono
-    canvas.drawPath(pathData, paintGradientFill);
+
+    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+
+    canvas.drawPath(
+      pathData,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill,
+    );
+
+    canvas.drawPath(
+      pathData,
+      paintGradientFill
+        ..blendMode = BlendMode.srcIn,
+    );
+
+
+    canvas.restore();
+
 
     // 2. Borde del polígono
     final Paint paintStroke = Paint()
@@ -1880,7 +1913,7 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: double.infinity, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: background, borderRadius: const BorderRadius.vertical(top: Radius.circular(32)), boxShadow: [
+    return Container(width: double.infinity, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(32), boxShadow: [
       BoxShadow(color: Colors.black.withOpacity(0.16), blurRadius: 24, offset: const Offset(0, -4))
     ]), child: Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 28), child: child));
   }
