@@ -61,7 +61,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   String _movesMethodFilter = 'level-up'; // default
   int _movesLimit = 20;
   String _movesSort = 'level'; // or 'name'
-  bool _onlyLevelUp = true;
+  bool _onlyLevelUp = false;
   
   // Page-based pagination for moves
   int _movesCurrentPage = 0;
@@ -128,6 +128,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           onChangeMovesMethod: (m) => setState(() {
             _movesMethodFilter = m;
             _movesLimit = 20;
+            _movesCurrentPage = 0;
+            _onlyLevelUp = (m == 'level-up');
           }),
           onChangeMovesSort: (s) => setState(() => _movesSort = s),
           onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
@@ -448,11 +450,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             }
           }
           final totalStats = stats.fold<int>(0, (prev, s) => prev + (s['value'] as int));
-          // Moves: include learn method, type, damage_class, version group id, level, TM/HM info
+          // Moves: include learn method, type, damage_class, version group id, level
           final rawMoves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? []).map((m) {
             final mv = m['pokemon_v2_move'] as Map<String, dynamic>?;
             final moveType = mv?['pokemon_v2_type']?['name'] as String? ?? '';
-            
+
             // Extract TM/HM information
             String? tmName;
             int? tmNumber;
@@ -494,7 +496,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             tmSpriteUrl ??= moveType.isNotEmpty
                 ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-$moveType.png'
                 : null;
-            
+
             return {
               'name': mv?['name'] as String? ?? '',
               'type': moveType,
@@ -510,8 +512,25 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 
           // Use rawMoves directly to preserve all move variants (different learn methods)
           // This ensures filters by method (level-up, machine, egg, tutor) work correctly
-          final movesList = rawMoves.map((e) => Map<String, dynamic>.from(e)).toList();
+          // Deduplicate moves by name + method combination
+          final Map<String, Map<String, dynamic>> uniqueMovesMap = {};
+          for (final m in rawMoves) {
+            final name = m['name'] as String;
+            final method = m['method'] as String?  ?? '';
+            final key = '$name|$method';
 
+            // Keep the move with the lowest level for level-up moves
+            if (!uniqueMovesMap.containsKey(key)) {
+              uniqueMovesMap[key] = m;
+            } else {
+              final existingLevel = uniqueMovesMap[key]! ['level'] as int?  ?? 9999;
+              final newLevel = m['level'] as int? ?? 9999;
+              if (newLevel < existingLevel) {
+                uniqueMovesMap[key] = m;
+              }
+            }
+          }
+          final movesList = uniqueMovesMap.values.toList();
           // Height / Weight / baseExp
           // Note: height is in decimeters (dm), weight is in hectograms (hg)
           // Convert to meters and kg by dividing by 10
@@ -1443,7 +1462,8 @@ Widget _buildTabBody({
 
     case 2:
     // MOVES - Redesigned with modern UI and page-based pagination
-    // Apply filters by method
+
+    // Apply filters (method filter only - onlyLevelUp is redundant)
       List<Map<String, dynamic>> filtered = List.from(movesList);
       if (movesMethodFilter.isNotEmpty) {
         filtered = filtered.where((m) => (m['method'] as String?) == movesMethodFilter).toList();
@@ -1543,12 +1563,12 @@ Widget _buildTabBody({
         final method = (mv['method'] as String?) ?? '';
         final isLevelUp = method == 'level-up';
         final isMachine = method == 'machine';
-        
+
         // TM/HM info
         final tmName = mv['tm_name'] as String?;
         final tmNumber = mv['tm_number'] as int?;
         final tmSpriteUrl = mv['tm_sprite_url'] as String?;
-        
+
         // Build TM/HM label (e.g., "TM01", "HM03")
         String? tmLabel;
         if (isMachine && tmNumber != null) {
@@ -1560,7 +1580,7 @@ Widget _buildTabBody({
           // Use the name directly if no number
           tmLabel = tmName.toUpperCase().replaceAll('-', '');
         }
-        
+
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(12),
@@ -1702,12 +1722,7 @@ Widget _buildTabBody({
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.blur_circular,
-                  size: 22,
-                  color: baseColor,
-                ),
-                const SizedBox(width: 8),
+
                 const Text(
                   'Moves',
                   style: TextStyle(
