@@ -96,6 +96,22 @@ query PokemonDetail($id: Int!) {
         pokemon_v2_pokemonspecies(order_by: {id: asc}) {
           id
           name
+          pokemon_v2_pokemonevolutions {
+            min_level
+            pokemon_v2_evolutiontrigger {
+              name
+            }
+            pokemon_v2_item {
+              name
+            }
+          }
+          pokemon_v2_pokemons(limit: 1) {
+            pokemon_v2_pokemontypes {
+              pokemon_v2_type {
+                name
+              }
+            }
+          }
         }
       }
     }
