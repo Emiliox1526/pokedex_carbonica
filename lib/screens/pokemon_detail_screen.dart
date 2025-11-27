@@ -1322,31 +1322,6 @@ Widget _buildTabBody({
 
     case 1:
     // EVOLUTION
-    // Helper function to extract types from species data
-      List<String> extractTypesFromSpecies(Map<String, dynamic> species) {
-        final pokemons = (species['pokemon_v2_pokemons'] as List?) ?? [];
-        if (pokemons.isEmpty) return ['normal'];
-        final pokemonTypes = (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
-        return pokemonTypes
-            .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-            .where((t) => t.isNotEmpty)
-            .toList();
-      }
-
-      // Helper function to extract evolution data for next species
-      Map<String, dynamic> extractEvolutionData(Map<String, dynamic> nextSpecies) {
-        final evolutions = (nextSpecies['pokemon_v2_pokemonevolutions'] as List?) ?? [];
-        if (evolutions.isEmpty) {
-          return {'min_level': null, 'trigger': null, 'item': null};
-        }
-        final evo = evolutions.first as Map<String, dynamic>;
-        return {
-          'min_level': evo['min_level'] as int?,
-          'trigger': evo['pokemon_v2_evolutiontrigger']?['name'] as String?,
-          'item': evo['pokemon_v2_item']?['name'] as String?,
-        };
-      }
-
       return _DetailCard(
         key: key,
         background: Colors.white,
@@ -1366,17 +1341,18 @@ Widget _buildTabBody({
                 child: Column(
                   children: [
                     for (var i = 0; i < evolutionSpecies.length; i++) ...[
-                      _EvolutionNode(
-                        id: (evolutionSpecies[i]['id'] as int?) ?? 0,
-                        name: (evolutionSpecies[i]['name'] as String?) ?? '',
-                        types: extractTypesFromSpecies(evolutionSpecies[i]).isNotEmpty
-                            ? extractTypesFromSpecies(evolutionSpecies[i])
-                            : ['normal'],
-                      ),
+                      Builder(builder: (context) {
+                        final speciesTypes = _extractTypesFromSpecies(evolutionSpecies[i]);
+                        return _EvolutionNode(
+                          id: (evolutionSpecies[i]['id'] as int?) ?? 0,
+                          name: (evolutionSpecies[i]['name'] as String?) ?? '',
+                          types: speciesTypes,
+                        );
+                      }),
                       if (i < evolutionSpecies.length - 1) ...[
                         Builder(builder: (context) {
                           final nextSpecies = evolutionSpecies[i + 1];
-                          final evoData = extractEvolutionData(nextSpecies);
+                          final evoData = _extractEvolutionData(nextSpecies);
                           return _EvolutionTransition(
                             minLevel: evoData['min_level'] as int?,
                             triggerName: evoData['trigger'] as String?,
@@ -1452,45 +1428,21 @@ Widget _buildTabBody({
                       );
                     }
                     
-                    // Helper to extract types from fallback query
-                    List<String> getTypesFromFallback(Map<String, dynamic> species) {
-                      final pokemons = (species['pokemon_v2_pokemons'] as List?) ?? [];
-                      if (pokemons.isEmpty) return ['normal'];
-                      final pokemonTypes = (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
-                      return pokemonTypes
-                          .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-                          .where((t) => t.isNotEmpty)
-                          .toList();
-                    }
-                    
-                    // Helper to extract evolution data from fallback query
-                    Map<String, dynamic> getEvoDataFromFallback(Map<String, dynamic> nextSpecies) {
-                      final evolutions = (nextSpecies['pokemon_v2_pokemonevolutions'] as List?) ?? [];
-                      if (evolutions.isEmpty) {
-                        return {'min_level': null, 'trigger': null, 'item': null};
-                      }
-                      final evo = evolutions.first as Map<String, dynamic>;
-                      return {
-                        'min_level': evo['min_level'] as int?,
-                        'trigger': evo['pokemon_v2_evolutiontrigger']?['name'] as String?,
-                        'item': evo['pokemon_v2_item']?['name'] as String?,
-                      };
-                    }
-                    
                     return Column(
                       children: [
                         for (var i = 0; i < chainItems.length; i++) ...[
-                          _EvolutionNode(
-                            id: (chainItems[i]['id'] as int?) ?? 0,
-                            name: (chainItems[i]['name'] as String?) ?? '',
-                            types: getTypesFromFallback(chainItems[i]).isNotEmpty
-                                ? getTypesFromFallback(chainItems[i])
-                                : ['normal'],
-                          ),
+                          Builder(builder: (context) {
+                            final speciesTypes = _extractTypesFromSpecies(chainItems[i]);
+                            return _EvolutionNode(
+                              id: (chainItems[i]['id'] as int?) ?? 0,
+                              name: (chainItems[i]['name'] as String?) ?? '',
+                              types: speciesTypes,
+                            );
+                          }),
                           if (i < chainItems.length - 1) ...[
                             Builder(builder: (context) {
                               final nextSpecies = chainItems[i + 1];
-                              final evoData = getEvoDataFromFallback(nextSpecies);
+                              final evoData = _extractEvolutionData(nextSpecies);
                               return _EvolutionTransition(
                                 minLevel: evoData['min_level'] as int?,
                                 triggerName: evoData['trigger'] as String?,
@@ -2923,6 +2875,32 @@ String _capitalizeLocal(String raw) {
   if (raw.isEmpty) return raw;
   final parts = raw.replaceAll('-', ' ').split(' ');
   return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+}
+
+// Helper function to extract types from species data
+List<String> _extractTypesFromSpecies(Map<String, dynamic> species) {
+  final pokemons = (species['pokemon_v2_pokemons'] as List?) ?? [];
+  if (pokemons.isEmpty) return ['normal'];
+  final pokemonTypes = (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
+  final types = pokemonTypes
+      .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+      .where((t) => t.isNotEmpty)
+      .toList();
+  return types.isNotEmpty ? types : ['normal'];
+}
+
+// Helper function to extract evolution data for next species
+Map<String, dynamic> _extractEvolutionData(Map<String, dynamic> nextSpecies) {
+  final evolutions = (nextSpecies['pokemon_v2_pokemonevolutions'] as List?) ?? [];
+  if (evolutions.isEmpty) {
+    return {'min_level': null, 'trigger': null, 'item': null};
+  }
+  final evo = evolutions.first as Map<String, dynamic>;
+  return {
+    'min_level': evo['min_level'] as int?,
+    'trigger': evo['pokemon_v2_evolutiontrigger']?['name'] as String?,
+    'item': evo['pokemon_v2_item']?['name'] as String?,
+  };
 }
 
 // Helper widget for method filter chips in Moves section
