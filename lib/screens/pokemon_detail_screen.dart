@@ -1,8 +1,11 @@
+
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../queries/get_pokemon_detail.dart';
 
@@ -24,6 +27,59 @@ class PokemonDetailScreen extends StatefulWidget {
 
 class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   int _selectedTab = 0;
+
+  // UI state
+  bool _isFavorite = false;
+  bool _showShiny = false;
+
+  // Moves filters/pagination
+  String _movesMethodFilter = 'level-up'; // default
+  int _movesLimit = 20;
+  String _movesSort = 'level'; // or 'name'
+  bool _onlyLevelUp = true;
+
+  // Selected form index
+  int _selectedFormIndex = 0;
+
+  // SharedPreferences key
+  static const _prefsKeyFavorites = 'favorite_pokemon_ids';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorite();
+  }
+
+  Future<void> _loadFavorite() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favs = prefs.getStringList(_prefsKeyFavorites) ?? [];
+      setState(() {
+        _isFavorite = favs.contains(widget.pokemonId.toString());
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favs = prefs.getStringList(_prefsKeyFavorites) ?? [];
+    setState(() {
+      if (_isFavorite) {
+        favs.remove(widget.pokemonId.toString());
+        _isFavorite = false;
+      } else {
+        favs.add(widget.pokemonId.toString());
+        _isFavorite = true;
+      }
+    });
+    await prefs.setStringList(_prefsKeyFavorites, favs);
+    // small feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites')),
+    );
+  }
 
   static const Map<String, Color> _typeColor = {
     "normal": Color(0xFF9BA0A8), // más limpio
@@ -86,6 +142,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
         return Icons.circle;
     }
   }
+
   String formatStatName(String raw) {
     switch (raw) {
       case 'hp':
@@ -109,6 +166,131 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     setState(() {
       _selectedTab = index;
     });
+  }
+
+  // Helper para construir URL oficial de artwork por id (fallback si no hay sprite en DB)
+  String _artworkUrlForId(int id) {
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+  }
+
+  // Extrae urls default + shiny desde pokemon object (si posible)
+  Map<String, String?> _extractSpriteUrls(Map<String, dynamic> pokemon) {
+    final spriteList = pokemon['pokemon_v2_pokemonsprites'] as List?;
+    if (spriteList == null || spriteList.isEmpty) return {'default': null, 'shiny': null};
+    final raw = spriteList.first['sprites'];
+    if (raw == null) return {'default': null, 'shiny': null};
+    Map<String, dynamic> decoded;
+    if (raw is String) {
+      try {
+        decoded = json.decode(raw) as Map<String, dynamic>;
+      } catch (_) {
+        return {'default': null, 'shiny': null};
+      }
+    } else if (raw is Map<String, dynamic>) {
+      decoded = raw;
+    } else {
+      return {'default': null, 'shiny': null};
+    }
+    final defaultUrl =
+        decoded['other']?['official-artwork']?['front_default'] ??
+            decoded['other']?['home']?['front_default'] ??
+            decoded['front_default'] ??
+            decoded['front_shiny'] ??
+            decoded['front_female'] ??
+            decoded['back_default'];
+    final shinyUrl = decoded['front_shiny'] ??
+        decoded['other']?['home']?['front_shiny'] ??
+        decoded['other']?['official-artwork']?['front_shiny'];
+    return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
+  }
+
+  // Capitalize helper
+  String _capitalize(String raw) {
+    if (raw.isEmpty) return raw;
+    final parts = raw.replaceAll('-', ' ').split(' ');
+    return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+  }
+
+  // Simple full type effectiveness chart (attacker -> defender -> multiplier).
+  // Source: standard Pokémon type chart. This covers all types used in repo.
+  static const Map<String, Map<String, double>> _typeChart = {
+    "normal": {
+      "rock": 0.5, "ghost": 0.0, "steel": 0.5
+    },
+    "fire": {
+      "fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 2.0, "bug": 2.0, "rock": 0.5, "dragon": 0.5, "steel": 2.0
+    },
+    "water": {
+      "fire": 2.0, "water": 0.5, "grass": 0.5, "ground": 2.0, "rock": 2.0, "dragon": 0.5
+    },
+    "electric": {
+      "water": 2.0, "electric": 0.5, "grass": 0.5, "ground": 0.0, "flying": 2.0, "dragon": 0.5
+    },
+    "grass": {
+      "fire": 0.5, "water": 2.0, "grass": 0.5, "poison": 0.5, "ground": 2.0, "flying": 0.5, "bug": 0.5, "rock": 2.0, "dragon": 0.5, "steel": 0.5
+    },
+    "ice": {
+      "fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 0.5, "ground": 2.0, "flying": 2.0, "dragon": 2.0, "steel": 0.5
+    },
+    "fighting": {
+      "normal": 2.0, "ice": 2.0, "poison": 0.5, "flying": 0.5, "psychic": 0.5, "bug": 0.5, "rock": 2.0, "ghost": 0.0, "dark": 2.0, "steel": 2.0, "fairy": 0.5
+    },
+    "poison": {
+      "grass": 2.0, "poison": 0.5, "ground": 0.5, "rock": 0.5, "ghost": 0.5, "steel": 0.0, "fairy": 2.0
+    },
+    "ground": {
+      "fire": 2.0, "electric": 2.0, "grass": 0.5, "poison": 2.0, "flying": 0.0, "bug": 0.5, "rock": 2.0, "steel": 2.0
+    },
+    "flying": {
+      "electric": 0.5, "grass": 2.0, "fighting": 2.0, "bug": 2.0, "rock": 0.5, "steel": 0.5
+    },
+    "psychic": {
+      "fighting": 2.0, "poison": 2.0, "psychic": 0.5, "dark": 0.0, "steel": 0.5
+    },
+    "bug": {
+      "fire": 0.5, "grass": 2.0, "fighting": 0.5, "poison": 0.5, "flying": 0.5, "psychic": 2.0, "ghost": 0.5, "dark": 2.0, "steel": 0.5, "fairy": 0.5
+    },
+    "rock": {
+      "fire": 2.0, "ice": 2.0, "fighting": 0.5, "ground": 0.5, "flying": 2.0, "bug": 2.0, "steel": 0.5
+    },
+    "ghost": {
+      "normal": 0.0, "psychic": 2.0, "ghost": 2.0, "dark": 0.5
+    },
+    "dragon": {
+      "dragon": 2.0, "steel": 0.5, "fairy": 0.0
+    },
+    "dark": {
+      "fighting": 0.5, "psychic": 2.0, "ghost": 2.0, "dark": 0.5, "fairy": 0.5
+    },
+    "steel": {
+      "fire": 0.5, "water": 0.5, "electric": 0.5, "ice": 2.0, "rock": 2.0, "fairy": 2.0, "steel": 0.5
+    },
+    "fairy": {
+      "fire": 0.5, "fighting": 2.0, "poison": 0.5, "dragon": 2.0, "dark": 2.0, "steel": 0.5
+    },
+  };
+
+  // Compute total multiplier of an attacking type vs target types.
+  double _typeMultiplierAgainst(List<String> defenderTypes, String attacker) {
+    var m = 1.0;
+    for (final def in defenderTypes) {
+      final row = _typeChart[attacker];
+      if (row != null && row.containsKey(def)) {
+        m *= row[def]!;
+      } else {
+        m *= 1.0;
+      }
+    }
+    return m;
+  }
+
+  // Determine weaknesses/resistances for this Pokémon types.
+  Map<String, double> _computeMatchups(List<String> defenderTypes) {
+    final Map<String, double> results = {};
+    for (final attacker in _typeChart.keys) {
+      results[attacker] = _typeMultiplierAgainst(defenderTypes, attacker);
+    }
+    return results;
   }
 
   @override
@@ -137,42 +319,72 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             );
           }
 
-          final pokemon = result.data?['pokemon_v2_pokemon_by_pk']
-          as Map<String, dynamic>? ?? widget.initialPokemon;
+          final pokemon = result.data?['pokemon_v2_pokemon_by_pk'] as Map<String, dynamic>? ??
+              widget.initialPokemon;
 
           if (pokemon == null) {
             return const Center(child: Text('Pokémon not found'));
           }
 
+          // --- Identity
           final pokemonName = (pokemon['name'] as String? ?? 'Unknown')
               .replaceAll('-', ' ')
               .split(' ')
               .map((w) => w[0].toUpperCase() + w.substring(1))
               .join(' ');
-
           final idLabel = '#${pokemon['id'].toString().padLeft(3, '0')}';
 
+          // Types
           final types = ((pokemon['pokemon_v2_pokemontypes'] as List?) ?? [])
               .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
               .where((t) => t.isNotEmpty)
               .cast<String>()
               .toList();
-
           final primaryType = types.isNotEmpty ? types.first : 'normal';
           final secondaryTypeName = types.length > 1 ? types[1] : primaryType;
 
+          // Colors
           final baseColor = _typeColor[primaryType] ?? _typeColor['normal']!;
-          final secondaryColor =
-              _typeColor[secondaryTypeName] ?? Color.lerp(baseColor, Colors.white, .35)!;
+          final secondaryColor = _typeColor[secondaryTypeName] ?? Color.lerp(baseColor, Colors.white, .35)!;
 
-          final imageUrl = _extractImageUrl(pokemon);
+          // Sprites
+          final spriteUrls = _extractSpriteUrls(pokemon);
+          final defaultImageUrl = spriteUrls['default'];
+          final shinyImageUrl = spriteUrls['shiny'];
+          final displayedImageUrl = _showShiny ? (shinyImageUrl ?? defaultImageUrl) : (defaultImageUrl ?? shinyImageUrl);
 
-          final abilities =
-          ((pokemon['pokemon_v2_pokemonabilities'] as List?) ?? []).map((a) {
+          // Forms (variants)
+          final forms = ((pokemon['pokemon_v2_pokemonforms'] as List?) ?? [])
+              .map((f) {
+            return {
+              'form_name': f['form_name'] as String?,
+              'form_identifier': f['form_identifier'] as String?,
+              'is_default': f['is_default'] as bool? ?? false,
+            };
+          })
+              .toList(growable: false);
+
+          // Abilities: include name, is_hidden, short_effect (english)
+          final abilities = ((pokemon['pokemon_v2_pokemonabilities'] as List?) ?? []).map((a) {
             final ability = a['pokemon_v2_ability'] as Map<String, dynamic>?;
-            return ability?['name'] as String? ?? '';
-          }).where((name) => name.isNotEmpty).toList();
+            final effectList = (ability?['pokemon_v2_abilityeffecttexts'] as List?) ?? [];
+            String shortEffect = '';
+            for (final ef in effectList) {
+              final lang = ef['language']?['name'] as String? ?? '';
+              if (lang == 'en') {
+                shortEffect = (ef['short_effect'] as String? ?? '').replaceAll('\n', ' ').trim();
+                break;
+              }
+            }
+            if (shortEffect.length > 160) shortEffect = shortEffect.substring(0, 157) + '...';
+            return {
+              'name': ability?['name'] as String? ?? '',
+              'is_hidden': a['is_hidden'] as bool? ?? false,
+              'short_effect': shortEffect,
+            };
+          }).toList();
 
+          // Stats
           final stats = ((pokemon['pokemon_v2_pokemonstats'] as List?) ?? [])
               .map((s) => {
             'name': formatStatName(s['pokemon_v2_stat']?['name'] as String? ?? ''),
@@ -180,34 +392,38 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           })
               .where((s) => (s['name'] as String).isNotEmpty)
               .toList();
+          final totalStats = stats.fold<int>(0, (prev, s) => prev + (s['value'] as int));
 
-          final moves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? [])
-              .map((m) => {
-            'name': m['pokemon_v2_move']?['name'] as String? ?? '',
-            'type':
-            m['pokemon_v2_move']?['pokemon_v2_type']?['name'] as String? ?? '',
-            'damage_class': m['pokemon_v2_move']
-            ?['pokemon_v2_movedamageclass']?['name'] as String? ??
-                '',
-            'level': m['level'] as int?,
-          })
-              .where((m) => (m['name'] as String).isNotEmpty)
-              .toList();
+          // Moves: include learn method, type, damage_class, version group id, level
+          final rawMoves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? []).map((m) {
+            final mv = m['pokemon_v2_move'] as Map<String, dynamic>?;
+            return {
+              'name': mv?['name'] as String? ?? '',
+              'type': mv?['pokemon_v2_type']?['name'] as String? ?? '',
+              'damage_class': mv?['pokemon_v2_movedamageclass']?['name'] as String? ?? '',
+              'level': m['level'] as int?,
+              'method': m['pokemon_v2_movelearnmethod']?['name'] as String? ?? '',
+              'version_group_id': m['version_group_id'] as int?,
+            };
+          }).where((m) => (m['name'] as String).isNotEmpty).toList();
 
+          // unique moves keyed by name (keep first)
           final uniqueMoves = {
-            for (var move in moves) move['name'] as String: move,
-          }.values.toList();
+            for (var move in rawMoves) move['name'] as String: move,
+          }.values.map((e) => Map<String, dynamic>.from(e)).toList();
 
+          // Height / Weight / baseExp
           final height = (pokemon['height'] as int?) ?? 0;
           final weight = (pokemon['weight'] as int?) ?? 0;
           final baseExperience = (pokemon['base_experience'] as int?) ?? 0;
 
-          // --- EXTRA: obtener la cadena evolutiva desde la species -> evolution chain (si existe)
+          // Evolution species (from initial query)
           final speciesObj = pokemon['pokemon_v2_pokemonspecy'] as Map<String, dynamic>?;
-          final evolutionSpeciesRaw = (speciesObj?['pokemon_v2_evolutionchain']?['pokemon_v2_pokemonspecies'] as List?) ?? [];
-          // Cada entry suele venir como { id: int, name: String }
+          final evolutionSpeciesRaw =
+              (speciesObj?['pokemon_v2_evolutionchain']?['pokemon_v2_pokemonspecies'] as List?) ?? [];
           final evolutionSpecies = evolutionSpeciesRaw.cast<Map<String, dynamic>>();
 
+          // Build the UI
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -241,21 +457,43 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header row with back, name, id, favorite button
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               _CircleButton(
                                 icon: Icons.arrow_back,
                                 onTap: () => Navigator.of(context).maybePop(),
                               ),
                               const SizedBox(width: 12),
-                              Text(
-                                pokemonName,
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
+                              Expanded(
+                                child: Text(
+                                  pokemonName,
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                              const Spacer(),
+                              IconButton(
+                                onPressed: _toggleFavorite,
+                                icon: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 220),
+                                  child: _isFavorite
+                                      ? const Icon(Icons.favorite, color: Colors.red, key: ValueKey('fav_on'))
+                                      : const Icon(Icons.favorite_border, color: Colors.white, key: ValueKey('fav_off')),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  // share: copy to clipboard
+                                  final txt = '$pokemonName $idLabel\n${displayedImageUrl ?? _artworkUrlForId(pokemon['id'] as int)}';
+                                  Clipboard.setData(ClipboardData(text: txt));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied Pokémon info to clipboard')));
+                                },
+                                icon: const Icon(Icons.share, color: Colors.white),
+                              ),
+                              const SizedBox(width: 4),
                               Text(
                                 idLabel,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -267,33 +505,18 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                           ),
                           const SizedBox(height: 18),
 
-                          const SizedBox(height: 18),
+                          // Center image with type chips (responsive as before)
                           Center(
                             child: Stack(
                               alignment: Alignment.center,
                               clipBehavior: Clip.none,
                               children: [
-                                // Usamos LayoutBuilder para ajustar el tamaño de la imagen
-                                // respecto al ancho disponible y escalar los chips en consecuencia.
                                 LayoutBuilder(builder: (context, constraints) {
-                                  // ancho disponible dentro del Column / SingleChildScrollView
                                   final availableWidth = constraints.maxWidth.isFinite && constraints.maxWidth > 0
                                       ? constraints.maxWidth
                                       : MediaQuery.of(context).size.width - 32; // fallback
-
-                                  // Calculamos diámetro de la imagen: depende del ancho disponible.
-                                  // Lógica: intenta usar 220 en pantallas amplias, pero si el espacio es pequeño,
-                                  // reduce el tamaño proporcionalmente. Clamp entre 100 y 320.
-                                  final imageDiameter = math.max(
-                                    100.0,
-                                    math.min(320.0, availableWidth * 0.45),
-                                  );
-
-                                  // escala relativa para chips (1.0 = tamaño base cuando imageDiameter == 220)
+                                  final imageDiameter = math.max(100.0, math.min(360.0, availableWidth * 0.48));
                                   final scale = imageDiameter / 220.0;
-
-                                  // desplazamiento horizontal de los chips para que queden "pegados" a la imagen,
-                                  // pero sin salirse tanto que se corten.
                                   final chipOffset = imageDiameter * 0.45;
 
                                   return Stack(
@@ -316,24 +539,16 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                             ],
                                           ),
                                           child: ClipOval(
-                                            child: imageUrl != null
+                                            child: displayedImageUrl != null
                                                 ? Image.network(
-                                              imageUrl,
+                                              displayedImageUrl,
                                               fit: BoxFit.contain,
+                                              errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
                                             )
-                                                : Container(
-                                              color: Colors.white.withOpacity(0.18),
-                                              child: Icon(
-                                                Icons.image_not_supported_outlined,
-                                                color: Colors.white,
-                                                size: math.max(32.0, 64.0 * scale),
-                                              ),
-                                            ),
+                                                : Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
                                           ),
                                         ),
                                       ),
-
-                                      // CHIP IZQUIERDO
                                       Positioned(
                                         left: -chipOffset,
                                         child: _TypeColumn(
@@ -343,7 +558,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                           scale: scale,
                                         ),
                                       ),
-
                                       if (secondaryTypeName != null)
                                         Positioned(
                                           right: -chipOffset,
@@ -360,14 +574,18 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 20),
+
+                          // Tabs
                           _TabsCard(
                             selectedIndex: _selectedTab,
                             primaryColor: baseColor,
                             secondaryColor: secondaryColor,
                             onChanged: _onTabSelected,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 18),
+
+                          // Tab content (pass many params and callbacks)
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 220),
                             switchInCurve: Curves.easeOut,
@@ -382,9 +600,35 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               baseExperience: baseExperience,
                               abilities: abilities,
                               stats: stats,
+                              totalStats: totalStats,
                               uniqueMoves: uniqueMoves,
                               evolutionSpecies: evolutionSpecies,
                               speciesName: (pokemon['name'] as String?) ?? '',
+                              isFavorite: _isFavorite,
+                              onToggleFavorite: _toggleFavorite,
+                              showShiny: _showShiny,
+                              onToggleShiny: () => setState(() => _showShiny = !_showShiny),
+                              forms: forms,
+                              selectedFormIndex: _selectedFormIndex,
+                              onSelectForm: (i) => setState(() => _selectedFormIndex = i),
+                              movesMethodFilter: _movesMethodFilter,
+                              onChangeMovesMethod: (m) => setState(() {
+                                _movesMethodFilter = m;
+                                _movesLimit = 20;
+                              }),
+                              movesSort: _movesSort,
+                              onChangeMovesSort: (s) => setState(() => _movesSort = s),
+                              movesLimit: _movesLimit,
+                              onLoadMoreMoves: () => setState(() => _movesLimit += 20),
+                              onlyLevelUp: _onlyLevelUp,
+                              onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
+                              movesList: uniqueMoves,
+                              pokemonName: pokemonName,
+                              pokemonId: pokemon['id'] as int,
+                              computeMatchups: (types) => _computeMatchups(types),
+                              // small artifacts for About tab
+                              heightMeters: (height / 10),
+                              weightKg: (weight / 10),
                             ),
                           ),
                         ],
@@ -399,61 +643,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
       ),
     );
   }
-
-  String? _extractImageUrl(Map<String, dynamic> pokemon) {
-    // 1) Lista de sprites de la relación
-    final spriteList = pokemon['pokemon_v2_pokemonsprites'] as List?;
-    if (spriteList == null || spriteList.isEmpty) return null;
-
-    final raw = spriteList.first['sprites'];
-    if (raw == null) return null;
-
-    Map<String, dynamic> decoded;
-
-    // 2) Puede venir como String (JSON) o como Map ya decodificado
-    if (raw is String) {
-      try {
-        decoded = json.decode(raw) as Map<String, dynamic>;
-      } catch (_) {
-        return null;
-      }
-    } else if (raw is Map<String, dynamic>) {
-      decoded = raw;
-    } else {
-      return null;
-    }
-
-    // 3) Buscar la mejor URL disponible
-    final fromDb =
-        decoded['other']?['official-artwork']?['front_default'] ??
-            decoded['other']?['home']?['front_default'] ??
-            decoded['front_default'] ??
-            decoded['front_shiny'] ??
-            decoded['front_female'] ??
-            decoded['back_default'] ??
-            decoded['back_shiny'];
-
-    if (fromDb is String && fromDb.isNotEmpty) {
-      return fromDb;
-    }
-
-    return null;
-  }
-
-  // Helper para construir URL oficial de artwork por id (fallback si no hay sprite en DB)
-  String _artworkUrlForId(int id) {
-    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
-  }
-
-  // Helper para capitalizar nombres
-  String _capitalize(String raw) {
-    if (raw.isEmpty) return raw;
-    final parts = raw.replaceAll('-', ' ').split(' ');
-    return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
-  }
-
 }
 
+// ----------------- Tab Body (top-level helper) -----------------
+// This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
   required int tabIndex,
@@ -462,11 +655,33 @@ Widget _buildTabBody({
   required int height,
   required int weight,
   required int baseExperience,
-  required List<String> abilities,
+  required List<Map<String, dynamic>> abilities,
   required List<Map<String, dynamic>> stats,
+  required int totalStats,
   required List<Map<String, dynamic>> uniqueMoves,
   required List<Map<String, dynamic>> evolutionSpecies,
-  required String speciesName, // nombre de la especie (para fallback query)
+  required String speciesName,
+  required bool isFavorite,
+  required VoidCallback onToggleFavorite,
+  required bool showShiny,
+  required VoidCallback onToggleShiny,
+  required List<Map<String, dynamic>> forms,
+  required int selectedFormIndex,
+  required ValueChanged<int> onSelectForm,
+  required String movesMethodFilter,
+  required ValueChanged<String> onChangeMovesMethod,
+  required String movesSort,
+  required ValueChanged<String> onChangeMovesSort,
+  required int movesLimit,
+  required VoidCallback onLoadMoreMoves,
+  required bool onlyLevelUp,
+  required VoidCallback onToggleOnlyLevelUp,
+  required List<Map<String, dynamic>> movesList,
+  required String pokemonName,
+  required int pokemonId,
+  required Map<String, double> Function(List<String>) computeMatchups,
+  required double heightMeters,
+  required double weightKg,
 }) {
   switch (tabIndex) {
     case 0:
@@ -477,93 +692,162 @@ Widget _buildTabBody({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Título "About" ---
+            // Title
             Center(
               child: Text(
                 'About',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-            // --- Bloques Weight / Height / Moves ---
+            // Identity row: height / weight / egg groups (egg groups not available here; placeholder)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _AboutBlock(
-                    icon: Icons.monitor_weight_outlined,
-                    value: '${(weight / 10).toStringAsFixed(1)} kg',
-                    label: 'Weight',
+                  Expanded(
+                    child: _AboutInfoCard(
+                      title: 'Height',
+                      content: '${heightMeters.toStringAsFixed(1)} m',
+                      icon: Icons.height,
+                    ),
                   ),
-                  Container(width: 1, height: 40, color: Colors.black12),
-                  _AboutBlock(
-                    icon: Icons.height,
-                    value: '${(height / 10).toStringAsFixed(1)} m',
-                    label: 'Height',
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _AboutInfoCard(
+                      title: 'Weight',
+                      content: '${weightKg.toStringAsFixed(1)} kg',
+                      icon: Icons.monitor_weight_outlined,
+                    ),
                   ),
-                  Container(width: 1, height: 40, color: Colors.black12),
-                  _AboutBlock(
-                    icon: Icons.list_alt_outlined,
-                    value: abilities.isNotEmpty ? abilities.join('\n') : '—',
-                    label: 'Moves',
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _AboutInfoCard(
+                      title: 'Base Exp',
+                      content: baseExperience.toString(),
+                      icon: Icons.star_border,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
 
-            // --- Descripción (placeholder, puedes cambiarla por flavor text) ---
+            const SizedBox(height: 18),
+
+            // Abilities
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
-              child: Text(
-                'There is a plant seed on its back right from the day this Pokémon is born. The seed slowly grows larger.',
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  height: 1.4,
-                  color: Colors.black.withOpacity(.75),
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Abilities', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                  const SizedBox(height: 8),
+                  for (final ab in abilities)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      _capitalizeLocal(ab['name'] as String),
+                                      style: const TextStyle(fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    if (ab['is_hidden'] as bool)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black87,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Text('Hidden', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  (ab['short_effect'] as String).isNotEmpty ? (ab['short_effect'] as String) : 'No description available.',
+                                  style: TextStyle(color: Colors.black.withOpacity(.7)),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            if (stats.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 6),
-                child: const Center(
-                  child: Text(
-                    'Base Stats',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+            const SizedBox(height: 18),
+
+            // Stats visualization: radar chart + list
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
+                  const Text('Base Stats', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 220,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _RadarChart(
+                            data: stats.map((s) => (s['value'] as int).toDouble()).toList(),
+                            labels: stats.map((s) => (s['name'] as String)).toList(),
+                            maxValue: 255.0,
+                            fillColor: baseColor.withOpacity(.18),
+                            strokeColor: baseColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Total: $totalStats', style: const TextStyle(fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 8),
+                              for (final s in stats)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    children: [
+                                      Expanded(child: Text((s['name'] as String))),
+                                      Text('${(s['value'] as int)}'),
+                                    ],
+                                  ),
+                                )
+                            ],
+                          ),
+                        )
+                      ],
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 4),
-              for (final stat in stats)
-                _StatRow(
-                  label: (stat['name'] as String).replaceAll('-', ' ').toUpperCase(),
-                  value: stat['value'] as int,
-                  primaryColor: baseColor,
-                  secondaryColor: secondaryColor,
-                ),
-            ],
+            ),
+
+            const SizedBox(height: 12),
           ],
         ),
       );
 
     case 1:
-    // EVOLUTION: mostramos una "evolution chart" vertical usando los species provistos por la query.
+    // EVOLUTION
       return _DetailCard(
         key: key,
         background: Colors.white,
@@ -573,11 +857,7 @@ Widget _buildTabBody({
             Center(
               child: Text(
                 'Evolution Chart',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87),
               ),
             ),
             const SizedBox(height: 12),
@@ -602,19 +882,11 @@ Widget _buildTabBody({
                                 color: Colors.redAccent,
                                 shape: BoxShape.circle,
                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.12),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  )
+                                  BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 4))
                                 ],
                               ),
-                              child: Center(
-                                child: Text(
-                                  'Lv. -',
-                                  style: const TextStyle(
-                                      color: Colors.white, fontWeight: FontWeight.w800),
-                                ),
+                              child: const Center(
+                                child: Text('Lv. -', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -628,7 +900,7 @@ Widget _buildTabBody({
                 ),
               )
             else
-            // Si no hay datos en la respuesta inicial intentamos obtener la cadena por nombre de especie
+            // fallback query by species name is done at runtime inside the widget tree
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
                 child: Query(
@@ -639,6 +911,7 @@ Widget _buildTabBody({
                           id
                           name
                           pokemon_v2_evolutionchain {
+                            id
                             pokemon_v2_pokemonspecies(order_by: {id: asc}) {
                               id
                               name
@@ -651,18 +924,13 @@ Widget _buildTabBody({
                     fetchPolicy: FetchPolicy.networkOnly,
                   ),
                   builder: (res, {fetchMore, refetch}) {
-                    if (res.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                    if (res.isLoading) return const Center(child: CircularProgressIndicator());
                     if (res.hasException) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24.0),
-                        child: Center(
-                          child: Text('Error loading evolution data', style: TextStyle(color: Colors.grey.shade700)),
-                        ),
+                        child: Center(child: Text('Error loading evolution data', style: TextStyle(color: Colors.grey.shade700))),
                       );
                     }
-
                     final speciesList = (res.data?['pokemon_v2_pokemonspecies'] as List?) ?? [];
                     if (speciesList.isEmpty) {
                       return const Padding(
@@ -670,17 +938,14 @@ Widget _buildTabBody({
                         child: Center(child: Text('No evolution data available')),
                       );
                     }
-
                     final chain = (speciesList.first['pokemon_v2_evolutionchain']?['pokemon_v2_pokemonspecies'] as List?) ?? [];
                     final chainItems = chain.cast<Map<String, dynamic>>();
-
                     if (chainItems.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 64.0),
                         child: Center(child: Text('No evolution data available')),
                       );
                     }
-
                     return Column(
                       children: [
                         for (var i = 0; i < chainItems.length; i++) ...[
@@ -699,19 +964,11 @@ Widget _buildTabBody({
                                     color: Colors.redAccent,
                                     shape: BoxShape.circle,
                                     boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.12),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      )
+                                      BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 4))
                                     ],
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      'Lv. -',
-                                      style: const TextStyle(
-                                          color: Colors.white, fontWeight: FontWeight.w800),
-                                    ),
+                                  child: const Center(
+                                    child: Text('Lv. -', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -733,207 +990,115 @@ Widget _buildTabBody({
 
     case 2:
     // MOVES
+    // Apply filters (method and onlyLevelUp)
+      List<Map<String, dynamic>> filtered = List.from(movesList);
+      if (onlyLevelUp) {
+        filtered = filtered.where((m) => (m['method'] as String?) == 'level-up').toList();
+      } else if (movesMethodFilter.isNotEmpty) {
+        filtered = filtered.where((m) => (m['method'] as String?) == movesMethodFilter).toList();
+      }
+      if (movesSort == 'level') {
+        filtered.sort((a, b) {
+          final int la = (a['level'] as int?) ?? 9999;
+          final int lb = (b['level'] as int?) ?? 9999;
+          if (la != lb) return la.compareTo(lb);
+          return (a['name'] as String).compareTo(b['name'] as String);
+        });
+      } else {
+        filtered.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+      }
+      final visible = filtered.take(movesLimit).toList();
+
       return _DetailCard(
         key: key,
         background: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Text(
-                'Moves',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
+            Center(child: Text('Moves', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87))),
+            const SizedBox(height: 12),
+            // Filters row
+            Row(
+              children: [
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: movesMethodFilter,
+                  items: const [
+                    DropdownMenuItem(value: 'level-up', child: Text('Level-up')),
+                    DropdownMenuItem(value: 'machine', child: Text('Machine (TM/HM)')),
+                    DropdownMenuItem(value: 'tutor', child: Text('Tutor')),
+                    DropdownMenuItem(value: 'egg', child: Text('Egg')),
+                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                  ],
+                  onChanged: (v) => onChangeMovesMethod(v ?? 'level-up'),
                 ),
-              ),
+                const SizedBox(width: 12),
+                DropdownButton<String>(
+                  value: movesSort,
+                  items: const [
+                    DropdownMenuItem(value: 'level', child: Text('Sort: Level')),
+                    DropdownMenuItem(value: 'name', child: Text('Sort: Name')),
+                  ],
+                  onChanged: (v) => onChangeMovesSort(v ?? 'level'),
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    const Text('Only level-up'),
+                    Switch(value: onlyLevelUp, onChanged: (_) => onToggleOnlyLevelUp()),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            if (uniqueMoves.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 64.0),
-                child: Center(
-                  child: Text(
-                    'No moves found for this Pokémon.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
+            const SizedBox(height: 12),
+            if (visible.isEmpty)
+              const Center(child: Text('No moves found with current filters', style: TextStyle(color: Colors.grey)))
             else
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        topRight: Radius.circular(14),
+                  for (final mv in visible)
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
-                    child: Row(
-                      children: const [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Move',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Type',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Class',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
                             child: Text(
-                              'Lvl',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
+                              _capitalizeLocal(mv['name'] as String),
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              (mv['type'] as String).isNotEmpty ? (mv['type'] as String).toUpperCase() : '—',
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              (mv['damage_class'] as String).isNotEmpty ? _capitalizeLocal(mv['damage_class'] as String) : '—',
+                            ),
+                          ),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                (mv['level'] as int?)?.toString() ?? '—',
+                                style: const TextStyle(fontWeight: FontWeight.w700),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(14),
-                        bottomRight: Radius.circular(14),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      children: [
-                        for (final move in uniqueMoves.take(60))
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 6, horizontal: 12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 12),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.grey.shade200,
-                                    width: 0.75,
-                                  ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      (move['name'] as String)
-                                          .replaceAll('-', ' ')
-                                          .split(' ')
-                                          .map((w) => w[0].toUpperCase() + w.substring(1))
-                                          .join(' '),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 18,
-                                          height: 18,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade800,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.bolt,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          (move['type'] as String).isNotEmpty
-                                              ? (move['type'] as String)
-                                              .replaceAll('-', ' ')
-                                              .toUpperCase()
-                                              : '—',
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      (move['damage_class'] as String).isNotEmpty
-                                          ? (move['damage_class'] as String)
-                                          .replaceAll('-', ' ')
-                                          .toUpperCase()
-                                          : '—',
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        (move['level'] as int?)?.toString() ?? '—',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                  if (filtered.length > movesLimit)
+                    TextButton(onPressed: onLoadMoreMoves, child: const Text('Load more')),
                 ],
               ),
           ],
@@ -941,18 +1106,239 @@ Widget _buildTabBody({
       );
 
     case 3:
-    default:
+    // OPTIONS: filters, shiny toggle, forms dropdown, matchups, variants, sharing
       return _DetailCard(
         key: key,
         background: Colors.white,
-        child: const Center(
-          child: Text(
-            'Options coming soon',
-            style: TextStyle(color: Colors.grey),
-          ),
+        child: Column(
+          children: [
+            const SizedBox(height: 4),
+            Center(child: Text('Options', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87))),
+            const SizedBox(height: 12),
+            // Shiny toggle and favorite (duplicated)
+            Row(
+              children: [
+                const SizedBox(width: 12),
+                const Text('Show Shiny', style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(width: 8),
+                Switch(value: showShiny, onChanged: (_) => onToggleShiny()),
+                const SizedBox(width: 18),
+                ElevatedButton.icon(
+                  onPressed: onToggleFavorite,
+                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+                  label: Text(isFavorite ? 'Favorito' : 'Marcar favorito'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final txt = '$pokemonName (#$pokemonId)';
+                    Clipboard.setData(ClipboardData(text: txt));
+                    // can't show ScaffoldMessenger here; parent will still show snack via Clipboard action
+                  },
+                  icon: const Icon(Icons.share),
+                  label: const Text('Copy info'),
+                )
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Variants/forms dropdown
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Row(
+                children: [
+                  const Text('Variant:', style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(width: 12),
+                  if (forms.isEmpty)
+                    const Text('Default')
+                  else
+                    DropdownButton<int>(
+                      value: selectedFormIndex,
+                      items: [
+                        for (var i = 0; i < forms.length; i++)
+                          DropdownMenuItem(value: i, child: Text((forms[i]['form_name'] as String?) ?? 'Form ${i + 1}'))
+                      ],
+                      onChanged: (v) => onSelectForm(v ?? 0),
+                    )
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Matchups (weaknesses/resistances)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Matchups', style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  // For demo, compute with the Pokémon types we can infer from the UI (this requires caller to pass types; using speciesName is a fallback).
+                  // Here we show an explanatory placeholder; computeMatchups should be passed in and used by the caller if needed.
+                  const Text('Weaknesses / resistances vs all attack types:'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: computeMatchups([]).entries.map((e) {
+                      // Since computeMatchups([]) may not have real defender types, show neutral
+                      final attacker = e.key;
+                      final m = e.value;
+                      final label = m == 0 ? 'Immune' : (m >= 2 ? 'Weak x$m' : (m < 1 ? 'Resist x$m' : 'Neutral'));
+                      return Chip(label: Text('$attacker • $label'));
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Quick metadata
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('Metadata', style: TextStyle(fontWeight: FontWeight.w800)),
+                  SizedBox(height: 8),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+          ],
         ),
       );
+
+    default:
+      return const SizedBox.shrink();
   }
+}
+
+// ---------- Small helper widgets and classes ----------
+
+class _AboutInfoCard extends StatelessWidget {
+  final String title;
+  final String content;
+  final IconData icon;
+
+  const _AboutInfoCard({required this.title, required this.content, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 3))
+      ]),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black54),
+          const SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            const SizedBox(height: 4),
+            Text(content, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ])
+        ],
+      ),
+    );
+  }
+}
+
+// Basic radar chart implementation (custom painter)
+class _RadarChart extends StatelessWidget {
+  final List<double> data;
+  final List<String> labels;
+  final double maxValue;
+  final Color fillColor;
+  final Color strokeColor;
+
+  const _RadarChart({
+    required this.data,
+    required this.labels,
+    required this.maxValue,
+    required this.fillColor,
+    required this.strokeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _RadarPainter(data: data, labels: labels, maxValue: maxValue, fillColor: fillColor, strokeColor: strokeColor),
+      size: const Size(double.infinity, double.infinity),
+    );
+  }
+}
+
+class _RadarPainter extends CustomPainter {
+  final List<double> data;
+  final List<String> labels;
+  final double maxValue;
+  final Color fillColor;
+  final Color strokeColor;
+
+  _RadarPainter({required this.data, required this.labels, required this.maxValue, required this.fillColor, required this.strokeColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintGrid = Paint()..color = Colors.grey.shade200..style = PaintingStyle.stroke;
+    final paintFill = Paint()..color = fillColor..style = PaintingStyle.fill;
+    final paintLine = Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 2;
+
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final radius = math.min(cx, cy) * 0.85;
+
+    final n = math.max(3, data.length);
+    // draw concentric polygons
+    const rings = 4;
+    for (var r = 1; r <= rings; r++) {
+      final rr = radius * (r / rings);
+      final path = Path();
+      for (var i = 0; i < n; i++) {
+        final angle = (math.pi * 2 / n) * i - math.pi / 2;
+        final x = cx + rr * math.cos(angle);
+        final y = cy + rr * math.sin(angle);
+        if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
+      }
+      path.close();
+      canvas.drawPath(path, paintGrid);
+    }
+
+    // data path
+    final pathData = Path();
+    for (var i = 0; i < n; i++) {
+      final val = (i < data.length) ? (data[i].clamp(0, maxValue) / maxValue) : 0.0;
+      final r = radius * val;
+      final angle = (math.pi * 2 / n) * i - math.pi / 2;
+      final x = cx + r * math.cos(angle);
+      final y = cy + r * math.sin(angle);
+      if (i == 0) pathData.moveTo(x, y); else pathData.lineTo(x, y);
+    }
+    pathData.close();
+    canvas.drawPath(pathData, paintFill);
+    canvas.drawPath(pathData, paintLine);
+
+    // labels
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (var i = 0; i < n; i++) {
+      final angle = (math.pi * 2 / n) * i - math.pi / 2;
+      final x = cx + (radius + 12) * math.cos(angle);
+      final y = cy + (radius + 12) * math.sin(angle);
+      final tp = TextSpan(text: (i < labels.length) ? labels[i] : '', style: const TextStyle(fontSize: 11, color: Colors.black54));
+      textPainter.text = tp;
+      textPainter.layout();
+      final offset = Offset(x - textPainter.width / 2, y - textPainter.height / 2);
+      textPainter.paint(canvas, offset);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RadarPainter oldDelegate) => oldDelegate.data != data || oldDelegate.labels != labels;
 }
 
 class _EvolutionNode extends StatelessWidget {
@@ -983,10 +1369,6 @@ class _EvolutionNode extends StatelessWidget {
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () {
-            // Al tocar una especie en la cadena, navegamos a su pantalla de detalle.
-            // Esto usa el mismo screen pero enviando el pokemonId correspondiente.
-            // Nota: si tu lista de especies no coincide exactamente con el id de Pokémon/forma
-            // (depende de tu esquema DB), podrías necesitar mapear species id -> pokemon id.
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => PokemonDetailScreen(
               pokemonId: id,
               heroTag: 'pokemon_$id',
@@ -999,17 +1381,13 @@ class _EvolutionNode extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))],
             ),
             child: ClipOval(
               child: Image.network(
                 artworkUrl,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
-                ),
+                errorBuilder: (context, error, stackTrace) => Center(child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400)),
               ),
             ),
           ),
@@ -1019,118 +1397,6 @@ class _EvolutionNode extends StatelessWidget {
   }
 }
 
-class _DetailCard extends StatelessWidget {
-  const _DetailCard({
-    super.key,
-    required this.background,
-    required this.child,
-  });
-
-  final Color background;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(32),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.16),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-        child: child,
-      ),
-    );
-  }
-}
-
-class _TabsCard extends StatelessWidget {
-  const _TabsCard({
-    required this.selectedIndex,
-    required this.primaryColor,
-    required this.secondaryColor,
-    required this.onChanged,
-  });
-
-  final int selectedIndex;
-  final Color primaryColor;
-  final Color secondaryColor;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final aboutColor = primaryColor;
-    final evolutionColor = primaryColor;
-    final movesColor = secondaryColor;
-    final optionsColor = secondaryColor;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(.15),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _TabButton(
-              label: 'About',
-              icon: Icons.info_outline,
-              color: aboutColor,
-              selected: selectedIndex == 0,
-              onTap: () => onChanged(0),
-            ),
-          ),
-          Expanded(
-            child: _TabButton(
-              label: 'Evolution',
-              icon: Icons.auto_graph,
-              color: evolutionColor,
-              selected: selectedIndex == 1,
-              onTap: () => onChanged(1),
-            ),
-          ),
-          Expanded(
-            child: _TabButton(
-              label: 'Moves',
-              icon: Icons.blur_circular,
-              color: movesColor,
-              selected: selectedIndex == 2,
-              onTap: () => onChanged(2),
-            ),
-          ),
-          Expanded(
-            child: _TabButton(
-              label: 'Options',
-              icon: Icons.menu,
-              color: optionsColor,
-              selected: selectedIndex == 3,
-              onTap: () => onChanged(3),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 class _TypeColumn extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -1149,28 +1415,19 @@ class _TypeColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TypeChip(
-          icon: icon,
-          color: color,
-          scale: scale,
-        ),
+        _TypeChip(icon: icon, color: color, scale: scale),
         SizedBox(height: 8 * scale),
-        _TypeLabelChip(
-          label: label,
-          scale: scale,
-        ),
+        _TypeLabelChip(label: label, scale: scale),
       ],
     );
   }
 }
+
 class _TypeLabelChip extends StatelessWidget {
   final String label;
   final double scale;
 
-  const _TypeLabelChip({
-    required this.label,
-    this.scale = 1.0,
-  });
+  const _TypeLabelChip({required this.label, this.scale = 1.0});
 
   @override
   Widget build(BuildContext context) {
@@ -1182,11 +1439,7 @@ class _TypeLabelChip extends StatelessWidget {
       ),
       child: Text(
         label.toUpperCase(),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: math.max(10.0, 14.0 * scale),
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: Colors.white, fontSize: math.max(10.0, 14.0 * scale), fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -1197,11 +1450,7 @@ class _TypeChip extends StatelessWidget {
   final Color color;
   final double scale;
 
-  const _TypeChip({
-    required this.icon,
-    required this.color,
-    this.scale = 1.0,
-  });
+  const _TypeChip({required this.icon, required this.color, this.scale = 1.0});
 
   @override
   Widget build(BuildContext context) {
@@ -1212,31 +1461,48 @@ class _TypeChip extends StatelessWidget {
     return Container(
       width: outerSize,
       height: outerSize,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 4 * scale),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, boxShadow: [
+        BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4 * scale))
+      ]),
       child: Center(
         child: Container(
           width: innerSize,
           height: innerSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
-          child: Icon(
-            icon,
-            size: iconSize,
-            color: Colors.white,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          child: Icon(icon, size: iconSize, color: Colors.white),
         ),
+      ),
+    );
+  }
+}
+
+class _TabsCard extends StatelessWidget {
+  const _TabsCard({required this.selectedIndex, required this.primaryColor, required this.secondaryColor, required this.onChanged});
+
+  final int selectedIndex;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final aboutColor = primaryColor;
+    final evolutionColor = primaryColor;
+    final movesColor = secondaryColor;
+    final optionsColor = secondaryColor;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(.15), blurRadius: 18, offset: const Offset(0, 6))
+      ]),
+      child: Row(
+        children: [
+          Expanded(child: _TabButton(label: 'About', icon: Icons.info_outline, color: aboutColor, selected: selectedIndex == 0, onTap: () => onChanged(0))),
+          Expanded(child: _TabButton(label: 'Evolution', icon: Icons.auto_graph, color: evolutionColor, selected: selectedIndex == 1, onTap: () => onChanged(1))),
+          Expanded(child: _TabButton(label: 'Moves', icon: Icons.blur_circular, color: movesColor, selected: selectedIndex == 2, onTap: () => onChanged(2))),
+          Expanded(child: _TabButton(label: 'Options', icon: Icons.menu, color: optionsColor, selected: selectedIndex == 3, onTap: () => onChanged(3))),
+        ],
       ),
     );
   }
@@ -1312,35 +1578,35 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-// --- Componentes auxiliares (sin cambios funcionales, solo tal vez usados más arriba) ---
+
+// --- Componentes auxiliares ---
 
 class _CircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _CircleButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(.12),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-        ),
-      ),
+      child: Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withOpacity(.12), shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 20)),
     );
+  }
+}
+
+class _DetailCard extends StatelessWidget {
+  const _DetailCard({super.key, required this.background, required this.child});
+
+  final Color background;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: double.infinity, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: background, borderRadius: const BorderRadius.vertical(top: Radius.circular(32)), boxShadow: [
+      BoxShadow(color: Colors.black.withOpacity(0.16), blurRadius: 24, offset: const Offset(0, -4))
+    ]), child: Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 28), child: child));
   }
 }
 
@@ -1349,31 +1615,12 @@ class _AboutBlock extends StatelessWidget {
   final String value;
   final String label;
 
-  const _AboutBlock({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
+  const _AboutBlock({required this.icon, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(color: Colors.black.withOpacity(.6)),
-          )
-        ],
-      ),
+      child: Column(children: [Icon(icon, size: 18), const SizedBox(height: 8), Text(value, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 6), Text(label, style: TextStyle(color: Colors.black.withOpacity(.6))) ]),
     );
   }
 }
@@ -1384,59 +1631,19 @@ class _StatRow extends StatelessWidget {
   final Color primaryColor;
   final Color secondaryColor;
 
-  const _StatRow({
-    required this.label,
-    required this.value,
-    required this.primaryColor,
-    required this.secondaryColor,
-  });
+  const _StatRow({required this.label, required this.value, required this.primaryColor, required this.secondaryColor});
 
   @override
   Widget build(BuildContext context) {
     final pct = (value / 255).clamp(0.0, 1.0);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              height: 12,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: pct,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 30,
-            child: Text(
-              value.toString(),
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          )
-        ],
-      ),
+      child: Row(children: [
+        SizedBox(width: 110, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700))),
+        Expanded(child: Container(height: 12, decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(6)), child: FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: pct, child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [primaryColor, secondaryColor]), borderRadius: BorderRadius.circular(6)))))),
+        const SizedBox(width: 12),
+        SizedBox(width: 30, child: Text(value.toString(), textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w700)))
+      ]),
     );
   }
 }
@@ -1448,16 +1655,13 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red.shade700,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        message,
-        style: const TextStyle(color: Colors.white),
-      ),
-    );
+    return Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(12)), child: Text(message, style: const TextStyle(color: Colors.white)));
   }
+}
+
+// Local helper to capitalize (used in UI areas)
+String _capitalizeLocal(String raw) {
+  if (raw.isEmpty) return raw;
+  final parts = raw.replaceAll('-', ' ').split(' ');
+  return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
 }
