@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class PokemonOptionsModal extends StatelessWidget {
   const PokemonOptionsModal({
     Key? key,
+    required this.baseColor,
+    required this.secondaryColor,
     required this.initialShowShiny,
     required this.initialIsFavorite,
     required this.onlyLevelUp,
@@ -15,6 +17,8 @@ class PokemonOptionsModal extends StatelessWidget {
     required this.onToggleOnlyLevelUp,
   }) : super(key: key);
 
+  final Color baseColor;
+  final Color secondaryColor;
   final bool initialShowShiny;
   final bool initialIsFavorite;
   final bool onlyLevelUp;
@@ -35,77 +39,145 @@ class PokemonOptionsModal extends StatelessWidget {
         // Make corners rounded and use a subtle elevation look
         decoration: BoxDecoration(
           color: theme.dialogBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 18, offset: const Offset(0, -6)),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle
-            Container(
-              width: 44,
-              height: 6,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(6)),
+            // Improved drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
 
-            // Title + Close
+            // Title with icon
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Expanded(
-                  child: Text('Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Icon(Icons.tune, size: 22, color: baseColor),
+                const SizedBox(width: 8),
+                const Text(
+                  'Options',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                )
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 20),
 
-            // Toggle shiny + Favorite
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.auto_awesome, color: Colors.deepPurple),
-                    title: const Text('Show shiny'),
-                    subtitle: const Text('Toggle shiny sprite when available'),
-                    trailing: Switch(
-                      value: initialShowShiny,
-                      onChanged: (_) {
-                        onToggleShiny();
-                        // Keep modal open so user sees the change
-                      },
+            // Shiny toggle card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  // Icon with colored background
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: baseColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.auto_awesome, color: baseColor),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Show Shiny',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Toggle shiny sprite',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: initialIsFavorite ? Colors.red.shade50 : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(10),
+                  // Styled switch
+                  Switch(
+                    value: initialShowShiny,
+                    activeColor: baseColor,
+                    onChanged: (_) => onToggleShiny(),
                   ),
-                  child: IconButton(
-                    tooltip: initialIsFavorite ? 'Remove favorite' : 'Add to favorites',
-                    onPressed: () {
-                      onToggleFavorite();
-                    },
-                    icon: Icon(initialIsFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: initialIsFavorite ? Colors.red : Colors.black54),
-                  ),
-                )
-              ],
+                ],
+              ),
             ),
 
-            const Divider(height: 18),
+            const SizedBox(height: 12),
 
+            // Favorites card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: initialIsFavorite ? Colors.red.shade50 : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: initialIsFavorite ? Colors.red.shade200 : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: initialIsFavorite ? Colors.red.withOpacity(0.15) : Colors.grey.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      initialIsFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: initialIsFavorite ? Colors.red : Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          initialIsFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Save this Pokémon for quick access',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onToggleFavorite,
+                    icon: Icon(
+                      initialIsFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: initialIsFavorite ? Colors.red : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-],
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
