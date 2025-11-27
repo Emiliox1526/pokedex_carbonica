@@ -716,6 +716,9 @@ const Color _kStatBarBackgroundColor = Color(0xFFF5B5C8);
 // Maximum number of abilities to display in the About tab
 const int _kMaxAbilitiesToShow = 2;
 
+// Height of the radar chart container
+const double _kRadarChartHeight = 280.0;
+
 // This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
@@ -954,7 +957,7 @@ Widget _buildTabBody({
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
-                  height: 280,
+                  height: _kRadarChartHeight,
                   child: _RadarChart(
                     data: stats.map((s) => (s['value'] as int).toDouble()).toList(),
                     labels: stats.map((s) => getAbbreviatedStatName(s['name'] as String)).toList(),
@@ -1473,6 +1476,7 @@ class _RadarPainter extends CustomPainter {
   bool shouldRepaint(covariant _RadarPainter oldDelegate) =>
       oldDelegate.data != data ||
       oldDelegate.labels != labels ||
+      oldDelegate.maxValue != maxValue ||
       oldDelegate.baseColor != baseColor ||
       oldDelegate.secondaryColor != secondaryColor;
 }
