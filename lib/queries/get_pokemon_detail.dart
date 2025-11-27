@@ -14,10 +14,10 @@ query PokemonDetail($id: Int!) {
 
     # Forms / Variants (if present)
     pokemon_v2_pokemonforms {
-      form_name
-      form_identifier
-      is_default
-    }
+  name        
+  form_name
+  is_default
+}
 
     # Abilities: include is_hidden and effect texts
     pokemon_v2_pokemonabilities {
@@ -28,7 +28,7 @@ query PokemonDetail($id: Int!) {
         # Effect texts (short_effect) in multiple languages if available
         pokemon_v2_abilityeffecttexts {
           short_effect
-          language {
+          pokemon_v2_language {
             name
           }
         }
@@ -71,7 +71,7 @@ query PokemonDetail($id: Int!) {
     # Species: egg groups and evolutionary chain
     pokemon_v2_pokemonspecy {
       # egg groups
-      pokemon_v2_pokemonspecies_egg_groups {
+      pokemon_v2_pokemonegggroups {
         pokemon_v2_egggroup {
           name
         }
