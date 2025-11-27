@@ -688,6 +688,9 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 // Stats bar background color (pink/magenta)
 const Color _kStatBarBackgroundColor = Color(0xFFF5B5C8);
 
+// Maximum number of abilities to display in the About tab
+const int _kMaxAbilitiesToShow = 2;
+
 // This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
@@ -857,7 +860,7 @@ Widget _buildTabBody({
                       children: [
                         Column(
                           children: [
-                            for (final name in abilityNames.take(2))
+                            for (final name in abilityNames.take(_kMaxAbilitiesToShow))
                               Text(
                                 name,
                                 style: TextStyle(
