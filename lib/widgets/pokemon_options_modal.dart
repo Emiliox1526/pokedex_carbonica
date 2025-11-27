@@ -810,21 +810,3 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
     return typeColors[type.toLowerCase()] ?? Colors.grey;
   }
 }
-
-// Widget helper para AnimatedBuilder
-class AnimatedBuilder extends AnimatedWidget {
-  final Widget Function(BuildContext context, Widget? child) builder;
-  final Widget? child;
-
-  const AnimatedBuilder({
-    Key? key,
-    required Animation<double> animation,
-    required this.builder,
-    this. child,
-  }) : super(key: key, listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, child);
-  }
-}
