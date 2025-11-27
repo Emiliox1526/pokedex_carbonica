@@ -67,8 +67,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   int _movesCurrentPage = 0;
   int _movesPerPage = 10;
 
-  // Selected form index
+  // Selected form index for tab-based form selection
   int _selectedFormIndex = 0;
+  
+  // Form selection state for dropdown-based selection
+  int? _selectedFormId;
+  List<PokemonFormVariant> _availableForms = [];
 
   // SharedPreferences key
   static const _prefsKeyFavorites = 'favorite_pokemon_ids';
@@ -110,13 +114,13 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     );
   }
 
-  void _openOptionsModal(Color baseColor, Color secondaryColor) {
+  void _openOptionsModal(Color baseColor, Color secondaryColor, String pokemonName) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => FractionallySizedBox(
-        heightFactor: 0.50,
+        heightFactor: _availableForms.length > 1 ? 0.65 : 0.50,
         child: PokemonOptionsModal(
           baseColor: baseColor,
           secondaryColor: secondaryColor,
@@ -135,9 +139,190 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           }),
           onChangeMovesSort: (s) => setState(() => _movesSort = s),
           onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
+          // New parameters for form selection
+          availableForms: _availableForms,
+          selectedFormId: _selectedFormId,
+          onFormSelected: _onFormSelected,
+          pokemonName: pokemonName,
         ),
       ),
     );
+  }
+
+  /// Handle form selection from the options modal
+  void _onFormSelected(PokemonFormVariant form) {
+    setState(() {
+      _selectedFormId = form.id;
+    });
+    // Load data for the selected form
+    _loadFormData(form);
+  }
+
+  /// Load data for a specific form variant
+  void _loadFormData(PokemonFormVariant form) {
+    // Update the selected form ID
+    // The UI will use the form's sprites and types from the availableForms list
+    setState(() {
+      _selectedFormId = form.id;
+    });
+  }
+
+  /// Build available forms list from Pokemon data
+  List<PokemonFormVariant> _buildAvailableForms(Map<String, dynamic> pokemon) {
+    final List<PokemonFormVariant> forms = [];
+    final speciesObj = pokemon['pokemon_v2_pokemonspecy'] as Map<String, dynamic>?;
+    
+    if (speciesObj == null) return forms;
+    
+    final pokemonVariants = (speciesObj['pokemon_v2_pokemons'] as List?) ?? [];
+    final speciesName = (speciesObj['name'] as String?) ?? '';
+    
+    for (final variant in pokemonVariants) {
+      final variantId = (variant['id'] as int?) ?? 0;
+      final variantName = (variant['name'] as String?) ?? '';
+      final variantForms = (variant['pokemon_v2_pokemonforms'] as List?) ?? [];
+      
+      // Get types from the variant
+      final variantTypes = ((variant['pokemon_v2_pokemontypes'] as List?) ?? [])
+          .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+          .where((t) => t.isNotEmpty)
+          .cast<String>()
+          .toList();
+      
+      // Get sprites from variant
+      final variantSprites = _extractSpriteUrlsFromPokemon(variant);
+      
+      for (final form in variantForms) {
+        final formId = (form['id'] as int?) ?? variantId;
+        final formName = (form['form_name'] as String?) ?? '';
+        final isDefault = (form['is_default'] as bool?) ?? false;
+        final isMega = (form['is_mega'] as bool?) ?? false;
+        
+        // Get form-specific types if available
+        final formTypes = ((form['pokemon_v2_pokemonformtypes'] as List?) ?? [])
+            .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? '')
+            .where((t) => t.isNotEmpty)
+            .cast<String>()
+            .toList();
+        
+        // Get form-specific sprites if available
+        final formSprites = _extractFormSprites(form);
+        
+        // Determine the category
+        PokemonFormCategory category;
+        if (isMega) {
+          category = PokemonFormCategory.mega;
+        } else {
+          category = PokemonFormVariant.getCategoryFromName(formName.isNotEmpty ? formName : variantName);
+        }
+        
+        // Build display name
+        String displayName;
+        if (formName.isEmpty || isDefault) {
+          displayName = _capitalize(speciesName);
+        } else {
+          displayName = '${category.displayName} ${_capitalize(speciesName)}';
+        }
+        
+        forms.add(PokemonFormVariant(
+          id: formId,
+          name: formName.isNotEmpty ? formName : variantName,
+          displayName: displayName,
+          category: category,
+          pokemonId: variantId,
+          spriteUrl: formSprites['default'] ?? variantSprites['default'],
+          shinySpriteUrl: formSprites['shiny'] ?? variantSprites['shiny'],
+          types: formTypes.isNotEmpty ? formTypes : variantTypes,
+        ));
+      }
+      
+      // If no forms, add the variant itself
+      if (variantForms.isEmpty) {
+        final category = PokemonFormVariant.getCategoryFromName(variantName);
+        String displayName;
+        if (variantName == speciesName) {
+          displayName = _capitalize(speciesName);
+        } else {
+          displayName = '${category.displayName} ${_capitalize(speciesName)}';
+        }
+        
+        forms.add(PokemonFormVariant(
+          id: variantId,
+          name: variantName,
+          displayName: displayName,
+          category: category,
+          pokemonId: variantId,
+          spriteUrl: variantSprites['default'],
+          shinySpriteUrl: variantSprites['shiny'],
+          types: variantTypes,
+        ));
+      }
+    }
+    
+    // Sort forms: default first, then by category
+    forms.sort((a, b) {
+      if (a.category == PokemonFormCategory.defaultForm && b.category != PokemonFormCategory.defaultForm) {
+        return -1;
+      }
+      if (b.category == PokemonFormCategory.defaultForm && a.category != PokemonFormCategory.defaultForm) {
+        return 1;
+      }
+      return a.category.index.compareTo(b.category.index);
+    });
+    
+    return forms;
+  }
+
+  /// Extract sprites from a Pokemon variant
+  Map<String, String?> _extractSpriteUrlsFromPokemon(Map<String, dynamic> pokemon) {
+    final spriteList = pokemon['pokemon_v2_pokemonsprites'] as List?;
+    if (spriteList == null || spriteList.isEmpty) return {'default': null, 'shiny': null};
+    final raw = spriteList.first['sprites'];
+    if (raw == null) return {'default': null, 'shiny': null};
+    Map<String, dynamic> decoded;
+    if (raw is String) {
+      try {
+        decoded = json.decode(raw) as Map<String, dynamic>;
+      } catch (_) {
+        return {'default': null, 'shiny': null};
+      }
+    } else if (raw is Map<String, dynamic>) {
+      decoded = raw;
+    } else {
+      return {'default': null, 'shiny': null};
+    }
+    final defaultUrl =
+        decoded['other']?['official-artwork']?['front_default'] ??
+            decoded['other']?['home']?['front_default'] ??
+            decoded['front_default'];
+    final shinyUrl =
+        decoded['other']?['official-artwork']?['front_shiny'] ??
+            decoded['other']?['home']?['front_shiny'] ??
+            decoded['front_shiny'];
+    return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
+  }
+
+  /// Extract sprites from a form object
+  Map<String, String?> _extractFormSprites(Map<String, dynamic> form) {
+    final spritesList = form['pokemon_v2_pokemonformsprites'] as List?;
+    if (spritesList == null || spritesList.isEmpty) return {'default': null, 'shiny': null};
+    final raw = spritesList.first['sprites'];
+    if (raw == null) return {'default': null, 'shiny': null};
+    Map<String, dynamic> decoded;
+    if (raw is String) {
+      try {
+        decoded = json.decode(raw) as Map<String, dynamic>;
+      } catch (_) {
+        return {'default': null, 'shiny': null};
+      }
+    } else if (raw is Map<String, dynamic>) {
+      decoded = raw;
+    } else {
+      return {'default': null, 'shiny': null};
+    }
+    final defaultUrl = decoded['front_default'];
+    final shinyUrl = decoded['front_shiny'];
+    return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
   }
 
   static const Map<String, Color> _typeColor = _kTypeColor;
@@ -406,7 +591,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           final shinyImageUrl = spriteUrls['shiny'];
           final displayedImageUrl = _showShiny ? (shinyImageUrl ?? defaultImageUrl) : (defaultImageUrl ?? shinyImageUrl);
 
-          // Forms (variants)
+          // Forms (variants) - Build available forms list
           final forms = ((pokemon['pokemon_v2_pokemonforms'] as List?) ?? [])
               .map((f) {
             return {
@@ -416,6 +601,51 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             };
           })
               .toList(growable: false);
+
+          // Build available forms from species data (for the dropdown)
+          final newAvailableForms = _buildAvailableForms(pokemon);
+          if (_availableForms.isEmpty && newAvailableForms.isNotEmpty) {
+            // Initialize forms list (only once to avoid rebuilding on every frame)
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _availableForms.isEmpty) {
+                setState(() {
+                  _availableForms = newAvailableForms;
+                  // Set the default selected form
+                  if (_selectedFormId == null && newAvailableForms.isNotEmpty) {
+                    final defaultForm = newAvailableForms.firstWhere(
+                      (f) => f.category == PokemonFormCategory.defaultForm,
+                      orElse: () => newAvailableForms.first,
+                    );
+                    _selectedFormId = defaultForm.id;
+                  }
+                });
+              }
+            });
+          }
+
+          // Get current selected form data for display
+          PokemonFormVariant? currentForm;
+          if (_availableForms.isNotEmpty && _selectedFormId != null) {
+            try {
+              currentForm = _availableForms.firstWhere((f) => f.id == _selectedFormId);
+            } catch (_) {
+              currentForm = _availableForms.first;
+            }
+          }
+
+          // Use selected form's sprite if available
+          String? displayedFormImageUrl;
+          String? displayedFormShinyUrl;
+          if (currentForm != null) {
+            displayedFormImageUrl = currentForm.spriteUrl ?? defaultImageUrl;
+            displayedFormShinyUrl = currentForm.shinySpriteUrl ?? shinyImageUrl;
+          } else {
+            displayedFormImageUrl = defaultImageUrl;
+            displayedFormShinyUrl = shinyImageUrl;
+          }
+          final finalDisplayedImageUrl = _showShiny 
+              ? (displayedFormShinyUrl ?? displayedFormImageUrl) 
+              : (displayedFormImageUrl ?? displayedFormShinyUrl);
 
           // Abilities: include name, is_hidden, short_effect (english)
           final abilities = ((pokemon['pokemon_v2_pokemonabilities'] as List?) ?? []).map((a) {
@@ -620,7 +850,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               IconButton(
                                 onPressed: () {
                                   // share: copy to clipboard
-                                  final txt = '$pokemonName $idLabel\n${displayedImageUrl ?? _artworkUrlForId(pokemon['id'] as int)}';
+                                  final txt = '$pokemonName $idLabel\n${finalDisplayedImageUrl ?? _artworkUrlForId(pokemon['id'] as int)}';
                                   Clipboard.setData(ClipboardData(text: txt));
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied Pokémon info to clipboard')));
                                 },
@@ -676,12 +906,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                               duration: const Duration(milliseconds: 300),
                                               crossFadeState: _showShiny ? CrossFadeState.showSecond : CrossFadeState.showFirst,
                                               firstChild: Image.network(
-                                                defaultImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
+                                                displayedFormImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
                                                 fit: BoxFit.contain,
                                                 errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
                                               ),
                                               secondChild: Image.network(
-                                                shinyImageUrl ?? defaultImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
+                                                displayedFormShinyUrl ?? displayedFormImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
                                                 fit: BoxFit.contain,
                                                 errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
                                               ),
@@ -722,7 +952,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                             primaryColor: baseColor,
                             secondaryColor: secondaryColor,
                             onChanged: _onTabSelected,
-                            onOptionsPressed: () => _openOptionsModal(baseColor, secondaryColor),
+                            onOptionsPressed: () => _openOptionsModal(baseColor, secondaryColor, pokemonName),
                           ),
                           const SizedBox(height: 18),
 
