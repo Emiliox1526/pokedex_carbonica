@@ -8,6 +8,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../queries/get_pokemon_detail.dart';
+import '../widgets/pokemon_options_modal.dart';
 
 class PokemonDetailScreen extends StatefulWidget {
   const PokemonDetailScreen({
@@ -78,6 +79,32 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     // small feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites')),
+    );
+  }
+
+  void _openOptionsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => FractionallySizedBox(
+        heightFactor: 0.62,
+        child: PokemonOptionsModal(
+          initialShowShiny: _showShiny,
+          initialIsFavorite: _isFavorite,
+          onlyLevelUp: _onlyLevelUp,
+          movesMethod: _movesMethodFilter,
+          movesSort: _movesSort,
+          onToggleShiny: () => setState(() => _showShiny = !_showShiny),
+          onToggleFavorite: _toggleFavorite,
+          onChangeMovesMethod: (m) => setState(() {
+            _movesMethodFilter = m;
+            _movesLimit = 20;
+          }),
+          onChangeMovesSort: (s) => setState(() => _movesSort = s),
+          onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
+        ),
+      ),
     );
   }
 
@@ -314,6 +341,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                 padding: const EdgeInsets.all(24.0),
                 child: _ErrorBanner(
                   message: 'Error loading Pokémon details:\n${result.exception}',
+                  onRetry: refetch,
                 ),
               ),
             );
@@ -472,8 +500,16 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w800,
+                                    shadows: [
+                                      Shadow(color: Colors.black.withOpacity(0.3), offset: const Offset(1, 2), blurRadius: 4),
+                                    ],
                                   ),
                                 ),
+                              ),
+                              IconButton(
+                                onPressed: _openOptionsModal,
+                                tooltip: 'Options',
+                                icon: const Icon(Icons.tune, color: Colors.white),
                               ),
                               IconButton(
                                 onPressed: _toggleFavorite,
@@ -539,13 +575,20 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                             ],
                                           ),
                                           child: ClipOval(
-                                            child: displayedImageUrl != null
-                                                ? Image.network(
-                                              displayedImageUrl,
-                                              fit: BoxFit.contain,
-                                              errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
-                                            )
-                                                : Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
+                                            child: AnimatedCrossFade(
+                                              duration: const Duration(milliseconds: 300),
+                                              crossFadeState: _showShiny ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                                              firstChild: Image.network(
+                                                defaultImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
+                                              ),
+                                              secondChild: Image.network(
+                                                shinyImageUrl ?? defaultImageUrl ?? _artworkUrlForId(pokemon['id'] as int),
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (c, e, s) => Image.network(_artworkUrlForId(pokemon['id'] as int), fit: BoxFit.contain),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -744,45 +787,43 @@ Widget _buildTabBody({
                   const Text('Abilities', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
                   const SizedBox(height: 8),
                   for (final ab in abilities)
-                    Container(
+                    Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      _capitalizeLocal(ab['name'] as String),
-                                      style: const TextStyle(fontWeight: FontWeight.w700),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    if (ab['is_hidden'] as bool)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black87,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Text('Hidden', style: TextStyle(color: Colors.white, fontSize: 12)),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  (ab['short_effect'] as String).isNotEmpty ? (ab['short_effect'] as String) : 'No description available.',
-                                  style: TextStyle(color: Colors.black.withOpacity(.7)),
-                                ),
-                              ],
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: Icon(
+                          (ab['is_hidden'] as bool) ? Icons.visibility_off : Icons.auto_awesome,
+                          color: (ab['is_hidden'] as bool) ? Colors.grey : baseColor,
+                        ),
+                        title: Row(
+                          children: [
+                            Text(
+                              _capitalizeLocal(ab['name'] as String),
+                              style: const TextStyle(fontWeight: FontWeight.w700),
                             ),
-                          )
+                            const SizedBox(width: 8),
+                            if (ab['is_hidden'] as bool)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black87,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text('Hidden', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              ),
+                          ],
+                        ),
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              (ab['short_effect'] as String).isNotEmpty ? (ab['short_effect'] as String) : 'No description available.',
+                              style: TextStyle(color: Colors.black.withOpacity(.7)),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -837,6 +878,44 @@ Widget _buildTabBody({
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  // Linear progress bars for each stat
+                  for (final s in stats)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              (s['name'] as String),
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: ((s['value'] as int) / 255).clamp(0.0, 1.0),
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(baseColor),
+                                minHeight: 8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 30,
+                            child: Text(
+                              '${(s['value'] as int)}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1101,114 +1180,6 @@ Widget _buildTabBody({
                     TextButton(onPressed: onLoadMoreMoves, child: const Text('Load more')),
                 ],
               ),
-          ],
-        ),
-      );
-
-    case 3:
-    // OPTIONS: filters, shiny toggle, forms dropdown, matchups, variants, sharing
-      return _DetailCard(
-        key: key,
-        background: Colors.white,
-        child: Column(
-          children: [
-            const SizedBox(height: 4),
-            Center(child: Text('Options', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87))),
-            const SizedBox(height: 12),
-            // Shiny toggle and favorite (duplicated)
-            Row(
-              children: [
-                const SizedBox(width: 12),
-                const Text('Show Shiny', style: TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(width: 8),
-                Switch(value: showShiny, onChanged: (_) => onToggleShiny()),
-                const SizedBox(width: 18),
-                ElevatedButton.icon(
-                  onPressed: onToggleFavorite,
-                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-                  label: Text(isFavorite ? 'Favorito' : 'Marcar favorito'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final txt = '$pokemonName (#$pokemonId)';
-                    Clipboard.setData(ClipboardData(text: txt));
-                    // can't show ScaffoldMessenger here; parent will still show snack via Clipboard action
-                  },
-                  icon: const Icon(Icons.share),
-                  label: const Text('Copy info'),
-                )
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Variants/forms dropdown
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Row(
-                children: [
-                  const Text('Variant:', style: TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(width: 12),
-                  if (forms.isEmpty)
-                    const Text('Default')
-                  else
-                    DropdownButton<int>(
-                      value: selectedFormIndex,
-                      items: [
-                        for (var i = 0; i < forms.length; i++)
-                          DropdownMenuItem(value: i, child: Text((forms[i]['form_name'] as String?) ?? 'Form ${i + 1}'))
-                      ],
-                      onChanged: (v) => onSelectForm(v ?? 0),
-                    )
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Matchups (weaknesses/resistances)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Matchups', style: TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  // For demo, compute with the Pokémon types we can infer from the UI (this requires caller to pass types; using speciesName is a fallback).
-                  // Here we show an explanatory placeholder; computeMatchups should be passed in and used by the caller if needed.
-                  const Text('Weaknesses / resistances vs all attack types:'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: computeMatchups([]).entries.map((e) {
-                      // Since computeMatchups([]) may not have real defender types, show neutral
-                      final attacker = e.key;
-                      final m = e.value;
-                      final label = m == 0 ? 'Immune' : (m >= 2 ? 'Weak x$m' : (m < 1 ? 'Resist x$m' : 'Neutral'));
-                      return Chip(label: Text('$attacker • $label'));
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Quick metadata
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Metadata', style: TextStyle(fontWeight: FontWeight.w800)),
-                  SizedBox(height: 8),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
           ],
         ),
       );
@@ -1489,7 +1460,6 @@ class _TabsCard extends StatelessWidget {
     final aboutColor = primaryColor;
     final evolutionColor = primaryColor;
     final movesColor = secondaryColor;
-    final optionsColor = secondaryColor;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1501,7 +1471,6 @@ class _TabsCard extends StatelessWidget {
           Expanded(child: _TabButton(label: 'About', icon: Icons.info_outline, color: aboutColor, selected: selectedIndex == 0, onTap: () => onChanged(0))),
           Expanded(child: _TabButton(label: 'Evolution', icon: Icons.auto_graph, color: evolutionColor, selected: selectedIndex == 1, onTap: () => onChanged(1))),
           Expanded(child: _TabButton(label: 'Moves', icon: Icons.blur_circular, color: movesColor, selected: selectedIndex == 2, onTap: () => onChanged(2))),
-          Expanded(child: _TabButton(label: 'Options', icon: Icons.menu, color: optionsColor, selected: selectedIndex == 3, onTap: () => onChanged(3))),
         ],
       ),
     );
@@ -1650,12 +1619,34 @@ class _StatRow extends StatelessWidget {
 
 class _ErrorBanner extends StatelessWidget {
   final String message;
+  final VoidCallback? onRetry;
 
-  const _ErrorBanner({required this.message});
+  const _ErrorBanner({required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
-    return Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(12)), child: Text(message, style: const TextStyle(color: Colors.white)));
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, style: const TextStyle(color: Colors.white)),
+          if (onRetry != null) ...[
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.red.shade700,
+              ),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
