@@ -226,9 +226,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             decoded['front_shiny'] ??
             decoded['front_female'] ??
             decoded['back_default'];
-    final shinyUrl = decoded['front_shiny'] ??
-        decoded['other']?['home']?['front_shiny'] ??
-        decoded['other']?['official-artwork']?['front_shiny'];
+    final shinyUrl =
+        decoded['other']?['official-artwork']?['front_shiny'] ??
+            decoded['other']?['home']?['front_shiny'] ??
+            decoded['front_shiny'];
     return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
   }
 
