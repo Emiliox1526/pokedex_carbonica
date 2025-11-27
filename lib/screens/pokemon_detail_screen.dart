@@ -475,7 +475,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                       if (spritesData is String) {
                         try {
                           spritesMap = json.decode(spritesData) as Map<String, dynamic>?;
-                        } catch (_) {}
+                        } catch (e) {
+                          // Log decode error in debug mode for troubleshooting
+                          if (kDebugMode) {
+                            debugPrint('Failed to decode item sprites JSON: $e');
+                          }
+                        }
                       } else if (spritesData is Map<String, dynamic>) {
                         spritesMap = spritesData;
                       }
@@ -1547,8 +1552,7 @@ Widget _buildTabBody({
         // Build TM/HM label (e.g., "TM01", "HM03")
         String? tmLabel;
         if (isMachine && tmNumber != null) {
-          // Check if it's an HM (typically numbers 1-8 in certain games)
-          // or determine from tmName if available
+          // Determine if it's an HM based on the item name
           final isHm = tmName != null && tmName.toLowerCase().startsWith('hm');
           final prefix = isHm ? 'HM' : 'TM';
           tmLabel = '$prefix${tmNumber.toString().padLeft(2, '0')}';
