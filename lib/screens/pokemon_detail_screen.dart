@@ -689,10 +689,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               movesList: movesList,
                               pokemonName: pokemonName,
                               pokemonId: pokemon['id'] as int,
-                              computeMatchups: (types) => _computeMatchups(types),
+                              computeMatchups: (t) => _computeMatchups(t),
                               // Height in meters, weight in kg (converted from dm and hg)
                               heightMeters: heightMeters,
                               weightKg: weightKg,
+                              types: types,
                             ),
                           ),
                         ],
@@ -753,6 +754,7 @@ Widget _buildTabBody({
   required Map<String, double> Function(List<String>) computeMatchups,
   required double heightMeters,
   required double weightKg,
+  required List<String> types,
   String? description,
 }) {
   switch (tabIndex) {
@@ -969,6 +971,143 @@ Widget _buildTabBody({
               ),
 
             const SizedBox(height: 12),
+
+            // Type Matchups section
+            Builder(
+              builder: (context) {
+                // Calculate matchups
+                final matchups = computeMatchups(types);
+                
+                // Group types by multiplier
+                final List<String> x4Types = [];
+                final List<String> x2Types = [];
+                final List<String> x05Types = [];
+                final List<String> x025Types = [];
+                final List<String> x0Types = [];
+                
+                for (final entry in matchups.entries) {
+                  final multiplier = entry.value;
+                  if (multiplier == 4.0) {
+                    x4Types.add(entry.key);
+                  } else if (multiplier == 2.0) {
+                    x2Types.add(entry.key);
+                  } else if (multiplier == 0.5) {
+                    x05Types.add(entry.key);
+                  } else if (multiplier == 0.25) {
+                    x025Types.add(entry.key);
+                  } else if (multiplier == 0.0) {
+                    x0Types.add(entry.key);
+                  }
+                }
+                
+                // Type color map (same as in main class)
+                const Map<String, Color> typeColor = {
+                  "normal": Color(0xFF9BA0A8),
+                  "fire": Color(0xFFFF6B3D),
+                  "water": Color(0xFF4C90FF),
+                  "electric": Color(0xFFFFD037),
+                  "grass": Color(0xFF6BD64A),
+                  "ice": Color(0xFF64DDF8),
+                  "fighting": Color(0xFFE34343),
+                  "poison": Color(0xFFB24ADD),
+                  "ground": Color(0xFFE2B36B),
+                  "flying": Color(0xFFA890F7),
+                  "psychic": Color(0xFFFF4888),
+                  "bug": Color(0xFF88C12F),
+                  "rock": Color(0xFFC9B68B),
+                  "ghost": Color(0xFF6F65D8),
+                  "dragon": Color(0xFF7366FF),
+                  "dark": Color(0xFF5A5A5A),
+                  "steel": Color(0xFF8AA4C1),
+                  "fairy": Color(0xFFFF78D5),
+                };
+                
+                // Build type chip widget
+                Widget buildTypeChip(String typeName) {
+                  final color = typeColor[typeName] ?? Colors.grey;
+                  return Container(
+                    margin: const EdgeInsets.only(right: 6, bottom: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      typeName.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                }
+                
+                // Build a row for a multiplier category
+                Widget buildMatchupRow(String label, List<String> typesList) {
+                  if (typesList.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          children: typesList.map((t) => buildTypeChip(t)).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                // Check if there's anything to show
+                final hasMatchups = x4Types.isNotEmpty || 
+                                    x2Types.isNotEmpty || 
+                                    x05Types.isNotEmpty || 
+                                    x025Types.isNotEmpty || 
+                                    x0Types.isNotEmpty;
+                
+                if (!hasMatchups) return const SizedBox.shrink();
+                
+                return Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        'Type Matchups',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildMatchupRow('x4 (Super Weak)', x4Types),
+                          buildMatchupRow('x2 (Weak)', x2Types),
+                          buildMatchupRow('x0.5 (Resistant)', x05Types),
+                          buildMatchupRow('x0.25 (Very Resistant)', x025Types),
+                          buildMatchupRow('x0 (Immune)', x0Types),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       );
