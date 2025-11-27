@@ -27,15 +27,29 @@ dependencies:
   # Tipografía moderna (Google Fonts)
   google_fonts: ^6.2.1
 
-  # Manejo de estados (opcional, recomendado)
+  # Manejo de estados con Riverpod
+  flutter_riverpod: ^2.4.0
+  riverpod_annotation: ^2.3.0
+  
+  # Cache local con Hive
+  hive_flutter: ^1.1.0
+  
+  # Verificación de conectividad
+  connectivity_plus: ^5.0.0
+  
+  # Provider mantenido para compatibilidad con otras pantallas
   provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-
   flutter_lints: ^6.0.0
+  
+  # Generadores de código para Riverpod y Hive
+  riverpod_generator: ^2.3.0
+  build_runner: ^2.4.0
+  hive_generator: ^2.0.0
 
 flutter:
   uses-material-design: true
