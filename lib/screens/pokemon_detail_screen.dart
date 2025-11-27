@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -938,7 +939,7 @@ Widget _buildTabBody({
             ),
             const SizedBox(height: 16),
 
-            // Stats list with progress bars
+            // Radar Chart for stats
             if (stats.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -952,57 +953,15 @@ Widget _buildTabBody({
             else
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    for (final s in stats)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            // Stat label (abbreviated)
-                            SizedBox(
-                              width: 45,
-                              child: Text(
-                                getAbbreviatedStatName(s['name'] as String),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                  color: baseColor,
-                                ),
-                              ),
-                            ),
-                            // Vertical separator line
-                            Container(
-                              width: 1,
-                              height: 16,
-                              color: Colors. grey.shade300,
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                            // Stat value (padded with zeros)
-                            SizedBox(
-                              width: 32,
-                              child: Text(
-                                (s['value'] as int).toString(). padLeft(3, '0'),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Progress bar with two colors
-                            Expanded(
-                              child: _TwoColorProgressBar(
-                                value: (s['value'] as int) / 255,
-                                fillColor: baseColor,
-                                backgroundColor: _kStatBarBackgroundColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+                child: SizedBox(
+                  height: 280,
+                  child: _RadarChart(
+                    data: stats.map((s) => (s['value'] as int).toDouble()).toList(),
+                    labels: stats.map((s) => getAbbreviatedStatName(s['name'] as String)).toList(),
+                    maxValue: 255,
+                    baseColor: baseColor,
+                    secondaryColor: secondaryColor,
+                  ),
                 ),
               ),
 
@@ -1306,26 +1265,32 @@ class _AboutInfoCard extends StatelessWidget {
   }
 }
 
-// Basic radar chart implementation (custom painter)
+// Enhanced radar chart implementation with gradients (custom painter)
 class _RadarChart extends StatelessWidget {
   final List<double> data;
   final List<String> labels;
   final double maxValue;
-  final Color fillColor;
-  final Color strokeColor;
+  final Color baseColor;
+  final Color secondaryColor;
 
   const _RadarChart({
     required this.data,
     required this.labels,
     required this.maxValue,
-    required this.fillColor,
-    required this.strokeColor,
+    required this.baseColor,
+    required this.secondaryColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _RadarPainter(data: data, labels: labels, maxValue: maxValue, fillColor: fillColor, strokeColor: strokeColor),
+      painter: _RadarPainter(
+        data: data,
+        labels: labels,
+        maxValue: maxValue,
+        baseColor: baseColor,
+        secondaryColor: secondaryColor,
+      ),
       size: const Size(double.infinity, double.infinity),
     );
   }
@@ -1335,23 +1300,46 @@ class _RadarPainter extends CustomPainter {
   final List<double> data;
   final List<String> labels;
   final double maxValue;
-  final Color fillColor;
-  final Color strokeColor;
+  final Color baseColor;
+  final Color secondaryColor;
 
-  _RadarPainter({required this.data, required this.labels, required this.maxValue, required this.fillColor, required this.strokeColor});
+  _RadarPainter({
+    required this.data,
+    required this.labels,
+    required this.maxValue,
+    required this.baseColor,
+    required this.secondaryColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paintGrid = Paint()..color = Colors.grey.shade200..style = PaintingStyle.stroke;
-    final paintFill = Paint()..color = fillColor..style = PaintingStyle.fill;
-    final paintLine = Paint()..color = strokeColor..style = PaintingStyle.stroke..strokeWidth = 2;
-
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final radius = math.min(cx, cy) * 0.85;
+    final radius = math.min(cx, cy) * 0.65;
 
     final n = math.max(3, data.length);
-    // draw concentric polygons
+
+    // Paint for concentric ring guides (gray background lines)
+    final paintGrid = Paint()
+      ..color = Colors.grey.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Paint for radial lines from center to vertices
+    final paintRadialLines = Paint()
+      ..color = Colors.grey.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Draw radial lines from center to each vertex
+    for (var i = 0; i < n; i++) {
+      final angle = (math.pi * 2 / n) * i - math.pi / 2;
+      final x = cx + radius * math.cos(angle);
+      final y = cy + radius * math.sin(angle);
+      canvas.drawLine(Offset(cx, cy), Offset(x, y), paintRadialLines);
+    }
+
+    // Draw concentric hexagonal/polygonal ring guides
     const rings = 4;
     for (var r = 1; r <= rings; r++) {
       final rr = radius * (r / rings);
@@ -1360,42 +1348,122 @@ class _RadarPainter extends CustomPainter {
         final angle = (math.pi * 2 / n) * i - math.pi / 2;
         final x = cx + rr * math.cos(angle);
         final y = cy + rr * math.sin(angle);
-        if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
       }
       path.close();
       canvas.drawPath(path, paintGrid);
     }
 
-    // data path
+    // Build the data polygon path and collect vertex points
     final pathData = Path();
+    final List<Offset> dataPoints = [];
     for (var i = 0; i < n; i++) {
       final val = (i < data.length) ? (data[i].clamp(0, maxValue) / maxValue) : 0.0;
       final r = radius * val;
       final angle = (math.pi * 2 / n) * i - math.pi / 2;
       final x = cx + r * math.cos(angle);
       final y = cy + r * math.sin(angle);
-      if (i == 0) pathData.moveTo(x, y); else pathData.lineTo(x, y);
+      dataPoints.add(Offset(x, y));
+      if (i == 0) {
+        pathData.moveTo(x, y);
+      } else {
+        pathData.lineTo(x, y);
+      }
     }
     pathData.close();
-    canvas.drawPath(pathData, paintFill);
-    canvas.drawPath(pathData, paintLine);
 
-    // labels
+    // Create gradient paint for fill - yellow/orange at top to pink/coral at bottom
+    // Using baseColor and secondaryColor from Pokemon type for coherence
+    final gradientColors = [
+      Color.lerp(const Color(0xFFFFD54F), baseColor, 0.3) ?? const Color(0xFFFFD54F), // Yellow/orange tint
+      Color.lerp(const Color(0xFFFF8A80), secondaryColor, 0.3) ?? const Color(0xFFFF8A80), // Pink/coral tint
+    ];
+
+    final paintGradientFill = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(cx, cy - radius), // Top
+        Offset(cx, cy + radius), // Bottom
+        gradientColors,
+      )
+      ..style = PaintingStyle.fill;
+
+    // Draw the gradient fill with transparency
+    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+    canvas.drawPath(pathData, paintGradientFill..color = paintGradientFill.color.withOpacity(0.7));
+    canvas.restore();
+
+    // Draw the data polygon fill with gradient
+    canvas.drawPath(pathData, paintGradientFill);
+
+    // Draw the data polygon border/stroke
+    final paintStroke = Paint()
+      ..color = Color.lerp(baseColor, secondaryColor, 0.5)?.withOpacity(0.8) ?? baseColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawPath(pathData, paintStroke);
+
+    // Draw small black circles at each vertex of the data polygon
+    final paintVertex = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.fill;
+    for (final point in dataPoints) {
+      canvas.drawCircle(point, 4, paintVertex);
+    }
+
+    // Draw central circle
+    final paintCenterCircle = Paint()
+      ..color = Colors.grey.shade400
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, cy), 4, paintCenterCircle);
+
+    // Draw external labels
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
     for (var i = 0; i < n; i++) {
       final angle = (math.pi * 2 / n) * i - math.pi / 2;
-      final x = cx + (radius + 12) * math.cos(angle);
-      final y = cy + (radius + 12) * math.sin(angle);
-      final tp = TextSpan(text: (i < labels.length) ? labels[i] : '', style: const TextStyle(fontSize: 11, color: Colors.black54));
+      // Position labels further out from the chart
+      final labelRadius = radius + 24;
+      final x = cx + labelRadius * math.cos(angle);
+      final y = cy + labelRadius * math.sin(angle);
+
+      final label = (i < labels.length) ? labels[i] : '';
+      final tp = TextSpan(
+        text: label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade700,
+        ),
+      );
       textPainter.text = tp;
       textPainter.layout();
-      final offset = Offset(x - textPainter.width / 2, y - textPainter.height / 2);
-      textPainter.paint(canvas, offset);
+
+      // Adjust offset based on position for better alignment
+      double offsetX = x - textPainter.width / 2;
+      double offsetY = y - textPainter.height / 2;
+
+      // Fine-tune positioning based on angle
+      if (angle > -math.pi / 4 && angle < math.pi / 4) {
+        // Top area - move up slightly
+        offsetY -= 4;
+      } else if (angle > 3 * math.pi / 4 || angle < -3 * math.pi / 4) {
+        // Bottom area - move down slightly
+        offsetY += 4;
+      }
+
+      textPainter.paint(canvas, Offset(offsetX, offsetY));
     }
   }
 
   @override
-  bool shouldRepaint(covariant _RadarPainter oldDelegate) => oldDelegate.data != data || oldDelegate.labels != labels;
+  bool shouldRepaint(covariant _RadarPainter oldDelegate) =>
+      oldDelegate.data != data ||
+      oldDelegate.labels != labels ||
+      oldDelegate.baseColor != baseColor ||
+      oldDelegate.secondaryColor != secondaryColor;
 }
 
 class _EvolutionNode extends StatelessWidget {
