@@ -507,11 +507,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                                 ),
                               ),
                               IconButton(
-                                onPressed: _openOptionsModal,
-                                tooltip: 'Options',
-                                icon: const Icon(Icons.tune, color: Colors.white),
-                              ),
-                              IconButton(
                                 onPressed: _toggleFavorite,
                                 icon: AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 220),
@@ -625,6 +620,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                             primaryColor: baseColor,
                             secondaryColor: secondaryColor,
                             onChanged: _onTabSelected,
+                            onOptionsPressed: _openOptionsModal,
                           ),
                           const SizedBox(height: 18),
 
@@ -1448,18 +1444,20 @@ class _TypeChip extends StatelessWidget {
 }
 
 class _TabsCard extends StatelessWidget {
-  const _TabsCard({required this.selectedIndex, required this.primaryColor, required this.secondaryColor, required this.onChanged});
+  const _TabsCard({required this.selectedIndex, required this.primaryColor, required this.secondaryColor, required this.onChanged, this.onOptionsPressed});
 
   final int selectedIndex;
   final Color primaryColor;
   final Color secondaryColor;
   final ValueChanged<int> onChanged;
+  final VoidCallback? onOptionsPressed;
 
   @override
   Widget build(BuildContext context) {
     final aboutColor = primaryColor;
     final evolutionColor = primaryColor;
     final movesColor = secondaryColor;
+    final optionsColor = secondaryColor;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1471,6 +1469,7 @@ class _TabsCard extends StatelessWidget {
           Expanded(child: _TabButton(label: 'About', icon: Icons.info_outline, color: aboutColor, selected: selectedIndex == 0, onTap: () => onChanged(0))),
           Expanded(child: _TabButton(label: 'Evolution', icon: Icons.auto_graph, color: evolutionColor, selected: selectedIndex == 1, onTap: () => onChanged(1))),
           Expanded(child: _TabButton(label: 'Moves', icon: Icons.blur_circular, color: movesColor, selected: selectedIndex == 2, onTap: () => onChanged(2))),
+          Expanded(child: _TabButton(label: 'Options', icon: Icons.tune, color: optionsColor, selected: false, onTap: onOptionsPressed ?? () {})),
         ],
       ),
     );
