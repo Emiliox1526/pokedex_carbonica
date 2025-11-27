@@ -110,14 +110,16 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     );
   }
 
-  void _openOptionsModal() {
+  void _openOptionsModal(Color baseColor, Color secondaryColor) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => FractionallySizedBox(
-        heightFactor: 0.62,
+        heightFactor: 0.50,
         child: PokemonOptionsModal(
+          baseColor: baseColor,
+          secondaryColor: secondaryColor,
           initialShowShiny: _showShiny,
           initialIsFavorite: _isFavorite,
           onlyLevelUp: _onlyLevelUp,
@@ -720,7 +722,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                             primaryColor: baseColor,
                             secondaryColor: secondaryColor,
                             onChanged: _onTabSelected,
-                            onOptionsPressed: _openOptionsModal,
+                            onOptionsPressed: () => _openOptionsModal(baseColor, secondaryColor),
                           ),
                           const SizedBox(height: 18),
 
