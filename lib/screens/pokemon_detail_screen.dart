@@ -331,24 +331,35 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           widget.initialPokemon != null ? FetchPolicy.cacheAndNetwork : FetchPolicy.cacheFirst,
         ),
         builder: (result, {fetchMore, refetch}) {
+          // 1. Loading: si no hay datos todavía, muestra el loader
           if (result.isLoading && result.data == null && widget.initialPokemon == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (result.hasException && widget.initialPokemon == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: _ErrorBanner(
-                  message: 'Error loading Pokémon details:\n${result.exception}',
-                  onRetry: refetch,
+          // 2. Manejo de error
+          if (result.hasException) {
+            // Si NO tienes initialPokemon, muestra el banner de error como antes
+            if (widget.initialPokemon == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: _ErrorBanner(
+                    message: 'Error loading Pokémon details:\n${result.exception}',
+                    onRetry: refetch,
+                  ),
                 ),
-              ),
-            );
+              );
+            } else {
+              // Si SÍ tienes initialPokemon, avisa en consola al menos
+              debugPrint('Error loading Pokémon details: ${result.exception}');
+              // seguimos usando initialPokemon como fallback visual
+            }
           }
 
-          final pokemon = result.data?['pokemon_v2_pokemon_by_pk'] as Map<String, dynamic>? ??
-              widget.initialPokemon;
+          // 3. Tomar primero lo que venga de la query; si falla, usar initialPokemon
+          final pokemonFromQuery =
+          result.data?['pokemon_v2_pokemon_by_pk'] as Map<String, dynamic>?;
+          final pokemon = pokemonFromQuery ?? widget.initialPokemon;
 
           if (pokemon == null) {
             return const Center(child: Text('Pokémon not found'));
@@ -412,16 +423,21 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             };
           }).toList();
 
-          // Stats
-          final stats = ((pokemon['pokemon_v2_pokemonstats'] as List?) ?? [])
-              .map((s) => {
-            'name': formatStatName(s['pokemon_v2_stat']?['name'] as String? ?? ''),
-            'value': s['base_stat'] as int? ?? 0,
-          })
-              .where((s) => (s['name'] as String).isNotEmpty)
-              .toList();
+          // Stats - CORREGIDO
+          final rawStats = (pokemon['pokemon_v2_pokemonstats'] as List?) ?? [];
+          final List<Map<String, dynamic>> stats = [];
+          for (final s in rawStats) {
+            final statObj = s['pokemon_v2_stat'];
+            final statName = statObj? ['name'] as String?  ?? '';
+            final baseStat = s['base_stat'] as int?  ?? 0;
+            if (statName.isNotEmpty) {
+              stats.add({
+                'name': formatStatName(statName),
+                'value': baseStat,
+              });
+            }
+          }
           final totalStats = stats.fold<int>(0, (prev, s) => prev + (s['value'] as int));
-
           // Moves: include learn method, type, damage_class, version group id, level
           final rawMoves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? []).map((m) {
             final mv = m['pokemon_v2_move'] as Map<String, dynamic>?;
@@ -732,7 +748,7 @@ Widget _buildTabBody({
   switch (tabIndex) {
     case 0:
     // ABOUT - Redesigned to match reference design
-      // Helper to get abbreviated stat name
+    // Helper to get abbreviated stat name
       String getAbbreviatedStatName(String name) {
         switch (name) {
           case 'HP':
@@ -789,7 +805,7 @@ Widget _buildTabBody({
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.balance, size: 18, color: Colors.grey.shade700),
+                            Icon(Icons.balance, size: 18, color: Colors.grey. shade700),
                             const SizedBox(width: 6),
                             Text(
                               '${weightKg.toStringAsFixed(1)} kg',
@@ -832,7 +848,7 @@ Widget _buildTabBody({
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade800,
+                                color: Colors.grey. shade800,
                               ),
                             ),
                           ],
@@ -851,7 +867,7 @@ Widget _buildTabBody({
                   // Vertical divider
                   Container(
                     width: 1,
-                    color: Colors.grey.shade300,
+                    color: Colors.grey. shade300,
                   ),
                   // Abilities column
                   Expanded(
@@ -860,7 +876,7 @@ Widget _buildTabBody({
                       children: [
                         Column(
                           children: [
-                            for (final name in abilityNames.take(_kMaxAbilitiesToShow))
+                            for (final name in abilityNames. take(_kMaxAbilitiesToShow))
                               Text(
                                 name,
                                 style: TextStyle(
@@ -873,7 +889,7 @@ Widget _buildTabBody({
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Moves',
+                          'Abilities',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade500,
@@ -889,7 +905,7 @@ Widget _buildTabBody({
             const SizedBox(height: 24),
 
             // Description section (shown if description is provided)
-            if (description != null && description.isNotEmpty)
+            if (description != null && description. isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 24.0),
                 child: Text(
@@ -897,7 +913,7 @@ Widget _buildTabBody({
                   textAlign: TextAlign.justify,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade700,
+                    color: Colors. grey.shade700,
                     height: 1.4,
                   ),
                 ),
@@ -917,61 +933,72 @@ Widget _buildTabBody({
             const SizedBox(height: 16),
 
             // Stats list with progress bars
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  for (final s in stats)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          // Stat label (abbreviated)
-                          SizedBox(
-                            width: 45,
-                            child: Text(
-                              getAbbreviatedStatName(s['name'] as String),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
+            if (stats.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Center(
+                  child: Text(
+                    'No stats available',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  children: [
+                    for (final s in stats)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            // Stat label (abbreviated)
+                            SizedBox(
+                              width: 45,
+                              child: Text(
+                                getAbbreviatedStatName(s['name'] as String),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: baseColor,
+                                ),
                               ),
                             ),
-                          ),
-                          // Vertical separator line
-                          Container(
-                            width: 1,
-                            height: 16,
-                            color: Colors.grey.shade300,
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                          // Stat value (padded with zeros)
-                          SizedBox(
-                            width: 32,
-                            child: Text(
-                              (s['value'] as int).toString().padLeft(3, '0'),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
+                            // Vertical separator line
+                            Container(
+                              width: 1,
+                              height: 16,
+                              color: Colors. grey.shade300,
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                            // Stat value (padded with zeros)
+                            SizedBox(
+                              width: 32,
+                              child: Text(
+                                (s['value'] as int).toString(). padLeft(3, '0'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Progress bar with two colors
-                          Expanded(
-                            child: _TwoColorProgressBar(
-                              value: (s['value'] as int) / 255,
-                              fillColor: baseColor,
-                              backgroundColor: _kStatBarBackgroundColor,
+                            const SizedBox(width: 8),
+                            // Progress bar with two colors
+                            Expanded(
+                              child: _TwoColorProgressBar(
+                                value: (s['value'] as int) / 255,
+                                fillColor: baseColor,
+                                backgroundColor: _kStatBarBackgroundColor,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             const SizedBox(height: 12),
           ],
