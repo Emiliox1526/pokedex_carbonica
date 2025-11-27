@@ -448,16 +448,58 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             }
           }
           final totalStats = stats.fold<int>(0, (prev, s) => prev + (s['value'] as int));
-          // Moves: include learn method, type, damage_class, version group id, level
+          // Moves: include learn method, type, damage_class, version group id, level, TM/HM info
           final rawMoves = ((pokemon['pokemon_v2_pokemonmoves'] as List?) ?? []).map((m) {
             final mv = m['pokemon_v2_move'] as Map<String, dynamic>?;
+            final moveType = mv?['pokemon_v2_type']?['name'] as String? ?? '';
+            
+            // Extract TM/HM information
+            String? tmName;
+            int? tmNumber;
+            String? tmSpriteUrl;
+            final machines = (mv?['pokemon_v2_machines'] as List?) ?? [];
+            if (machines.isNotEmpty) {
+              // Use the first machine entry (typically the most recent version)
+              final machine = machines.first as Map<String, dynamic>?;
+              if (machine != null) {
+                tmNumber = machine['machine_number'] as int?;
+                final item = machine['pokemon_v2_item'] as Map<String, dynamic>?;
+                if (item != null) {
+                  tmName = item['name'] as String?;
+                  // Try to get sprite from item sprites
+                  final itemSprites = (item['pokemon_v2_itemsprites'] as List?) ?? [];
+                  if (itemSprites.isNotEmpty) {
+                    final spritesData = itemSprites.first['sprites'];
+                    if (spritesData != null) {
+                      Map<String, dynamic>? spritesMap;
+                      if (spritesData is String) {
+                        try {
+                          spritesMap = json.decode(spritesData) as Map<String, dynamic>?;
+                        } catch (_) {}
+                      } else if (spritesData is Map<String, dynamic>) {
+                        spritesMap = spritesData;
+                      }
+                      tmSpriteUrl = spritesMap?['default'] as String?;
+                    }
+                  }
+                }
+              }
+            }
+            // Fallback sprite URL based on move type
+            tmSpriteUrl ??= moveType.isNotEmpty
+                ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-$moveType.png'
+                : null;
+            
             return {
               'name': mv?['name'] as String? ?? '',
-              'type': mv?['pokemon_v2_type']?['name'] as String? ?? '',
+              'type': moveType,
               'damage_class': mv?['pokemon_v2_movedamageclass']?['name'] as String? ?? '',
               'level': m['level'] as int?,
               'method': m['pokemon_v2_movelearnmethod']?['name'] as String? ?? '',
               'version_group_id': m['version_group_id'] as int?,
+              'tm_name': tmName,
+              'tm_number': tmNumber,
+              'tm_sprite_url': tmSpriteUrl,
             };
           }).where((m) => (m['name'] as String).isNotEmpty).toList();
 
@@ -1396,11 +1438,9 @@ Widget _buildTabBody({
 
     case 2:
     // MOVES - Redesigned with modern UI and page-based pagination
-    // Apply filters (method and onlyLevelUp)
+    // Apply filters by method
       List<Map<String, dynamic>> filtered = List.from(movesList);
-      if (onlyLevelUp) {
-        filtered = filtered.where((m) => (m['method'] as String?) == 'level-up').toList();
-      } else if (movesMethodFilter.isNotEmpty) {
+      if (movesMethodFilter.isNotEmpty) {
         filtered = filtered.where((m) => (m['method'] as String?) == movesMethodFilter).toList();
       }
       if (movesSort == 'level') {
@@ -1497,6 +1537,25 @@ Widget _buildTabBody({
         final level = mv['level'] as int?;
         final method = (mv['method'] as String?) ?? '';
         final isLevelUp = method == 'level-up';
+        final isMachine = method == 'machine';
+        
+        // TM/HM info
+        final tmName = mv['tm_name'] as String?;
+        final tmNumber = mv['tm_number'] as int?;
+        final tmSpriteUrl = mv['tm_sprite_url'] as String?;
+        
+        // Build TM/HM label (e.g., "TM01", "HM03")
+        String? tmLabel;
+        if (isMachine && tmNumber != null) {
+          // Check if it's an HM (typically numbers 1-8 in certain games)
+          // or determine from tmName if available
+          final isHm = tmName != null && tmName.toLowerCase().startsWith('hm');
+          final prefix = isHm ? 'HM' : 'TM';
+          tmLabel = '$prefix${tmNumber.toString().padLeft(2, '0')}';
+        } else if (isMachine && tmName != null) {
+          // Use the name directly if no number
+          tmLabel = tmName.toUpperCase().replaceAll('-', '');
+        }
         
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
@@ -1535,6 +1594,50 @@ Widget _buildTabBody({
                         color: baseColor,
                       ),
                     ),
+                  ),
+                )
+              // TM/HM image and label (for machine moves)
+              else if (isMachine)
+                Container(
+                  width: 48,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // TM/HM disc image
+                      if (tmSpriteUrl != null)
+                        Image.network(
+                          tmSpriteUrl,
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback icon colored by move type
+                            final typeColor = _kTypeColor[moveType.toLowerCase()] ?? Colors.grey;
+                            return Icon(
+                              Icons.album,
+                              size: 32,
+                              color: typeColor,
+                            );
+                          },
+                        )
+                      else
+                        Icon(
+                          Icons.album,
+                          size: 32,
+                          color: _kTypeColor[moveType.toLowerCase()] ?? Colors.grey,
+                        ),
+                      // TM/HM label
+                      if (tmLabel != null)
+                        Text(
+                          tmLabel,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                    ],
                   ),
                 )
               else

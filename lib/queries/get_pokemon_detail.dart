@@ -61,6 +61,21 @@ query PokemonDetail($id: Int!) {
         pokemon_v2_movedamageclass {
           name
         }
+        # TM/HM information
+        pokemon_v2_machines {
+          machine_number
+          pokemon_v2_item {
+            id
+            name
+            pokemon_v2_itemsprites {
+              sprites
+            }
+          }
+          pokemon_v2_versiongroup {
+            name
+            generation_id
+          }
+        }
       }
       pokemon_v2_movelearnmethod {
         name
