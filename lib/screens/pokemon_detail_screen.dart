@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
@@ -464,8 +465,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           final weightKg = weightHg / 10.0; // convert hg to kg
           final baseExperience = (pokemon['base_experience'] as int?) ?? 0;
           
-          // Debug logging for height/weight validation
-          debugPrint('Pokemon ${pokemon['name']}: height=$heightDm dm (${heightMeters}m), weight=$weightHg hg (${weightKg}kg)');
+          // Debug logging for height/weight validation (only in debug mode)
+          if (kDebugMode) {
+            debugPrint('Pokemon ${pokemon['name']}: height=$heightDm dm (${heightMeters}m), weight=$weightHg hg (${weightKg}kg)');
+          }
 
           // Evolution species (from initial query)
           final speciesObj = pokemon['pokemon_v2_pokemonspecy'] as Map<String, dynamic>?;
@@ -656,8 +659,6 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               tabIndex: _selectedTab,
                               baseColor: baseColor,
                               secondaryColor: secondaryColor,
-                              height: heightDm,
-                              weight: weightHg,
                               baseExperience: baseExperience,
                               abilities: abilities,
                               stats: stats,
@@ -719,8 +720,6 @@ Widget _buildTabBody({
   required int tabIndex,
   required Color baseColor,
   required Color secondaryColor,
-  required int height,
-  required int weight,
   required int baseExperience,
   required List<Map<String, dynamic>> abilities,
   required List<Map<String, dynamic>> stats,
