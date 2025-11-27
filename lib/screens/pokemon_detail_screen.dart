@@ -73,6 +73,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   // Form selection state for dropdown-based selection
   int? _selectedFormId;
   List<PokemonFormVariant> _availableForms = [];
+  
+  // Form data state - stores complete data for the selected form variant
+  Map<String, dynamic>? _currentFormData;
+  bool _isLoadingFormData = false;
 
   // SharedPreferences key
   static const _prefsKeyFavorites = 'favorite_pokemon_ids';
@@ -151,6 +155,15 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 
   /// Handle form selection from the options modal
   void _onFormSelected(PokemonFormVariant form) {
+    // If selecting the same form or the base Pokemon form, just update selection
+    if (form.pokemonId == widget.pokemonId) {
+      setState(() {
+        _selectedFormId = form.id;
+        _currentFormData = null; // Use original data
+      });
+      return;
+    }
+    
     setState(() {
       _selectedFormId = form.id;
     });
@@ -158,13 +171,58 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     _loadFormData(form);
   }
 
-  /// Load data for a specific form variant
-  void _loadFormData(PokemonFormVariant form) {
-    // Update the selected form ID
-    // The UI will use the form's sprites and types from the availableForms list
+  /// Load data for a specific form variant using GraphQL
+  Future<void> _loadFormData(PokemonFormVariant form) async {
+    // Skip if loading the base Pokemon (we already have that data)
+    if (form.pokemonId == widget.pokemonId) {
+      setState(() {
+        _currentFormData = null;
+      });
+      return;
+    }
+
     setState(() {
-      _selectedFormId = form.id;
+      _isLoadingFormData = true;
     });
+
+    try {
+      final client = GraphQLProvider.of(context).value;
+      final result = await client.query(
+        QueryOptions(
+          document: gql(getFormDetailQuery),
+          variables: {'pokemonId': form.pokemonId},
+          fetchPolicy: FetchPolicy.cacheFirst,
+        ),
+      );
+
+      if (result.hasException) {
+        debugPrint('Error loading form data: ${result.exception}');
+        if (mounted) {
+          setState(() {
+            _isLoadingFormData = false;
+          });
+        }
+        return;
+      }
+
+      final formData = result.data?['pokemon_v2_pokemon_by_pk'] as Map<String, dynamic>?;
+      
+      if (mounted) {
+        setState(() {
+          _currentFormData = formData;
+          _isLoadingFormData = false;
+          // Reset moves pagination when form changes
+          _movesCurrentPage = 0;
+        });
+      }
+    } catch (e) {
+      debugPrint('Exception loading form data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingFormData = false;
+        });
+      }
+    }
   }
 
   /// Build available forms list from Pokemon data
@@ -601,11 +659,15 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           // 3. Tomar primero lo que venga de la query; si falla, usar initialPokemon
           final pokemonFromQuery =
           result.data?['pokemon_v2_pokemon_by_pk'] as Map<String, dynamic>?;
-          final pokemon = pokemonFromQuery ?? widget.initialPokemon;
+          final basePokemon = pokemonFromQuery ?? widget.initialPokemon;
 
-          if (pokemon == null) {
+          if (basePokemon == null) {
             return const Center(child: Text('Pokémon not found'));
           }
+          
+          // Use form data if available, otherwise use base Pokemon data
+          // This allows the UI to update when a different form is selected
+          final pokemon = _currentFormData ?? basePokemon;
 
           // --- Identity
           final pokemonName = (pokemon['name'] as String? ?? 'Unknown')
@@ -646,8 +708,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               .toList(growable: false);
 
           // Build available forms from species data (for the dropdown)
-          // Build available forms from species data (for the dropdown)
-          final newAvailableForms = _buildAvailableForms(pokemon);
+          // Always use basePokemon since it has the complete species/variants data
+          final newAvailableForms = _buildAvailableForms(basePokemon);
 
 // Inicializar formas sincrónicamente para evitar parpadeo
 // Usamos variables locales para el render actual
@@ -1099,6 +1161,46 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                       ),
                     ),
                   ),
+                  // Loading indicator overlay when form data is being fetched
+                  if (_isLoadingFormData)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(baseColor),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Loading form data...',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
