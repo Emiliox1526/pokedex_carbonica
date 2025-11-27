@@ -7,10 +7,31 @@ query PokemonDetail($id: Int!) {
     weight
     base_experience
 
-    # Habilidades
+    # Sprites (raw JSON stored in DB)
+    pokemon_v2_pokemonsprites {
+      sprites
+    }
+
+    # Forms / Variants (if present)
+    pokemon_v2_pokemonforms {
+      form_name
+      form_identifier
+      is_default
+    }
+
+    # Abilities: include is_hidden and effect texts
     pokemon_v2_pokemonabilities {
+      is_hidden
       pokemon_v2_ability {
+        id
         name
+        # Effect texts (short_effect) in multiple languages if available
+        pokemon_v2_abilityeffecttexts {
+          short_effect
+          language {
+            name
+          }
+        }
       }
     }
 
@@ -21,12 +42,7 @@ query PokemonDetail($id: Int!) {
       }
     }
 
-    # Sprite principal
-    pokemon_v2_pokemonsprites {
-      sprites
-    }
-
-    # Estadísticas base
+    # Estadísticas base (ordenadas)
     pokemon_v2_pokemonstats(order_by: {pokemon_v2_stat: {id: asc}}) {
       base_stat
       pokemon_v2_stat {
@@ -34,7 +50,7 @@ query PokemonDetail($id: Int!) {
       }
     }
 
-    # Movimientos
+    # Movimientos y método (si está disponible)
     pokemon_v2_pokemonmoves(order_by: {pokemon_v2_move: {name: asc}}) {
       level
       pokemon_v2_move {
@@ -43,6 +59,27 @@ query PokemonDetail($id: Int!) {
           name
         }
         pokemon_v2_movedamageclass {
+          name
+        }
+      }
+      pokemon_v2_movelearnmethod {
+        name
+      }
+      version_group_id
+    }
+
+    # Species: egg groups and evolutionary chain
+    pokemon_v2_pokemonspecy {
+      # egg groups
+      pokemon_v2_pokemonspecies_egg_groups {
+        pokemon_v2_egggroup {
+          name
+        }
+      }
+      # evolution chain -> species (ascending order if possible)
+      pokemon_v2_evolutionchain {
+        pokemon_v2_pokemonspecies(order_by: {id: asc}) {
+          id
           name
         }
       }

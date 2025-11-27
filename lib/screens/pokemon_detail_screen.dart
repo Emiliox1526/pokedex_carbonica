@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -266,63 +267,92 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               alignment: Alignment.center,
                               clipBehavior: Clip.none,
                               children: [
-                                Hero(
-                                  tag: widget.heroTag,
-                                  child: Container(
-                                    width: 220,
-                                    height: 220,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.25),
-                                          blurRadius: 24,
-                                          offset: const Offset(0, 12),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipOval(
-                                      child: imageUrl != null
-                                          ? Image.network(
-                                        imageUrl,
-                                        fit: BoxFit.contain,
-                                      )
-                                          : Container(
-                                        color: Colors.white.withOpacity(0.18),
-                                        child: const Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: Colors.white,
-                                          size: 64,
+                                // Usamos LayoutBuilder para ajustar el tamaño de la imagen
+                                // respecto al ancho disponible y escalar los chips en consecuencia.
+                                LayoutBuilder(builder: (context, constraints) {
+                                  // ancho disponible dentro del Column / SingleChildScrollView
+                                  final availableWidth = constraints.maxWidth.isFinite && constraints.maxWidth > 0
+                                      ? constraints.maxWidth
+                                      : MediaQuery.of(context).size.width - 32; // fallback
+
+                                  // Calculamos diámetro de la imagen: depende del ancho disponible.
+                                  // Lógica: intenta usar 220 en pantallas amplias, pero si el espacio es pequeño,
+                                  // reduce el tamaño proporcionalmente. Clamp entre 100 y 320.
+                                  final imageDiameter = math.max(
+                                    100.0,
+                                    math.min(320.0, availableWidth * 0.45),
+                                  );
+
+                                  // escala relativa para chips (1.0 = tamaño base cuando imageDiameter == 220)
+                                  final scale = imageDiameter / 220.0;
+
+                                  // desplazamiento horizontal de los chips para que queden "pegados" a la imagen,
+                                  // pero sin salirse tanto que se corten.
+                                  final chipOffset = imageDiameter * 0.45;
+
+                                  return Stack(
+                                    clipBehavior: Clip.none,
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Hero(
+                                        tag: widget.heroTag,
+                                        child: Container(
+                                          width: imageDiameter,
+                                          height: imageDiameter,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.25),
+                                                blurRadius: 24,
+                                                offset: const Offset(0, 12),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipOval(
+                                            child: imageUrl != null
+                                                ? Image.network(
+                                              imageUrl,
+                                              fit: BoxFit.contain,
+                                            )
+                                                : Container(
+                                              color: Colors.white.withOpacity(0.18),
+                                              child: Icon(
+                                                Icons.image_not_supported_outlined,
+                                                color: Colors.white,
+                                                size: math.max(32.0, 64.0 * scale),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                ),
 
-                                // CHIP IZQUIERDO
+                                      // CHIP IZQUIERDO
+                                      Positioned(
+                                        left: -chipOffset,
+                                        child: _TypeColumn(
+                                          icon: _iconForType(primaryType),
+                                          color: baseColor,
+                                          label: primaryType,
+                                          scale: scale,
+                                        ),
+                                      ),
 
-                                Positioned(
-                                  left: -100,
-                                  child: _TypeColumn(
-                                    icon: _iconForType(primaryType),
-                                    color: baseColor,
-                                    label: primaryType,
-                                  ),
-                                ),
-                                if (secondaryTypeName != null)
-                                  Positioned(
-                                    right: -100,
-                                    child: _TypeColumn(
-                                      icon: _iconForType(secondaryTypeName),
-                                      color: secondaryColor,
-                                      label: secondaryTypeName!,
-                                    ),
-                                  ),
-
+                                      if (secondaryTypeName != null)
+                                        Positioned(
+                                          right: -chipOffset,
+                                          child: _TypeColumn(
+                                            icon: _iconForType(secondaryTypeName),
+                                            color: secondaryColor,
+                                            label: secondaryTypeName!,
+                                            scale: scale,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                }),
                               ],
                             ),
-
-
                           ),
                           const SizedBox(height: 24),
                           _TabsCard(
@@ -885,11 +915,13 @@ class _TypeColumn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label;
+  final double scale;
 
   const _TypeColumn({
     required this.icon,
     required this.color,
     required this.label,
+    this.scale = 1.0,
   });
 
   @override
@@ -900,10 +932,12 @@ class _TypeColumn extends StatelessWidget {
         _TypeChip(
           icon: icon,
           color: color,
+          scale: scale,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8 * scale),
         _TypeLabelChip(
           label: label,
+          scale: scale,
         ),
       ],
     );
@@ -911,24 +945,26 @@ class _TypeColumn extends StatelessWidget {
 }
 class _TypeLabelChip extends StatelessWidget {
   final String label;
+  final double scale;
 
   const _TypeLabelChip({
     required this.label,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 20 * scale, vertical: 8 * scale),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.9), width: 2),
+        borderRadius: BorderRadius.circular(24 * scale),
+        border: Border.all(color: Colors.white.withOpacity(0.9), width: 2 * scale),
       ),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 14,
+          fontSize: math.max(10.0, 14.0 * scale),
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -939,17 +975,23 @@ class _TypeLabelChip extends StatelessWidget {
 class _TypeChip extends StatelessWidget {
   final IconData icon;
   final Color color;
+  final double scale;
 
   const _TypeChip({
     required this.icon,
     required this.color,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final outerSize = 62.0 * scale;
+    final innerSize = 44.0 * scale;
+    final iconSize = 22.0 * scale;
+
     return Container(
-      width: 62,
-      height: 62,
+      width: outerSize,
+      height: outerSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -957,21 +999,21 @@ class _TypeChip extends StatelessWidget {
           BoxShadow(
             color: Colors.black26,
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: Offset(0, 4 * scale),
           ),
         ],
       ),
       child: Center(
         child: Container(
-          width: 44,
-          height: 44,
+          width: innerSize,
+          height: innerSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: color,
           ),
           child: Icon(
             icon,
-            size: 22,
+            size: iconSize,
             color: Colors.white,
           ),
         ),
@@ -997,54 +1039,55 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Color del icono
-    final fg = selected ? Colors.white : Colors.black87;
-
-    // El pill ya NO es todo verde; solo un highlight suave
-    final bg = selected ? color.withOpacity(.18) : Colors.white;
-
-    // Sombra más fuerte cuando está seleccionado
+    final Color ringColor = selected ? color : Colors.grey.shade300;
+    final Color iconBg = Colors.grey.shade900;
+    final Color textColor = selected ? color : Colors.grey.shade700;
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(999),
-
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                // El círculo sí se pinta del color principal cuando está seleccionado
-                color: selected ? color : Colors.white,
-                border: Border.all(
-                  // Anillo solo cuando NO está seleccionado
-                  color: selected ? Colors.transparent : color,
-                  width: 3,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          /// CÍRCULO CON ICONO
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: ringColor,
+                width: 4,
+              ),
+            ),
+            child: Center(
+              child: Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconBg,
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 28,
                 ),
               ),
-              child: Icon(icon, size: 22, color: fg),
             ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected ? color : Colors.black87,
-              ),
+          ),
+
+          const SizedBox(height: 10),
+
+          /// TEXTO DEBAJO
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: textColor,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1052,6 +1095,35 @@ class _TabButton extends StatelessWidget {
 
 
 
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+}
 
 class _AboutBlock extends StatelessWidget {
   final IconData icon;
@@ -1066,38 +1138,33 @@ class _AboutBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: Colors.black87),
-            const SizedBox(width: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Colors.black54,
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(color: Colors.black.withOpacity(.6)),
+          )
+        ],
+      ),
     );
   }
 }
 
 class _StatRow extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color primaryColor;
+  final Color secondaryColor;
+
   const _StatRow({
     required this.label,
     required this.value,
@@ -1105,167 +1172,72 @@ class _StatRow extends StatelessWidget {
     required this.secondaryColor,
   });
 
-  final String label;
-  final int value;
-  final Color primaryColor;
-  final Color secondaryColor;
-
   @override
   Widget build(BuildContext context) {
-    final normalizedValue = value.clamp(0, 255) / 255;
-
+    final pct = (value / 255).clamp(0.0, 1.0);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 6),
       child: Row(
         children: [
           SizedBox(
-            width: 40,
+            width: 110,
             child: Text(
               label,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 30,
-            child: Text(
-              value.toString().padLeft(3, '0'),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+          Expanded(
+            child: Container(
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: pct,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, secondaryColor],
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Stack(
-                children: [
-                  Container(
-                    height: 10,
-                    color: Colors.black.withOpacity(.08),
-                  ),
-                  FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: normalizedValue,
-                    child: Container(
-                      height: 10,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            primaryColor.withOpacity(.95),
-                            secondaryColor.withOpacity(.95),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          SizedBox(
+            width: 30,
+            child: Text(
+              value.toString(),
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-          ),
+          )
         ],
-      ),
-    );
-  }
-}
-
-class _TypeTag extends StatelessWidget {
-  const _TypeTag({
-    required this.label,
-    required this.color,
-    required this.icon,
-  });
-
-  final String label;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(.6), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.white),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withOpacity(.15),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.all(10.0),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ),
-        ),
       ),
     );
   }
 }
 
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
-
   final String message;
+
+  const _ErrorBanner({required this.message});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      borderRadius: BorderRadius.circular(16),
-      color: Colors.black87.withOpacity(.8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white70),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade700,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }
