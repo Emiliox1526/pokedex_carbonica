@@ -230,8 +230,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           displayName: displayName,
           category: category,
           pokemonId: variantId,
-          spriteUrl: formSprites['default'] ?? variantSprites['default'],
-          shinySpriteUrl: formSprites['shiny'] ?? variantSprites['shiny'],
+          spriteUrl: formSprites['default'] ?? variantSprites['default'] ?? _artworkUrlForId(variantId),
+          shinySpriteUrl: formSprites['shiny'] ?? variantSprites['shiny'] ?? _artworkShinyUrlForId(variantId),
           types: formTypes.isNotEmpty ? formTypes : variantTypes,
         ));
       }
@@ -252,8 +252,8 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           displayName: displayName,
           category: category,
           pokemonId: variantId,
-          spriteUrl: variantSprites['default'],
-          shinySpriteUrl: variantSprites['shiny'],
+          spriteUrl: variantSprites['default'] ?? _artworkUrlForId(variantId),
+          shinySpriteUrl: variantSprites['shiny'] ?? _artworkShinyUrlForId(variantId),
           types: variantTypes,
         ));
       }
@@ -320,8 +320,14 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     } else {
       return {'default': null, 'shiny': null};
     }
-    final defaultUrl = decoded['front_default'];
-    final shinyUrl = decoded['front_shiny'];
+    final defaultUrl =
+        decoded['other']?['official-artwork']?['front_default'] ??
+            decoded['other']?['home']?['front_default'] ??
+            decoded['front_default'];
+    final shinyUrl =
+        decoded['other']?['official-artwork']?['front_shiny'] ??
+            decoded['other']?['home']?['front_shiny'] ??
+            decoded['front_shiny'];
     return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
   }
 
@@ -396,6 +402,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   // Helper para construir URL oficial de artwork por id (fallback si no hay sprite en DB)
   String _artworkUrlForId(int id) {
     return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+  }
+
+  // Helper para construir URL oficial de artwork shiny por id
+  String _artworkShinyUrlForId(int id) {
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/$id.png';
   }
 
   // Extrae urls default + shiny desde pokemon object (si posible)
