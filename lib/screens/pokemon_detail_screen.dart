@@ -384,6 +384,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               stats: stats,
                               uniqueMoves: uniqueMoves,
                               evolutionSpecies: evolutionSpecies,
+                              speciesName: (pokemon['name'] as String?) ?? '',
                             ),
                           ),
                         ],
@@ -465,6 +466,7 @@ Widget _buildTabBody({
   required List<Map<String, dynamic>> stats,
   required List<Map<String, dynamic>> uniqueMoves,
   required List<Map<String, dynamic>> evolutionSpecies,
+  required String speciesName, // nombre de la especie (para fallback query)
 }) {
   switch (tabIndex) {
     case 0:
@@ -579,12 +581,7 @@ Widget _buildTabBody({
               ),
             ),
             const SizedBox(height: 12),
-            if (evolutionSpecies.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 64.0),
-                child: Center(child: Text('No evolution data available')),
-              )
-            else
+            if (evolutionSpecies.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
                 child: Column(
@@ -596,7 +593,6 @@ Widget _buildTabBody({
                       ),
                       if (i < evolutionSpecies.length - 1) ...[
                         const SizedBox(height: 8),
-                        // Flecha y badge de nivel (si no hay nivel, mostramos un badge neutral)
                         Column(
                           children: [
                             Container(
@@ -629,6 +625,105 @@ Widget _buildTabBody({
                       ]
                     ],
                   ],
+                ),
+              )
+            else
+            // Si no hay datos en la respuesta inicial intentamos obtener la cadena por nombre de especie
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+                child: Query(
+                  options: QueryOptions(
+                    document: gql(r'''
+                      query GetEvolutionBySpeciesName($name: String!) {
+                        pokemon_v2_pokemonspecies(where: {name: {_eq: $name}}) {
+                          id
+                          name
+                          pokemon_v2_evolutionchain {
+                            pokemon_v2_pokemonspecies(order_by: {id: asc}) {
+                              id
+                              name
+                            }
+                          }
+                        }
+                      }
+                    '''),
+                    variables: {'name': speciesName.toLowerCase()},
+                    fetchPolicy: FetchPolicy.networkOnly,
+                  ),
+                  builder: (res, {fetchMore, refetch}) {
+                    if (res.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (res.hasException) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Text('Error loading evolution data', style: TextStyle(color: Colors.grey.shade700)),
+                        ),
+                      );
+                    }
+
+                    final speciesList = (res.data?['pokemon_v2_pokemonspecies'] as List?) ?? [];
+                    if (speciesList.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 64.0),
+                        child: Center(child: Text('No evolution data available')),
+                      );
+                    }
+
+                    final chain = (speciesList.first['pokemon_v2_evolutionchain']?['pokemon_v2_pokemonspecies'] as List?) ?? [];
+                    final chainItems = chain.cast<Map<String, dynamic>>();
+
+                    if (chainItems.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 64.0),
+                        child: Center(child: Text('No evolution data available')),
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        for (var i = 0; i < chainItems.length; i++) ...[
+                          _EvolutionNode(
+                            id: (chainItems[i]['id'] as int?) ?? 0,
+                            name: (chainItems[i]['name'] as String?) ?? '',
+                          ),
+                          if (i < chainItems.length - 1) ...[
+                            const SizedBox(height: 8),
+                            Column(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.12),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Lv. -',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const Icon(Icons.arrow_downward, size: 36, color: Colors.redAccent),
+                                const SizedBox(height: 10),
+                              ],
+                            ),
+                          ]
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ),
             const SizedBox(height: 8),
@@ -676,7 +771,6 @@ Widget _buildTabBody({
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(14),
                         topRight: Radius.circular(14),
-
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -887,22 +981,35 @@ class _EvolutionNode extends StatelessWidget {
           style: TextStyle(color: Colors.grey.shade700),
         ),
         const SizedBox(height: 8),
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))
-            ],
-          ),
-          child: ClipOval(
-            child: Image.network(
-              artworkUrl,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Center(
-                child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
+        GestureDetector(
+          onTap: () {
+            // Al tocar una especie en la cadena, navegamos a su pantalla de detalle.
+            // Esto usa el mismo screen pero enviando el pokemonId correspondiente.
+            // Nota: si tu lista de especies no coincide exactamente con el id de Pokémon/forma
+            // (depende de tu esquema DB), podrías necesitar mapear species id -> pokemon id.
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => PokemonDetailScreen(
+              pokemonId: id,
+              heroTag: 'pokemon_$id',
+              initialPokemon: null,
+            )));
+          },
+          child: Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))
+              ],
+            ),
+            child: ClipOval(
+              child: Image.network(
+                artworkUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
+                ),
               ),
             ),
           ),
@@ -1134,7 +1241,6 @@ class _TypeChip extends StatelessWidget {
     );
   }
 }
-
 class _TabButton extends StatelessWidget {
   const _TabButton({
     required this.label,
@@ -1152,40 +1258,55 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Color del icono
-    final iconColor = selected ? Colors.white : color;
-    final bgColor = selected ? color : Colors.white;
-    final textColor = selected ? Colors.white : Colors.black87;
+    final Color ringColor = selected ? color : Colors.grey.shade300;
+    final Color iconBg = Colors.grey.shade900;
+    final Color textColor = selected ? color : Colors.grey.shade700;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 6),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16, color: iconColor),
-            const SizedBox(width: 8),
-            // Evitamos overflow: el texto está dentro de Flexible y corta con ellipsis si falta espacio.
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          /// CÍRCULO CON ICONO
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: ringColor,
+                width: 4,
+              ),
+            ),
+            child: Center(
+              child: Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconBg,
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 28,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 10),
+
+          /// TEXTO DEBAJO
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+        ],
       ),
     );
   }
