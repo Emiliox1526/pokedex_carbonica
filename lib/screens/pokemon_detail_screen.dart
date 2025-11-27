@@ -202,6 +202,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
           final weight = (pokemon['weight'] as int?) ?? 0;
           final baseExperience = (pokemon['base_experience'] as int?) ?? 0;
 
+          // --- EXTRA: obtener la cadena evolutiva desde la species -> evolution chain (si existe)
+          final speciesObj = pokemon['pokemon_v2_pokemonspecy'] as Map<String, dynamic>?;
+          final evolutionSpeciesRaw = (speciesObj?['pokemon_v2_evolutionchain']?['pokemon_v2_pokemonspecies'] as List?) ?? [];
+          // Cada entry suele venir como { id: int, name: String }
+          final evolutionSpecies = evolutionSpeciesRaw.cast<Map<String, dynamic>>();
+
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -377,6 +383,7 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               abilities: abilities,
                               stats: stats,
                               uniqueMoves: uniqueMoves,
+                              evolutionSpecies: evolutionSpecies,
                             ),
                           ),
                         ],
@@ -432,6 +439,18 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     return null;
   }
 
+  // Helper para construir URL oficial de artwork por id (fallback si no hay sprite en DB)
+  String _artworkUrlForId(int id) {
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+  }
+
+  // Helper para capitalizar nombres
+  String _capitalize(String raw) {
+    if (raw.isEmpty) return raw;
+    final parts = raw.replaceAll('-', ' ').split(' ');
+    return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+  }
+
 }
 
 Widget _buildTabBody({
@@ -445,6 +464,7 @@ Widget _buildTabBody({
   required List<String> abilities,
   required List<Map<String, dynamic>> stats,
   required List<Map<String, dynamic>> uniqueMoves,
+  required List<Map<String, dynamic>> evolutionSpecies,
 }) {
   switch (tabIndex) {
     case 0:
@@ -541,16 +561,16 @@ Widget _buildTabBody({
       );
 
     case 1:
-    // EVOLUTION (placeholder por ahora, listo para conectar a la API)
+    // EVOLUTION: mostramos una "evolution chart" vertical usando los species provistos por la query.
       return _DetailCard(
         key: key,
         background: Colors.white,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 4),
             Center(
               child: Text(
-                'Evolution',
+                'Evolution Chart',
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -558,19 +578,60 @@ Widget _buildTabBody({
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            const Padding(
-              padding: EdgeInsets.only(top: 64.0),
-              child: Center(
-                child: Text(
-                  'Evolution chart coming soon',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
-                  ),
+            const SizedBox(height: 12),
+            if (evolutionSpecies.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 64.0),
+                child: Center(child: Text('No evolution data available')),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < evolutionSpecies.length; i++) ...[
+                      _EvolutionNode(
+                        id: (evolutionSpecies[i]['id'] as int?) ?? 0,
+                        name: (evolutionSpecies[i]['name'] as String?) ?? '',
+                      ),
+                      if (i < evolutionSpecies.length - 1) ...[
+                        const SizedBox(height: 8),
+                        // Flecha y badge de nivel (si no hay nivel, mostramos un badge neutral)
+                        Column(
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.12),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Lv. -',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Icon(Icons.arrow_downward, size: 36, color: Colors.redAccent),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+                      ]
+                    ],
+                  ],
                 ),
               ),
-            ),
+            const SizedBox(height: 8),
           ],
         ),
       );
@@ -615,6 +676,7 @@ Widget _buildTabBody({
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(14),
                         topRight: Radius.circular(14),
+
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -796,6 +858,57 @@ Widget _buildTabBody({
           ),
         ),
       );
+  }
+}
+
+class _EvolutionNode extends StatelessWidget {
+  final int id;
+  final String name;
+
+  const _EvolutionNode({
+    required this.id,
+    required this.name,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final displayName = name.replaceAll('-', ' ').split(' ').map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+    final artworkUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+
+    return Column(
+      children: [
+        Text(
+          displayName,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '#${id.toString().padLeft(3, '0')}',
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))
+            ],
+          ),
+          child: ClipOval(
+            child: Image.network(
+              artworkUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Center(
+                child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -1039,61 +1152,46 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color ringColor = selected ? color : Colors.grey.shade300;
-    final Color iconBg = Colors.grey.shade900;
-    final Color textColor = selected ? color : Colors.grey.shade700;
+    // Color del icono
+    final iconColor = selected ? Colors.white : color;
+    final bgColor = selected ? color : Colors.white;
+    final textColor = selected ? Colors.white : Colors.black87;
 
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          /// CÍRCULO CON ICONO
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: ringColor,
-                width: 4,
-              ),
-            ),
-            child: Center(
-              child: Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: iconBg,
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 28,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: iconColor),
+            const SizedBox(width: 8),
+            // Evitamos overflow: el texto está dentro de Flexible y corta con ellipsis si falta espacio.
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
                 ),
               ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          /// TEXTO DEBAJO
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-
+// --- Componentes auxiliares (sin cambios funcionales, solo tal vez usados más arriba) ---
 
 class _CircleButton extends StatelessWidget {
   final IconData icon;
