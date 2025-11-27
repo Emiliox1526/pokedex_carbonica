@@ -62,6 +62,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   int _movesLimit = 20;
   String _movesSort = 'level'; // or 'name'
   bool _onlyLevelUp = true;
+  
+  // Page-based pagination for moves
+  int _movesCurrentPage = 0;
+  int _movesPerPage = 10;
 
   // Selected form index
   int _selectedFormIndex = 0;
@@ -682,13 +686,20 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               onChangeMovesMethod: (m) => setState(() {
                                 _movesMethodFilter = m;
                                 _movesLimit = 20;
+                                _movesCurrentPage = 0; // Reset to first page
                               }),
                               movesSort: _movesSort,
-                              onChangeMovesSort: (s) => setState(() => _movesSort = s),
+                              onChangeMovesSort: (s) => setState(() {
+                                _movesSort = s;
+                                _movesCurrentPage = 0; // Reset to first page
+                              }),
                               movesLimit: _movesLimit,
                               onLoadMoreMoves: () => setState(() => _movesLimit += 20),
                               onlyLevelUp: _onlyLevelUp,
-                              onToggleOnlyLevelUp: () => setState(() => _onlyLevelUp = !_onlyLevelUp),
+                              onToggleOnlyLevelUp: () => setState(() {
+                                _onlyLevelUp = !_onlyLevelUp;
+                                _movesCurrentPage = 0; // Reset to first page
+                              }),
                               movesList: movesList,
                               pokemonName: pokemonName,
                               pokemonId: pokemon['id'] as int,
@@ -697,6 +708,14 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                               heightMeters: heightMeters,
                               weightKg: weightKg,
                               types: types,
+                              // Page-based pagination
+                              movesCurrentPage: _movesCurrentPage,
+                              movesPerPage: _movesPerPage,
+                              onMovesPageChange: (page) => setState(() => _movesCurrentPage = page),
+                              onMovesPerPageChange: (perPage) => setState(() {
+                                _movesPerPage = perPage;
+                                _movesCurrentPage = 0; // Reset to first page
+                              }),
                             ),
                           ),
                         ],
@@ -801,6 +820,11 @@ Widget _buildTabBody({
   required double weightKg,
   required List<String> types,
   String? description,
+  // Page-based pagination for moves
+  required int movesCurrentPage,
+  required int movesPerPage,
+  required ValueChanged<int> onMovesPageChange,
+  required ValueChanged<int> onMovesPerPageChange,
 }) {
   switch (tabIndex) {
     case 0:
@@ -1371,7 +1395,7 @@ Widget _buildTabBody({
       );
 
     case 2:
-    // MOVES
+    // MOVES - Redesigned with modern UI and page-based pagination
     // Apply filters (method and onlyLevelUp)
       List<Map<String, dynamic>> filtered = List.from(movesList);
       if (onlyLevelUp) {
@@ -1389,7 +1413,177 @@ Widget _buildTabBody({
       } else {
         filtered.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
       }
-      final visible = filtered.take(movesLimit).toList();
+      
+      // Page-based pagination
+      final int totalMoves = filtered.length;
+      final int totalPages = (totalMoves / movesPerPage).ceil();
+      final int safeCurrentPage = totalPages > 0 ? movesCurrentPage.clamp(0, totalPages - 1) : 0;
+      final int startIndex = safeCurrentPage * movesPerPage;
+      final int endIndex = (startIndex + movesPerPage).clamp(0, totalMoves);
+      final visibleMoves = totalMoves > 0 ? filtered.sublist(startIndex, endIndex) : <Map<String, dynamic>>[];
+      
+      // Helper to get damage class icon
+      IconData getDamageClassIcon(String damageClass) {
+        switch (damageClass.toLowerCase()) {
+          case 'physical':
+            return Icons.fitness_center;
+          case 'special':
+            return Icons.auto_awesome;
+          case 'status':
+            return Icons.swap_horiz;
+          default:
+            return Icons.help_outline;
+        }
+      }
+      
+      // Helper to get damage class color
+      Color getDamageClassColor(String damageClass) {
+        switch (damageClass.toLowerCase()) {
+          case 'physical':
+            return Colors.orange.shade600;
+          case 'special':
+            return Colors.blue.shade600;
+          case 'status':
+            return Colors.grey.shade600;
+          default:
+            return Colors.grey.shade400;
+        }
+      }
+      
+      // Build move type chip with color
+      Widget buildMoveTypeChip(String typeName) {
+        final color = _kTypeColor[typeName.toLowerCase()] ?? Colors.grey;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.4),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _getTypeIcon(typeName.toLowerCase()),
+                size: 12,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                typeName.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      
+      // Build move item card
+      Widget buildMoveItem(Map<String, dynamic> mv) {
+        final moveName = _capitalizeLocal(mv['name'] as String);
+        final moveType = (mv['type'] as String?) ?? '';
+        final damageClass = (mv['damage_class'] as String?) ?? '';
+        final level = mv['level'] as int?;
+        final method = (mv['method'] as String?) ?? '';
+        final isLevelUp = method == 'level-up';
+        
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Level circle (for level-up moves)
+              if (isLevelUp && level != null)
+                Container(
+                  width: 36,
+                  height: 36,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: baseColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: baseColor, width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      level.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: baseColor,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                const SizedBox(width: 48),
+              
+              // Move name
+              Expanded(
+                flex: 3,
+                child: Text(
+                  moveName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              // Type chip
+              if (moveType.isNotEmpty)
+                buildMoveTypeChip(moveType)
+              else
+                const SizedBox(width: 60),
+              
+              const SizedBox(width: 8),
+              
+              // Damage class icon with tooltip
+              if (damageClass.isNotEmpty)
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: getDamageClassColor(damageClass).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    getDamageClassIcon(damageClass),
+                    size: 16,
+                    color: getDamageClassColor(damageClass),
+                  ),
+                )
+              else
+                const SizedBox(width: 28),
+            ],
+          ),
+        );
+      }
 
       return _DetailCard(
         key: key,
@@ -1397,91 +1591,286 @@ Widget _buildTabBody({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Text('Moves', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87))),
-            const SizedBox(height: 12),
-            // Filters row
+            // Title with icon
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(
+                  Icons.blur_circular,
+                  size: 22,
+                  color: baseColor,
+                ),
                 const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: movesMethodFilter,
-                  items: const [
-                    DropdownMenuItem(value: 'level-up', child: Text('Level-up')),
-                    DropdownMenuItem(value: 'machine', child: Text('Machine (TM/HM)')),
-                    DropdownMenuItem(value: 'tutor', child: Text('Tutor')),
-                    DropdownMenuItem(value: 'egg', child: Text('Egg')),
-                    DropdownMenuItem(value: 'other', child: Text('Other')),
-                  ],
-                  onChanged: (v) => onChangeMovesMethod(v ?? 'level-up'),
-                ),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: movesSort,
-                  items: const [
-                    DropdownMenuItem(value: 'level', child: Text('Sort: Level')),
-                    DropdownMenuItem(value: 'name', child: Text('Sort: Name')),
-                  ],
-                  onChanged: (v) => onChangeMovesSort(v ?? 'level'),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    const Text('Only level-up'),
-                    Switch(value: onlyLevelUp, onChanged: (_) => onToggleOnlyLevelUp()),
-                  ],
+                const Text(
+                  'Moves',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            if (visible.isEmpty)
-              const Center(child: Text('No moves found with current filters', style: TextStyle(color: Colors.grey)))
-            else
-              Column(
+            const SizedBox(height: 16),
+            
+            // Filters section - Redesigned with Wrap for responsiveness
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final mv in visible)
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(10),
+                  // Method filter chips
+                  Text(
+                    'Learn Method',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildMethodFilterChip(
+                        label: 'Level-up',
+                        value: 'level-up',
+                        selected: movesMethodFilter == 'level-up',
+                        baseColor: baseColor,
+                        onSelected: () => onChangeMovesMethod('level-up'),
                       ),
-                      child: Row(
+                      _buildMethodFilterChip(
+                        label: 'TM/HM',
+                        value: 'machine',
+                        selected: movesMethodFilter == 'machine',
+                        baseColor: baseColor,
+                        onSelected: () => onChangeMovesMethod('machine'),
+                      ),
+                      _buildMethodFilterChip(
+                        label: 'Tutor',
+                        value: 'tutor',
+                        selected: movesMethodFilter == 'tutor',
+                        baseColor: baseColor,
+                        onSelected: () => onChangeMovesMethod('tutor'),
+                      ),
+                      _buildMethodFilterChip(
+                        label: 'Egg',
+                        value: 'egg',
+                        selected: movesMethodFilter == 'egg',
+                        baseColor: baseColor,
+                        onSelected: () => onChangeMovesMethod('egg'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Sort and items per page row
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Sort toggle
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            flex: 4,
-                            child: Text(
-                              _capitalizeLocal(mv['name'] as String),
-                              style: const TextStyle(fontWeight: FontWeight.w700),
+                          Text(
+                            'Sort: ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
                             ),
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              (mv['type'] as String).isNotEmpty ? (mv['type'] as String).toUpperCase() : '—',
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              (mv['damage_class'] as String).isNotEmpty ? _capitalizeLocal(mv['damage_class'] as String) : '—',
-                            ),
-                          ),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                (mv['level'] as int?)?.toString() ?? '—',
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                          GestureDetector(
+                            onTap: () => onChangeMovesSort(movesSort == 'level' ? 'name' : 'level'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: baseColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: baseColor.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    movesSort == 'level' ? Icons.trending_up : Icons.sort_by_alpha,
+                                    size: 14,
+                                    color: baseColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    movesSort == 'level' ? 'Level' : 'Name',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: baseColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  if (filtered.length > movesLimit)
-                    TextButton(onPressed: onLoadMoreMoves, child: const Text('Load more')),
+                      
+                      // Items per page selector
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Per page: ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: movesPerPage,
+                                isDense: true,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                                items: const [
+                                  DropdownMenuItem(value: 5, child: Text('5')),
+                                  DropdownMenuItem(value: 10, child: Text('10')),
+                                  DropdownMenuItem(value: 15, child: Text('15')),
+                                  DropdownMenuItem(value: 20, child: Text('20')),
+                                ],
+                                onChanged: (v) => onMovesPerPageChange(v ?? 10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Moves count indicator
+            if (totalMoves > 0)
+              Center(
+                child: Text(
+                  '$totalMoves moves found',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ),
+            
+            const SizedBox(height: 8),
+            
+            // Moves list
+            if (visibleMoves.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 48,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No moves found with current filters',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: [
+                  for (final mv in visibleMoves)
+                    buildMoveItem(mv),
+                ],
+              ),
+            
+            // Page navigation controls
+            if (totalPages > 1)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Previous button
+                    IconButton(
+                      onPressed: safeCurrentPage > 0
+                          ? () => onMovesPageChange(safeCurrentPage - 1)
+                          : null,
+                      icon: Icon(
+                        Icons.chevron_left,
+                        color: safeCurrentPage > 0 ? baseColor : Colors.grey.shade300,
+                      ),
+                      splashRadius: 20,
+                    ),
+                    
+                    // Page indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        'Page ${safeCurrentPage + 1} of $totalPages',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                    
+                    // Next button
+                    IconButton(
+                      onPressed: safeCurrentPage < totalPages - 1
+                          ? () => onMovesPageChange(safeCurrentPage + 1)
+                          : null,
+                      icon: Icon(
+                        Icons.chevron_right,
+                        color: safeCurrentPage < totalPages - 1 ? baseColor : Colors.grey.shade300,
+                      ),
+                      splashRadius: 20,
+                    ),
+                  ],
+                ),
               ),
           ],
         ),
@@ -2165,4 +2554,45 @@ String _capitalizeLocal(String raw) {
   if (raw.isEmpty) return raw;
   final parts = raw.replaceAll('-', ' ').split(' ');
   return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+}
+
+// Helper widget for method filter chips in Moves section
+Widget _buildMethodFilterChip({
+  required String label,
+  required String value,
+  required bool selected,
+  required Color baseColor,
+  required VoidCallback onSelected,
+}) {
+  return GestureDetector(
+    onTap: onSelected,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected ? baseColor : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: selected ? baseColor : Colors.grey.shade300,
+          width: 1.5,
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: baseColor.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: selected ? Colors.white : Colors.grey.shade700,
+        ),
+      ),
+    ),
+  );
 }
