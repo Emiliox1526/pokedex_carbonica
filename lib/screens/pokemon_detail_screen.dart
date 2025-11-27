@@ -185,8 +185,10 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
       _isLoadingFormData = true;
     });
 
+    // Store client reference before async operations to avoid using stale context
+    final client = GraphQLProvider.of(context).value;
+
     try {
-      final client = GraphQLProvider.of(context).value;
       final result = await client.query(
         QueryOptions(
           document: gql(getFormDetailQuery),
