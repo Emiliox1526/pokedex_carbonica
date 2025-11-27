@@ -685,6 +685,9 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
 }
 
 // ----------------- Tab Body (top-level helper) -----------------
+// Stats bar background color (pink/magenta)
+const Color _kStatBarBackgroundColor = Color(0xFFF5B5C8);
+
 // This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
@@ -721,6 +724,7 @@ Widget _buildTabBody({
   required Map<String, double> Function(List<String>) computeMatchups,
   required double heightMeters,
   required double weightKg,
+  String? description,
 }) {
   switch (tabIndex) {
     case 0:
@@ -881,21 +885,20 @@ Widget _buildTabBody({
 
             const SizedBox(height: 24),
 
-            // Description placeholder (if available)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'There is a plant seed on its back right from the day this Pokémon is born. The seed slowly grows larger.',
-                textAlign: TextAlign.justify,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
+            // Description section (shown if description is provided)
+            if (description != null && description.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 24.0),
+                child: Text(
+                  description,
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 24),
 
             // Base Stats section
             Center(
@@ -957,7 +960,7 @@ Widget _buildTabBody({
                             child: _TwoColorProgressBar(
                               value: (s['value'] as int) / 255,
                               fillColor: baseColor,
-                              backgroundColor: const Color(0xFFF5B5C8), // Pink/magenta
+                              backgroundColor: _kStatBarBackgroundColor,
                             ),
                           ),
                         ],
