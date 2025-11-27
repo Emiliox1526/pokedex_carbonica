@@ -204,7 +204,9 @@ class PokemonRemoteDataSource {
     if (exception.linkException != null) {
       return PokemonRemoteExceptionType.noConnection;
     }
-    final errorMessage = exception.graphqlErrors.firstOrNull?.message ?? '';
+    final errorMessage = exception.graphqlErrors.isEmpty 
+        ? '' 
+        : exception.graphqlErrors.first.message;
     if (errorMessage.contains('rate limit') ||
         errorMessage.contains('too many requests')) {
       return PokemonRemoteExceptionType.rateLimit;
