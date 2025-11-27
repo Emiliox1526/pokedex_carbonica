@@ -67,12 +67,11 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   int _movesCurrentPage = 0;
   int _movesPerPage = 10;
 
-  // Selected form index (legacy)
+  // Selected form index for tab-based form selection
   int _selectedFormIndex = 0;
   
-  // Form selection state
+  // Form selection state for dropdown-based selection
   int? _selectedFormId;
-  Map<String, dynamic>? _selectedFormData;
   List<PokemonFormVariant> _availableForms = [];
 
   // SharedPreferences key
@@ -160,10 +159,9 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   }
 
   /// Load data for a specific form variant
-  Future<void> _loadFormData(PokemonFormVariant form) async {
-    // For now, we just update the selected form ID
+  void _loadFormData(PokemonFormVariant form) {
+    // Update the selected form ID
     // The UI will use the form's sprites and types from the availableForms list
-    // In a more complex implementation, we could fetch additional data via GraphQL
     setState(() {
       _selectedFormId = form.id;
     });
