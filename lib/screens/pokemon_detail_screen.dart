@@ -723,6 +723,48 @@ const int _kMaxAbilitiesToShow = 2;
 // Height of the radar chart container
 const double _kRadarChartHeight = 280.0;
 
+// Helper function to get icon for a Pokemon type
+IconData _getTypeIcon(String type) {
+  switch (type) {
+    case 'fire':
+      return Icons.local_fire_department;
+    case 'water':
+      return Icons.water_drop;
+    case 'grass':
+      return Icons.eco;
+    case 'electric':
+      return Icons.bolt;
+    case 'ice':
+      return Icons.ac_unit;
+    case 'fighting':
+      return Icons.sports_mma;
+    case 'poison':
+      return Icons.coronavirus;
+    case 'ground':
+      return Icons.landscape;
+    case 'flying':
+      return Icons.air;
+    case 'psychic':
+      return Icons.psychology;
+    case 'bug':
+      return Icons.pest_control_rodent;
+    case 'rock':
+      return Icons.terrain;
+    case 'ghost':
+      return Icons.auto_awesome;
+    case 'dragon':
+      return Icons.adb;
+    case 'dark':
+      return Icons.dark_mode;
+    case 'steel':
+      return Icons.build;
+    case 'fairy':
+      return Icons.auto_fix_high;
+    default:
+      return Icons.circle;
+  }
+}
+
 // This function receives the data and UI callbacks from the State and renders each tab.
 Widget _buildTabBody({
   Key? key,
@@ -975,7 +1017,7 @@ Widget _buildTabBody({
 
             const SizedBox(height: 12),
 
-            // Type Matchups section
+            // Type Matchups section - Redesigned
             Builder(
               builder: (context) {
                 // Calculate matchups
@@ -1003,85 +1045,178 @@ Widget _buildTabBody({
                   }
                 }
                 
-                // Build type chip widget
+                // Build enhanced type chip widget with icon and shadow
                 Widget buildTypeChip(String typeName) {
                   final color = _kTypeColor[typeName] ?? Colors.grey;
                   return Container(
-                    margin: const EdgeInsets.only(right: 6, bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    margin: const EdgeInsets.only(right: 8, bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      typeName.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  );
-                }
-                
-                // Build a row for a multiplier category
-                Widget buildMatchupRow(String label, List<String> typesList) {
-                  if (typesList.isEmpty) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
-                          ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          children: typesList.map((t) => buildTypeChip(t)).toList(),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getTypeIcon(typeName),
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          typeName.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ],
                     ),
                   );
                 }
                 
-                // Check if there's anything to show
-                final hasMatchups = x4Types.isNotEmpty || 
-                                    x2Types.isNotEmpty || 
-                                    x05Types.isNotEmpty || 
-                                    x025Types.isNotEmpty || 
-                                    x0Types.isNotEmpty;
+                // Build matchup category card with icon
+                Widget buildMatchupCard({
+                  required String title,
+                  required IconData icon,
+                  required Color iconColor,
+                  required List<MapEntry<String, List<String>>> categories,
+                }) {
+                  // Filter out empty categories
+                  final nonEmptyCategories = categories.where((c) => c.value.isNotEmpty).toList();
+                  if (nonEmptyCategories.isEmpty) return const SizedBox.shrink();
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Card header with icon
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: iconColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                icon,
+                                size: 18,
+                                color: iconColor,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Categories
+                        ...nonEmptyCategories.map((category) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                category.key,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                children: category.value.map((t) => buildTypeChip(t)).toList(),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  );
+                }
                 
-                if (!hasMatchups) return const SizedBox.shrink();
+                // Check if there's anything to show
+                final hasWeaknesses = x4Types.isNotEmpty || x2Types.isNotEmpty;
+                final hasResistances = x05Types.isNotEmpty || x025Types.isNotEmpty || x0Types.isNotEmpty;
+                
+                if (!hasWeaknesses && !hasResistances) return const SizedBox.shrink();
                 
                 return Column(
                   children: [
                     const SizedBox(height: 12),
-                    Center(
-                      child: Text(
-                        'Type Matchups',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black,
+                    // Title with icon - matching other section titles
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shield_outlined,
+                          size: 22,
+                          color: baseColor,
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Type Matchups',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          buildMatchupRow('x4 (Super Weak)', x4Types),
-                          buildMatchupRow('x2 (Weak)', x2Types),
-                          buildMatchupRow('x0.5 (Resistant)', x05Types),
-                          buildMatchupRow('x0.25 (Very Resistant)', x025Types),
-                          buildMatchupRow('x0 (Immune)', x0Types),
+                          // Weaknesses card
+                          if (hasWeaknesses)
+                            buildMatchupCard(
+                              title: 'Weaknesses',
+                              icon: Icons.arrow_upward_rounded,
+                              iconColor: Colors.red.shade400,
+                              categories: [
+                                MapEntry('×4 Super Effective', x4Types),
+                                MapEntry('×2 Effective', x2Types),
+                              ],
+                            ),
+                          // Resistances card
+                          if (hasResistances)
+                            buildMatchupCard(
+                              title: 'Resistances',
+                              icon: Icons.shield_rounded,
+                              iconColor: Colors.green.shade400,
+                              categories: [
+                                MapEntry('×0.5 Resistant', x05Types),
+                                MapEntry('×0.25 Very Resistant', x025Types),
+                                MapEntry('×0 Immune', x0Types),
+                              ],
+                            ),
                         ],
                       ),
                     ),
