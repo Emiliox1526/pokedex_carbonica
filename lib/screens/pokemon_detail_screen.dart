@@ -1469,6 +1469,7 @@ class _TabsCard extends StatelessWidget {
           Expanded(child: _TabButton(label: 'About', icon: Icons.info_outline, color: aboutColor, selected: selectedIndex == 0, onTap: () => onChanged(0))),
           Expanded(child: _TabButton(label: 'Evolution', icon: Icons.auto_graph, color: evolutionColor, selected: selectedIndex == 1, onTap: () => onChanged(1))),
           Expanded(child: _TabButton(label: 'Moves', icon: Icons.blur_circular, color: movesColor, selected: selectedIndex == 2, onTap: () => onChanged(2))),
+          // Options opens a modal, not a tab panel, so it's never marked as selected
           Expanded(child: _TabButton(label: 'Options', icon: Icons.tune, color: optionsColor, selected: false, onTap: onOptionsPressed ?? () {})),
         ],
       ),
