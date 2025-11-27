@@ -1341,33 +1341,24 @@ Widget _buildTabBody({
                 child: Column(
                   children: [
                     for (var i = 0; i < evolutionSpecies.length; i++) ...[
-                      _EvolutionNode(
-                        id: (evolutionSpecies[i]['id'] as int?) ?? 0,
-                        name: (evolutionSpecies[i]['name'] as String?) ?? '',
-                      ),
+                      Builder(builder: (context) {
+                        final speciesTypes = _extractTypesFromSpecies(evolutionSpecies[i]);
+                        return _EvolutionNode(
+                          id: (evolutionSpecies[i]['id'] as int?) ?? 0,
+                          name: (evolutionSpecies[i]['name'] as String?) ?? '',
+                          types: speciesTypes,
+                        );
+                      }),
                       if (i < evolutionSpecies.length - 1) ...[
-                        const SizedBox(height: 8),
-                        Column(
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 4))
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text('Lv. -', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Icon(Icons.arrow_downward, size: 36, color: Colors.redAccent),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
+                        Builder(builder: (context) {
+                          final nextSpecies = evolutionSpecies[i + 1];
+                          final evoData = _extractEvolutionData(nextSpecies);
+                          return _EvolutionTransition(
+                            minLevel: evoData['min_level'] as int?,
+                            triggerName: evoData['trigger'] as String?,
+                            itemName: evoData['item'] as String?,
+                          );
+                        }),
                       ]
                     ],
                   ],
@@ -1389,6 +1380,22 @@ Widget _buildTabBody({
                             pokemon_v2_pokemonspecies(order_by: {id: asc}) {
                               id
                               name
+                              pokemon_v2_pokemonevolutions {
+                                min_level
+                                pokemon_v2_evolutiontrigger {
+                                  name
+                                }
+                                pokemon_v2_item {
+                                  name
+                                }
+                              }
+                              pokemon_v2_pokemons(limit: 1) {
+                                pokemon_v2_pokemontypes {
+                                  pokemon_v2_type {
+                                    name
+                                  }
+                                }
+                              }
                             }
                           }
                         }
@@ -1420,36 +1427,28 @@ Widget _buildTabBody({
                         child: Center(child: Text('No evolution data available')),
                       );
                     }
+                    
                     return Column(
                       children: [
                         for (var i = 0; i < chainItems.length; i++) ...[
-                          _EvolutionNode(
-                            id: (chainItems[i]['id'] as int?) ?? 0,
-                            name: (chainItems[i]['name'] as String?) ?? '',
-                          ),
+                          Builder(builder: (context) {
+                            final speciesTypes = _extractTypesFromSpecies(chainItems[i]);
+                            return _EvolutionNode(
+                              id: (chainItems[i]['id'] as int?) ?? 0,
+                              name: (chainItems[i]['name'] as String?) ?? '',
+                              types: speciesTypes,
+                            );
+                          }),
                           if (i < chainItems.length - 1) ...[
-                            const SizedBox(height: 8),
-                            Column(
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 4))
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Text('Lv. -', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                const Icon(Icons.arrow_downward, size: 36, color: Colors.redAccent),
-                                const SizedBox(height: 10),
-                              ],
-                            ),
+                            Builder(builder: (context) {
+                              final nextSpecies = chainItems[i + 1];
+                              final evoData = _extractEvolutionData(nextSpecies);
+                              return _EvolutionTransition(
+                                minLevel: evoData['min_level'] as int?,
+                                triggerName: evoData['trigger'] as String?,
+                                itemName: evoData['item'] as String?,
+                              );
+                            }),
                           ]
                         ],
                       ],
@@ -2299,29 +2298,40 @@ class _RadarPainter extends CustomPainter {
 class _EvolutionNode extends StatelessWidget {
   final int id;
   final String name;
+  final List<String> types;
 
   const _EvolutionNode({
     required this.id,
     required this.name,
+    required this.types,
   });
 
   @override
   Widget build(BuildContext context) {
     final displayName = name.replaceAll('-', ' ').split(' ').map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
     final artworkUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png';
+    
+    final primaryType = types.isNotEmpty ? types.first : 'normal';
+    final secondaryType = types.length > 1 ? types[1] : primaryType;
+    
+    final primaryColor = _kTypeColor[primaryType] ?? _kTypeColor['normal']!;
+    final secondaryColor = _kTypeColor[secondaryType] ?? primaryColor;
 
     return Column(
       children: [
+        // Name
         Text(
           displayName,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
+        // ID
         Text(
           '#${id.toString().padLeft(3, '0')}',
-          style: TextStyle(color: Colors.grey.shade700),
+          style: TextStyle(color: Colors.grey.shade500),
         ),
         const SizedBox(height: 8),
+        // Image with gradient border and type icons
         GestureDetector(
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => PokemonDetailScreen(
@@ -2330,25 +2340,213 @@ class _EvolutionNode extends StatelessWidget {
               initialPokemon: null,
             )));
           },
-          child: Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))],
-            ),
-            child: ClipOval(
-              child: Image.network(
-                artworkUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Center(child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400)),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Image with gradient circular border
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(4),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      artworkUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              // Left type icon
+              Positioned(
+                left: -16,
+                top: 44,
+                child: _TypeIconCircle(type: primaryType),
+              ),
+              // Right type icon (only if Pokemon has two different types)
+              if (types.length > 1)
+                Positioned(
+                  right: -16,
+                  top: 44,
+                  child: _TypeIconCircle(type: secondaryType),
+                ),
+            ],
           ),
         ),
       ],
     );
+  }
+}
+
+// Type icon circle for evolution nodes
+class _TypeIconCircle extends StatelessWidget {
+  final String type;
+
+  const _TypeIconCircle({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final typeColor = _kTypeColor[type] ?? _kTypeColor['normal']!;
+    
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: typeColor,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            _getTypeIcon(type),
+            size: 14,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Evolution transition widget (level circle + arrow)
+class _EvolutionTransition extends StatelessWidget {
+  final int? minLevel;
+  final String? triggerName;
+  final String? itemName;
+
+  const _EvolutionTransition({
+    this.minLevel,
+    this.triggerName,
+    this.itemName,
+  });
+
+  String _getItemSpriteUrl(String itemName) {
+    // Format item name for URL (replace spaces with hyphens, lowercase)
+    final formattedName = itemName.toLowerCase().replaceAll(' ', '-');
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/$formattedName.png';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isUseItem = triggerName == 'use-item' && itemName != null;
+    final isLevelUp = triggerName == 'level-up' || (minLevel != null && minLevel! > 0);
+    
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        // Circle with level or item
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.red.shade600,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: isUseItem
+                ? ClipOval(
+                    child: Image.network(
+                      _getItemSpriteUrl(itemName!),
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.diamond,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  )
+                : Text(
+                    isLevelUp && minLevel != null && minLevel > 0
+                        ? 'Lv.$minLevel'
+                        : _getTriggerLabel(triggerName),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        // Arrow
+        Icon(Icons.arrow_downward, size: 32, color: Colors.red.shade600),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  String _getTriggerLabel(String? trigger) {
+    switch (trigger) {
+      case 'trade':
+        return 'Trade';
+      case 'shed':
+        return 'Shed';
+      case 'spin':
+        return 'Spin';
+      case 'tower-of-darkness':
+        return 'Tower';
+      case 'tower-of-waters':
+        return 'Tower';
+      case 'three-critical-hits':
+        return '3 Crits';
+      case 'take-damage':
+        return 'Damage';
+      case 'other':
+        return 'Special';
+      case 'agile-style-move':
+        return 'Agile';
+      case 'strong-style-move':
+        return 'Strong';
+      case 'recoil-damage':
+        return 'Recoil';
+      default:
+        return 'Evolve';
+    }
   }
 }
 
@@ -2678,6 +2876,32 @@ String _capitalizeLocal(String raw) {
   if (raw.isEmpty) return raw;
   final parts = raw.replaceAll('-', ' ').split(' ');
   return parts.map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w).join(' ');
+}
+
+// Helper function to extract types from species data
+List<String> _extractTypesFromSpecies(Map<String, dynamic> species) {
+  final pokemons = (species['pokemon_v2_pokemons'] as List?) ?? [];
+  if (pokemons.isEmpty) return ['normal'];
+  final pokemonTypes = (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
+  final types = pokemonTypes
+      .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+      .where((t) => t.isNotEmpty)
+      .toList();
+  return types.isNotEmpty ? types : ['normal'];
+}
+
+// Helper function to extract evolution data for next species
+Map<String, dynamic> _extractEvolutionData(Map<String, dynamic> nextSpecies) {
+  final evolutions = (nextSpecies['pokemon_v2_pokemonevolutions'] as List?) ?? [];
+  if (evolutions.isEmpty) {
+    return {'min_level': null, 'trigger': null, 'item': null};
+  }
+  final evo = evolutions.first as Map<String, dynamic>;
+  return {
+    'min_level': evo['min_level'] as int?,
+    'trigger': evo['pokemon_v2_evolutiontrigger']?['name'] as String?,
+    'item': evo['pokemon_v2_item']?['name'] as String?,
+  };
 }
 
 // Helper widget for method filter chips in Moves section
