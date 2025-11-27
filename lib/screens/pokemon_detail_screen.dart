@@ -1297,6 +1297,15 @@ class _RadarChart extends StatelessWidget {
 }
 
 class _RadarPainter extends CustomPainter {
+  // Gradient color constants for the radar chart fill
+  static const Color _gradientTopColor = Color(0xFFFFD54F); // Yellow/orange
+  static const Color _gradientBottomColor = Color(0xFFFF8A80); // Pink/coral
+  
+  // Label positioning constants
+  static const double _labelOffsetAdjustment = 4.0;
+  static const double _topAngleThreshold = math.pi / 4;
+  static const double _bottomAngleThreshold = 3 * math.pi / 4;
+  
   final List<double> data;
   final List<String> labels;
   final double maxValue;
@@ -1380,8 +1389,8 @@ class _RadarPainter extends CustomPainter {
     // Using baseColor and secondaryColor from Pokemon type for coherence
     // Colors include 70% opacity for transparency effect
     final gradientColors = [
-      (Color.lerp(const Color(0xFFFFD54F), baseColor, 0.3) ?? const Color(0xFFFFD54F)).withOpacity(0.7), // Yellow/orange tint
-      (Color.lerp(const Color(0xFFFF8A80), secondaryColor, 0.3) ?? const Color(0xFFFF8A80)).withOpacity(0.7), // Pink/coral tint
+      (Color.lerp(_gradientTopColor, baseColor, 0.3) ?? _gradientTopColor).withOpacity(0.7),
+      (Color.lerp(_gradientBottomColor, secondaryColor, 0.3) ?? _gradientBottomColor).withOpacity(0.7),
     ];
 
     final paintGradientFill = Paint()
@@ -1442,12 +1451,12 @@ class _RadarPainter extends CustomPainter {
       double offsetY = y - textPainter.height / 2;
 
       // Fine-tune positioning based on angle
-      if (angle > -math.pi / 4 && angle < math.pi / 4) {
+      if (angle > -_topAngleThreshold && angle < _topAngleThreshold) {
         // Top area - move up slightly
-        offsetY -= 4;
-      } else if (angle > 3 * math.pi / 4 || angle < -3 * math.pi / 4) {
+        offsetY -= _labelOffsetAdjustment;
+      } else if (angle > _bottomAngleThreshold || angle < -_bottomAngleThreshold) {
         // Bottom area - move down slightly
-        offsetY += 4;
+        offsetY += _labelOffsetAdjustment;
       }
 
       textPainter.paint(canvas, Offset(offsetX, offsetY));
