@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-typedef VoidCallbackAsync = Future<void> Function();
-
 class PokemonOptionsModal extends StatelessWidget {
   const PokemonOptionsModal({
     Key? key,
@@ -28,22 +26,6 @@ class PokemonOptionsModal extends StatelessWidget {
   final ValueChanged<String> onChangeMovesMethod;
   final ValueChanged<String> onChangeMovesSort;
   final VoidCallback onToggleOnlyLevelUp;
-
-  // Small helper for human labels
-  String _labelForMethod(String m) {
-    switch (m) {
-      case 'level-up':
-        return 'Level-up';
-      case 'machine':
-        return 'TM / HM';
-      case 'egg':
-        return 'Egg';
-      case 'tutor':
-        return 'Tutor';
-      default:
-        return m;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,8 +180,10 @@ class PokemonOptionsModal extends StatelessWidget {
                     icon: const Icon(Icons.restart_alt),
                     label: const Text('Reset filters'),
                     onPressed: () {
+                      // Reset to defaults: level-up method, sort by level, onlyLevelUp=true
                       onChangeMovesMethod('level-up');
                       onChangeMovesSort('level');
+                      // Ensure onlyLevelUp is true (toggle only if currently false)
                       if (!onlyLevelUp) onToggleOnlyLevelUp();
                     },
                   ),
