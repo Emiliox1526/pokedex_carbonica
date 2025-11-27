@@ -1306,6 +1306,12 @@ class _RadarPainter extends CustomPainter {
   static const double _topAngleThreshold = math.pi / 4;
   static const double _bottomAngleThreshold = 3 * math.pi / 4;
   
+  // Chart dimension constants
+  static const double _radiusScale = 0.65;
+  static const double _labelRadiusOffset = 24.0;
+  static const double _vertexCircleRadius = 4.0;
+  static const double _centerCircleRadius = 4.0;
+  
   final List<double> data;
   final List<String> labels;
   final double maxValue;
@@ -1324,7 +1330,7 @@ class _RadarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final radius = math.min(cx, cy) * 0.65;
+    final radius = math.min(cx, cy) * _radiusScale;
 
     final n = math.max(3, data.length);
 
@@ -1416,21 +1422,21 @@ class _RadarPainter extends CustomPainter {
       ..color = Colors.black87
       ..style = PaintingStyle.fill;
     for (final point in dataPoints) {
-      canvas.drawCircle(point, 4, paintVertex);
+      canvas.drawCircle(point, _vertexCircleRadius, paintVertex);
     }
 
     // Draw central circle
     final paintCenterCircle = Paint()
       ..color = Colors.grey.shade400
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(cx, cy), 4, paintCenterCircle);
+    canvas.drawCircle(Offset(cx, cy), _centerCircleRadius, paintCenterCircle);
 
     // Draw external labels
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
     for (var i = 0; i < n; i++) {
       final angle = (math.pi * 2 / n) * i - math.pi / 2;
       // Position labels further out from the chart
-      final labelRadius = radius + 24;
+      final labelRadius = radius + _labelRadiusOffset;
       final x = cx + labelRadius * math.cos(angle);
       final y = cy + labelRadius * math.sin(angle);
 
