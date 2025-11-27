@@ -1378,9 +1378,10 @@ class _RadarPainter extends CustomPainter {
 
     // Create gradient paint for fill - yellow/orange at top to pink/coral at bottom
     // Using baseColor and secondaryColor from Pokemon type for coherence
+    // Colors include 70% opacity for transparency effect
     final gradientColors = [
-      Color.lerp(const Color(0xFFFFD54F), baseColor, 0.3) ?? const Color(0xFFFFD54F), // Yellow/orange tint
-      Color.lerp(const Color(0xFFFF8A80), secondaryColor, 0.3) ?? const Color(0xFFFF8A80), // Pink/coral tint
+      (Color.lerp(const Color(0xFFFFD54F), baseColor, 0.3) ?? const Color(0xFFFFD54F)).withOpacity(0.7), // Yellow/orange tint
+      (Color.lerp(const Color(0xFFFF8A80), secondaryColor, 0.3) ?? const Color(0xFFFF8A80)).withOpacity(0.7), // Pink/coral tint
     ];
 
     final paintGradientFill = Paint()
@@ -1390,11 +1391,6 @@ class _RadarPainter extends CustomPainter {
         gradientColors,
       )
       ..style = PaintingStyle.fill;
-
-    // Draw the gradient fill with transparency
-    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
-    canvas.drawPath(pathData, paintGradientFill..color = paintGradientFill.color.withOpacity(0.7));
-    canvas.restore();
 
     // Draw the data polygon fill with gradient
     canvas.drawPath(pathData, paintGradientFill);
