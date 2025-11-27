@@ -106,10 +106,10 @@ class PokemonListState {
 
 /// Provider del cliente GraphQL.
 /// 
-/// Debe ser sobrescrito con el cliente real en la aplicación.
+/// Must be overridden with the real GraphQL client in the application.
 final graphQLClientProvider = Provider<GraphQLClient>((ref) {
   throw UnimplementedError(
-    'graphQLClientProvider debe ser sobrescrito con el cliente GraphQL real',
+    'graphQLClientProvider must be overridden with the real GraphQL client',
   );
 });
 

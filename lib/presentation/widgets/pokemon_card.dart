@@ -115,8 +115,7 @@ class PokemonCard extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                             ),
-                            const SizedBox(height: 10),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 18),
                             SizedBox(
                               height: 28,
                               child: ListView.separated(
