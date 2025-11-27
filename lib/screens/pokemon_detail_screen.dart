@@ -223,16 +223,17 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
         } else {
           displayName = '${category.displayName} ${_capitalize(speciesName)}';
         }
-        
+
         forms.add(PokemonFormVariant(
           id: formId,
-          name: formName.isNotEmpty ? formName : variantName,
+          name: formName. isNotEmpty ? formName : variantName,
           displayName: displayName,
           category: category,
           pokemonId: variantId,
-          spriteUrl: formSprites['default'] ?? variantSprites['default'] ?? _artworkUrlForId(variantId),
+          spriteUrl: formSprites['default'] ??  variantSprites['default'] ??  _artworkUrlForId(variantId),
           shinySpriteUrl: formSprites['shiny'] ?? variantSprites['shiny'] ?? _artworkShinyUrlForId(variantId),
-          types: formTypes.isNotEmpty ? formTypes : variantTypes,
+          types: formTypes. isNotEmpty ? formTypes : variantTypes,
+          isDefault: isDefault, // NUEVO: usar el valor de is_default del form
         ));
       }
       
@@ -258,18 +259,31 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
         ));
       }
     }
-    
-    // Sort forms: default first, then by category
+
+    // Sort forms:
+// 1. La forma del pokemonId seleccionado primero
+// 2.  Luego formas default
+// 3. Luego por categoría
     forms.sort((a, b) {
+      // Prioridad máxima: el pokemonId que el usuario seleccionó
+      final aIsSelected = a.pokemonId == widget.pokemonId;
+      final bIsSelected = b.pokemonId == widget.pokemonId;
+
+      if (aIsSelected && !bIsSelected) return -1;
+      if (bIsSelected && !aIsSelected) return 1;
+
+      // Segunda prioridad: formas default
       if (a.category == PokemonFormCategory.defaultForm && b.category != PokemonFormCategory.defaultForm) {
         return -1;
       }
       if (b.category == PokemonFormCategory.defaultForm && a.category != PokemonFormCategory.defaultForm) {
         return 1;
       }
+
+      // Tercera prioridad: por índice de categoría
       return a.category.index.compareTo(b.category.index);
     });
-    
+
     return forms;
   }
 
@@ -303,11 +317,15 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   }
 
   /// Extract sprites from a form object
+  /// Nota: Los form sprites en la DB usualmente solo tienen sprites básicos,
+  /// no official-artwork.  Esta función intenta extraerlos pero el fallback
+  /// a artwork URLs por ID es más confiable.
   Map<String, String?> _extractFormSprites(Map<String, dynamic> form) {
     final spritesList = form['pokemon_v2_pokemonformsprites'] as List?;
     if (spritesList == null || spritesList.isEmpty) return {'default': null, 'shiny': null};
     final raw = spritesList.first['sprites'];
     if (raw == null) return {'default': null, 'shiny': null};
+
     Map<String, dynamic> decoded;
     if (raw is String) {
       try {
@@ -320,17 +338,31 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     } else {
       return {'default': null, 'shiny': null};
     }
+
+    // Priorizar official-artwork, luego home, luego sprites básicos
+    // Los form sprites raramente tienen official-artwork, así que
+    // es probable que retorne null y use el fallback de _artworkUrlForId
     final defaultUrl =
-        decoded['other']?['official-artwork']?['front_default'] ??
+        decoded['other']?['official-artwork']? ['front_default'] ??
             decoded['other']?['home']?['front_default'] ??
             decoded['front_default'];
     final shinyUrl =
         decoded['other']?['official-artwork']?['front_shiny'] ??
-            decoded['other']?['home']?['front_shiny'] ??
+            decoded['other']?['home']? ['front_shiny'] ??
             decoded['front_shiny'];
-    return {'default': defaultUrl as String?, 'shiny': shinyUrl as String?};
-  }
 
+    // Solo retornar URLs si son de alta calidad (official-artwork o home)
+    // Los sprites básicos (front_default sin 'other') son de baja resolución
+    final hasOfficialDefault = decoded['other']?['official-artwork']? ['front_default'] != null ||
+        decoded['other']?['home']?['front_default'] != null;
+    final hasOfficialShiny = decoded['other']?['official-artwork']? ['front_shiny'] != null ||
+        decoded['other']?['home']?['front_shiny'] != null;
+
+    return {
+      'default': hasOfficialDefault ? defaultUrl as String? : null,
+      'shiny': hasOfficialShiny ? shinyUrl as String?  : null,
+    };
+  }
   static const Map<String, Color> _typeColor = _kTypeColor;
 
   IconData _iconForType(String type) {
@@ -614,37 +646,74 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
               .toList(growable: false);
 
           // Build available forms from species data (for the dropdown)
+          // Build available forms from species data (for the dropdown)
           final newAvailableForms = _buildAvailableForms(pokemon);
+
+// Inicializar formas sincrónicamente para evitar parpadeo
+// Usamos variables locales para el render actual
+          List<PokemonFormVariant> currentAvailableForms = _availableForms;
+          int?  currentSelectedFormId = _selectedFormId;
+
           if (_availableForms.isEmpty && newAvailableForms.isNotEmpty) {
-            // Initialize forms list (only once to avoid rebuilding on every frame)
+            currentAvailableForms = newAvailableForms;
+
+            // PRIORIDAD 1: Encontrar la forma que corresponde exactamente al pokemonId que el usuario seleccionó
+            // PRIORIDAD 2: Buscar una forma con isDefault true Y que sea del pokemon base (no variantes regionales)
+            // PRIORIDAD 3: Primera forma de la lista
+
+            PokemonFormVariant? defaultForm;
+
+            // Prioridad 1: Buscar por pokemonId exacto (el que el usuario seleccionó)
+            defaultForm = newAvailableForms.cast<PokemonFormVariant?>().firstWhere(
+                  (f) => f! .pokemonId == widget.pokemonId,
+              orElse: () => null,
+            );
+
+            // Prioridad 2: Si no encontramos por pokemonId, buscar la forma default que NO sea regional
+            if (defaultForm == null) {
+              defaultForm = newAvailableForms.cast<PokemonFormVariant?>().firstWhere(
+                    (f) => f!.isDefault && f.category == PokemonFormCategory.defaultForm,
+                orElse: () => null,
+              );
+            }
+
+            // Prioridad 3: Si aún no encontramos, buscar cualquier forma con category defaultForm
+            if (defaultForm == null) {
+              defaultForm = newAvailableForms.cast<PokemonFormVariant?>().firstWhere(
+                    (f) => f!.category == PokemonFormCategory.defaultForm,
+                orElse: () => null,
+              );
+            }
+
+            // Fallback: usar la primera forma
+            defaultForm ??= newAvailableForms.first;
+
+            currentSelectedFormId = defaultForm.id;
+
+            // Programar setState para persistir los cambios (sin causar parpadeo visual)
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && _availableForms.isEmpty) {
                 setState(() {
                   _availableForms = newAvailableForms;
-                  // Set the default selected form
-                  if (_selectedFormId == null && newAvailableForms.isNotEmpty) {
-                    final defaultForm = newAvailableForms.firstWhere(
-                      (f) => f.category == PokemonFormCategory.defaultForm,
-                      orElse: () => newAvailableForms.first,
-                    );
-                    _selectedFormId = defaultForm.id;
-                  }
+                  _selectedFormId = currentSelectedFormId;
                 });
               }
             });
           }
 
           // Get current selected form data for display
+          // Get current selected form data for display
+// Usar las variables locales que ya tienen los datos correctos
           PokemonFormVariant? currentForm;
-          if (_availableForms.isNotEmpty && _selectedFormId != null) {
+          if (currentAvailableForms.isNotEmpty && currentSelectedFormId != null) {
             try {
-              currentForm = _availableForms.firstWhere((f) => f.id == _selectedFormId);
+              currentForm = currentAvailableForms.firstWhere((f) => f. id == currentSelectedFormId);
             } catch (_) {
-              currentForm = _availableForms.first;
+              currentForm = currentAvailableForms.first;
             }
           }
 
-          // Use selected form's sprite if available
+// Use selected form's sprite if available
           String? displayedFormImageUrl;
           String? displayedFormShinyUrl;
           if (currentForm != null) {
@@ -654,10 +723,9 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
             displayedFormImageUrl = defaultImageUrl;
             displayedFormShinyUrl = shinyImageUrl;
           }
-          final finalDisplayedImageUrl = _showShiny 
-              ? (displayedFormShinyUrl ?? displayedFormImageUrl) 
-              : (displayedFormImageUrl ?? displayedFormShinyUrl);
-
+          final finalDisplayedImageUrl = _showShiny
+              ? (displayedFormShinyUrl ?? displayedFormImageUrl)
+              : (displayedFormImageUrl ??  displayedFormShinyUrl);
           // Abilities: include name, is_hidden, short_effect (english)
           final abilities = ((pokemon['pokemon_v2_pokemonabilities'] as List?) ?? []).map((a) {
             final ability = a['pokemon_v2_ability'] as Map<String, dynamic>?;
