@@ -1300,28 +1300,22 @@ class _RadarChart extends StatelessWidget {
 }
 
 class _RadarPainter extends CustomPainter {
-  // Gradient color constants for the radar chart fill
-  static const Color _gradientTopColor = Color(0xFFFFD54F); // Yellow/orange
-  static const Color _gradientBottomColor = Color(0xFFFF8A80); // Pink/coral
-  
-  // Label positioning constants
   static const double _labelOffsetAdjustment = 4.0;
   static const double _topAngleThreshold = math.pi / 4;
   static const double _bottomAngleThreshold = 3 * math.pi / 4;
-  
-  // Chart dimension constants
-  static const double _radiusScale = 0.65;
-  static const double _labelRadiusOffset = 24.0;
+
+  static const double _radiusScale = 0.72;
+  static const double _labelRadiusOffset = 30.0;
   static const double _vertexCircleRadius = 4.0;
-  static const double _centerCircleRadius = 4.0;
-  
+  static const double _centerCircleRadius = 5.0;
+
   final List<double> data;
   final List<String> labels;
   final double maxValue;
   final Color baseColor;
   final Color secondaryColor;
 
-  _RadarPainter({
+  const _RadarPainter({
     required this.data,
     required this.labels,
     required this.maxValue,
@@ -1334,152 +1328,172 @@ class _RadarPainter extends CustomPainter {
     final cx = size.width / 2;
     final cy = size.height / 2;
     final radius = math.min(cx, cy) * _radiusScale;
-
+    final center = Offset(cx, cy);
     final n = math.max(3, data.length);
 
-    // Paint for concentric ring guides (gray background lines)
-    final paintGrid = Paint()
+    // Fondo gris
+    final Paint backgroundPaint = Paint()
       ..color = Colors.grey.shade300
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..style = PaintingStyle.fill;
 
-    // Paint for radial lines from center to vertices
-    final paintRadialLines = Paint()
-      ..color = Colors.grey.shade300
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+    canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Draw radial lines from center to each vertex
-    for (var i = 0; i < n; i++) {
-      final angle = (math.pi * 2 / n) * i - math.pi / 2;
-      final x = cx + radius * math.cos(angle);
-      final y = cy + radius * math.sin(angle);
-      canvas.drawLine(Offset(cx, cy), Offset(x, y), paintRadialLines);
-    }
-
-    // Draw concentric hexagonal/polygonal ring guides
-    const rings = 4;
-    for (var r = 1; r <= rings; r++) {
-      final rr = radius * (r / rings);
-      final path = Path();
-      for (var i = 0; i < n; i++) {
-        final angle = (math.pi * 2 / n) * i - math.pi / 2;
-        final x = cx + rr * math.cos(angle);
-        final y = cy + rr * math.sin(angle);
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, paintGrid);
-    }
-
-    // Build the data polygon path and collect vertex points
-    final pathData = Path();
+    // Puntos del polígono
     final List<Offset> dataPoints = [];
-    for (var i = 0; i < n; i++) {
-      final val = (i < data.length) ? (data[i].clamp(0, maxValue) / maxValue) : 0.0;
-      final r = radius * val;
+    for (int i = 0; i < n; i++) {
+      final double normalized =
+      (i < data.length) ? (data[i].clamp(0.0, maxValue) / maxValue) : 0.0;
+
+      final r = radius * normalized;
       final angle = (math.pi * 2 / n) * i - math.pi / 2;
+
       final x = cx + r * math.cos(angle);
       final y = cy + r * math.sin(angle);
+
       dataPoints.add(Offset(x, y));
-      if (i == 0) {
-        pathData.moveTo(x, y);
-      } else {
-        pathData.lineTo(x, y);
-      }
     }
+
+    // Polígono curvo hacia dentro
+    final Path pathData = Path()..moveTo(dataPoints[0].dx, dataPoints[0].dy);
+    const double inwardFactor = 0.12;
+
+    for (int i = 0; i < dataPoints.length; i++) {
+      final current = dataPoints[i];
+      final next = dataPoints[(i + 1) % dataPoints.length];
+
+      final mid = Offset(
+        (current.dx + next.dx) / 2,
+        (current.dy + next.dy) / 2,
+      );
+
+      final control = Offset(
+        mid.dx + (center.dx - mid.dx) * inwardFactor,
+        mid.dy + (center.dy - mid.dy) * inwardFactor,
+      );
+
+      pathData.quadraticBezierTo(control.dx, control.dy, next.dx, next.dy);
+    }
+
     pathData.close();
 
-    // Create gradient paint for fill - yellow/orange at top to pink/coral at bottom
-    // Using baseColor and secondaryColor from Pokemon type for coherence
-    // Colors include 70% opacity for transparency effect
-    final gradientColors = [
-      (Color.lerp(_gradientTopColor, baseColor, 0.3) ?? _gradientTopColor).withOpacity(0.7),
-      (Color.lerp(_gradientBottomColor, secondaryColor, 0.3) ?? _gradientBottomColor).withOpacity(0.7),
-    ];
-
+    // Gradiente más fuerte
     final paintGradientFill = Paint()
       ..shader = ui.Gradient.linear(
-        Offset(cx, cy - radius), // Top
-        Offset(cx, cy + radius), // Bottom
-        gradientColors,
+        Offset(cx - radius * 1.2, cy - radius * 1.2),
+        Offset(cx + radius * 1.2, cy + radius * 1.2),
+        [
+          baseColor.withOpacity(1.0),
+          Color.lerp(baseColor, secondaryColor, 0.5)!.withOpacity(0.95),
+          secondaryColor.withOpacity(1.0),
+        ],
+        [
+          0.0,
+          0.5,
+          1.0,
+        ],
       )
       ..style = PaintingStyle.fill;
 
-    // Draw the data polygon fill with gradient
+    // 1. Área del polígono
     canvas.drawPath(pathData, paintGradientFill);
 
-    // Draw the data polygon border/stroke
-    final paintStroke = Paint()
-      ..color = Color.lerp(baseColor, secondaryColor, 0.5)?.withOpacity(0.8) ?? baseColor
+    // 2. Borde del polígono
+    final Paint paintStroke = Paint()
+      ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2.2;
+
     canvas.drawPath(pathData, paintStroke);
 
-    // Draw small black circles at each vertex of the data polygon
-    final paintVertex = Paint()
-      ..color = Colors.black87
-      ..style = PaintingStyle.fill;
-    for (final point in dataPoints) {
-      canvas.drawCircle(point, _vertexCircleRadius, paintVertex);
+    // 3. Líneas del radar
+    final Paint gridPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    final Paint radialPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    const int rings = 6;
+    for (int r = 1; r <= rings; r++) {
+      canvas.drawCircle(center, radius * (r / rings), gridPaint);
     }
 
-    // Draw central circle
-    final paintCenterCircle = Paint()
-      ..color = Colors.grey.shade400
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(cx, cy), _centerCircleRadius, paintCenterCircle);
-
-    // Draw external labels
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    for (var i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       final angle = (math.pi * 2 / n) * i - math.pi / 2;
-      // Position labels further out from the chart
-      final labelRadius = radius + _labelRadiusOffset;
-      final x = cx + labelRadius * math.cos(angle);
-      final y = cy + labelRadius * math.sin(angle);
+      final x = cx + radius * math.cos(angle);
+      final y = cy + radius * math.sin(angle);
+      canvas.drawLine(center, Offset(x, y), radialPaint);
+    }
 
-      final label = (i < labels.length) ? labels[i] : '';
-      final tp = TextSpan(
-        text: label,
+    // 4. Puntos
+    final Paint paintVertex = Paint()
+      ..color = Colors.black87
+      ..style = PaintingStyle.fill;
+
+    for (final p in dataPoints) {
+      canvas.drawCircle(p, _vertexCircleRadius, paintVertex);
+    }
+
+    // Centro hueco
+    final Paint centerStroke = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    canvas.drawCircle(center, _centerCircleRadius * 1.5, centerStroke);
+
+    // --- LABELS + VALORES ---
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+
+    for (int i = 0; i < n; i++) {
+      final angle = (math.pi * 2 / n) * i - math.pi / 2;
+      final double labelRadius = radius + _labelRadiusOffset;
+
+      final lx = cx + labelRadius * math.cos(angle);
+      final ly = cy + labelRadius * math.sin(angle);
+
+      final String label = labels[i];
+      final double value = (i < data.length) ? data[i] : 0;
+
+      final String fullText = "$label  ${value.toInt()}";
+
+      textPainter.text = TextSpan(
+        text: fullText,
         style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey.shade700,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade800,
         ),
       );
-      textPainter.text = tp;
+
       textPainter.layout();
 
-      // Adjust offset based on position for better alignment
-      double offsetX = x - textPainter.width / 2;
-      double offsetY = y - textPainter.height / 2;
+      double dx = lx - textPainter.width / 2;
+      double dy = ly - textPainter.height / 2;
 
-      // Fine-tune positioning based on angle
       if (angle > -_topAngleThreshold && angle < _topAngleThreshold) {
-        // Top area - move up slightly
-        offsetY -= _labelOffsetAdjustment;
-      } else if (angle > _bottomAngleThreshold || angle < -_bottomAngleThreshold) {
-        // Bottom area - move down slightly
-        offsetY += _labelOffsetAdjustment;
+        dy -= _labelOffsetAdjustment;
+      } else if (angle > _bottomAngleThreshold ||
+          angle < -_bottomAngleThreshold) {
+        dy += _labelOffsetAdjustment;
       }
 
-      textPainter.paint(canvas, Offset(offsetX, offsetY));
+      textPainter.paint(canvas, Offset(dx, dy));
     }
   }
 
   @override
   bool shouldRepaint(covariant _RadarPainter oldDelegate) =>
       oldDelegate.data != data ||
-      oldDelegate.labels != labels ||
-      oldDelegate.maxValue != maxValue ||
-      oldDelegate.baseColor != baseColor ||
-      oldDelegate.secondaryColor != secondaryColor;
+          oldDelegate.labels != labels ||
+          oldDelegate.maxValue != maxValue ||
+          oldDelegate.baseColor != baseColor ||
+          oldDelegate.secondaryColor != secondaryColor;
 }
+
 
 class _EvolutionNode extends StatelessWidget {
   final int id;
