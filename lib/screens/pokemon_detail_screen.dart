@@ -2385,12 +2385,13 @@ class _EvolutionNode extends StatelessWidget {
                 top: 44,
                 child: _TypeIconCircle(type: primaryType),
               ),
-              // Right type icon (only if different from primary)
-              Positioned(
-                right: -16,
-                top: 44,
-                child: _TypeIconCircle(type: secondaryType),
-              ),
+              // Right type icon (only if Pokemon has two different types)
+              if (types.length > 1)
+                Positioned(
+                  right: -16,
+                  top: 44,
+                  child: _TypeIconCircle(type: secondaryType),
+                ),
             ],
           ),
         ),
@@ -2499,7 +2500,7 @@ class _EvolutionTransition extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    isLevelUp && minLevel != null && minLevel! > 0
+                    isLevelUp && minLevel != null && minLevel > 0
                         ? 'Lv.$minLevel'
                         : _getTriggerLabel(triggerName),
                     style: const TextStyle(
