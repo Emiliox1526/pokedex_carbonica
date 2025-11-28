@@ -10,68 +10,67 @@ import 'presentation/providers/pokemon_list_provider.dart';
 import 'presentation/screens/pokemon_list_screen.dart';
 
 /// Punto de entrada de la aplicación Pokédex.
-/// 
+///
 /// Inicializa Flutter, Hive para persistencia local, y GraphQL para
 /// las consultas a la API. Utiliza Riverpod para la gestión de estado.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Inicializar Hive para cache local
-  await Hive.initFlutter();
-  
+  await Hive. initFlutter();
+
   // Registrar adaptadores de Hive
-  if (!Hive.isAdapterRegistered(0)) {
+  if (!Hive. isAdapterRegistered(0)) {
     Hive.registerAdapter(PokemonDTOAdapter());
   }
-  
+
   // Inicializar el data source local
   final localDataSource = PokemonLocalDataSource();
   await localDataSource.initialize();
-  
+
   // Inicializar cache de GraphQL
   await initHiveForFlutter();
-  
+
+  // Inicializar el cliente GraphQL aquí, antes del runApp
+  final graphQLClientNotifier = initGraphQLClient();
+  final graphQLClient = graphQLClientNotifier.value;
+
   runApp(
     ProviderScope(
       overrides: [
         // Sobrescribir el provider del data source local
         localDataSourceProvider.overrideWithValue(localDataSource),
+        // Sobrescribir el provider del cliente GraphQL con el cliente real
+        graphQLClientProvider. overrideWithValue(graphQLClient),
       ],
-      child: const PokedexApp(),
+      child: PokedexApp(graphQLClient: graphQLClientNotifier),
     ),
   );
 }
 
 /// Widget principal de la aplicación Pokédex.
-/// 
+///
 /// Configura los providers de GraphQL y Riverpod necesarios
 /// para el funcionamiento de la aplicación.
-class PokedexApp extends ConsumerWidget {
-  const PokedexApp({super.key});
+class PokedexApp extends StatelessWidget {
+  final ValueNotifier<GraphQLClient> graphQLClient;
+
+  const PokedexApp({super.key, required this.graphQLClient});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Inicializar el cliente GraphQL
-    final graphQLClient = initGraphQLClient();
-    
+  Widget build(BuildContext context) {
     return GraphQLProvider(
       client: graphQLClient,
       child: CacheProvider(
-        child: ProviderScope(
-          overrides: [
-            // Sobrescribir el provider del cliente GraphQL con el cliente real
-            graphQLClientProvider.overrideWithValue(graphQLClient.value),
-          ],
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Pokédex Carbonica',
-            theme: ThemeData(
-              colorSchemeSeed: Colors.red,
-              useMaterial3: true,
-            ),
-            // Usar la nueva pantalla con Clean Architecture
-            home: const PokemonListScreenNew(),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Pokédex Carbonica',
+          theme: ThemeData(
+            colorSchemeSeed: Colors. red,
+            useMaterial3: true,
           ),
+          // Usar la nueva pantalla con Clean Architecture
+          home: const PokemonListScreenNew(),
         ),
       ),
     );
