@@ -10,17 +10,38 @@ import '../../../domain/entities/game/game_achievement.dart';
 import '../../../domain/entities/pokemon.dart';
 import '../pokemon_list_provider.dart';
 
+/// Cantidad de Pokémon a cargar para el juego.
+const int _gamePokemonCount = 150;
+
 /// Provider para el data source local del juego.
 final gameLocalDataSourceProvider = Provider<GameLocalDataSource>((ref) {
   return GameLocalDataSource();
+});
+
+/// Provider que carga los Pokémon para el juego desde el repositorio.
+/// 
+/// Obtiene una cantidad amplia de Pokémon (150) para tener variedad en el juego,
+/// en lugar de depender de la lista paginada que solo tiene ~20 Pokémon.
+final gamePokemonsProvider = FutureProvider<List<Pokemon>>((ref) async {
+  final repository = ref.watch(pokemonRepositoryProvider);
+  return repository.getRandomPokemonsForGame(_gamePokemonCount);
 });
 
 /// Provider para el estado del juego "¿Quién es este Pokémon?".
 final gameProvider =
     StateNotifierProvider<GameNotifier, GameState>((ref) {
   final dataSource = ref.watch(gameLocalDataSourceProvider);
-  final pokemonState = ref.watch(pokemonListProvider);
-  return GameNotifier(dataSource, pokemonState.pokemons);
+  final gamePokemonsAsync = ref.watch(gamePokemonsProvider);
+  
+  // Obtener la lista de Pokémon del provider asíncrono
+  // Si aún está cargando o hay error, usar lista vacía
+  final gamePokemons = gamePokemonsAsync.when(
+    data: (pokemons) => pokemons,
+    loading: () => <Pokemon>[],
+    error: (_, __) => <Pokemon>[],
+  );
+  
+  return GameNotifier(dataSource, gamePokemons);
 });
 
 /// Provider para la lista de logros.

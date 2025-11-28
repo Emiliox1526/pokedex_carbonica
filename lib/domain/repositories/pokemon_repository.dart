@@ -96,4 +96,11 @@ abstract class PokemonRepository {
 
   /// Verifica si hay datos en el cache local.
   Future<bool> hasCachedData();
+
+  /// Obtiene una lista de Pokémon aleatorios para el juego.
+  /// 
+  /// [count] es la cantidad de Pokémon a obtener.
+  /// 
+  /// Retorna un [Future] con una lista de [Pokemon].
+  Future<List<Pokemon>> getRandomPokemonsForGame(int count);
 }
