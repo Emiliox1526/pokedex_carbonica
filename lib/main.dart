@@ -5,12 +5,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'graphql_client.dart';
 import 'data/models/pokemon_dto.dart';
+import 'data/models/game/game_score_dto.dart';
+import 'data/models/game/game_achievement_dto.dart';
 import 'data/datasources/pokemon_local_datasource.dart';
 import 'data/datasources/detail/pokemon_detail_local_datasource.dart';
 import 'data/datasources/favorites/favorites_local_datasource.dart';
+import 'data/datasources/game/game_local_datasource.dart';
 import 'presentation/providers/pokemon_list_provider.dart';
 import 'presentation/providers/detail/pokemon_detail_provider.dart';
 import 'presentation/providers/favorites/favorites_provider.dart';
+import 'presentation/providers/game/game_provider.dart';
 import 'presentation/screens/pokemon_list_screen.dart';
 
 /// Punto de entrada de la aplicación Pokédex.
@@ -27,6 +31,12 @@ Future<void> main() async {
   if (!Hive. isAdapterRegistered(0)) {
     Hive.registerAdapter(PokemonDTOAdapter());
   }
+  if (!Hive.isAdapterRegistered(GameScoreDTO.hiveTypeId)) {
+    Hive.registerAdapter(GameScoreDTOAdapter());
+  }
+  if (!Hive.isAdapterRegistered(GameAchievementDTO.hiveTypeId)) {
+    Hive.registerAdapter(GameAchievementDTOAdapter());
+  }
 
   // Inicializar el data source local
   final localDataSource = PokemonLocalDataSource();
@@ -39,6 +49,10 @@ Future<void> main() async {
   // Inicializar el data source local para favoritos
   final favoritesLocalDataSource = FavoritesLocalDataSource();
   await favoritesLocalDataSource.initialize();
+
+  // Inicializar el data source local para el juego "¿Quién es este Pokémon?"
+  final gameLocalDataSource = GameLocalDataSource();
+  await gameLocalDataSource.initialize();
 
   // Inicializar cache de GraphQL
   await initHiveForFlutter();
@@ -56,6 +70,8 @@ Future<void> main() async {
         pokemonDetailLocalDataSourceProvider.overrideWithValue(detailLocalDataSource),
         // Sobrescribir el provider del data source de favoritos
         favoritesLocalDataSourceProvider.overrideWithValue(favoritesLocalDataSource),
+        // Sobrescribir el provider del data source del juego
+        gameLocalDataSourceProvider.overrideWithValue(gameLocalDataSource),
         // Sobrescribir el provider del cliente GraphQL con el cliente real
         graphQLClientProvider. overrideWithValue(graphQLClient),
       ],
