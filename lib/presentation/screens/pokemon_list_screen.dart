@@ -35,6 +35,9 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   /// Colores de fondo del gradiente.
   final Color _bg1 = hex('#9e1932');
   final Color _bg2 = hex('#520317');
+  
+  /// Set de URLs de imágenes ya precargadas.
+  final Set<String> _prefetchedImageUrls = {};
 
   /// Mapa de colores por tipo de Pokémon.
   static final Map<String, Color> typeColor = {
@@ -273,7 +276,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
           itemBuilder: (context, index) {
             final pokemon = state.pokemons[index];
             
-            // Prefetch de imágenes para los próximos 5-10 Pokémon
+            // Prefetch de imágenes para los próximos 5 Pokémon
             _prefetchUpcomingImages(context, state.pokemons, index);
             
             return PokemonCard(
@@ -300,17 +303,20 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   }
   
   /// Precarga las imágenes de los próximos Pokémon para mejorar el rendimiento.
+  /// Silencia errores de red ya que el prefetching es una optimización no crítica.
   void _prefetchUpcomingImages(BuildContext context, List<Pokemon> pokemons, int currentIndex) {
     const prefetchCount = 5;
     final endIndex = (currentIndex + prefetchCount).clamp(0, pokemons.length);
     
     for (int i = currentIndex + 1; i < endIndex; i++) {
       final imageUrl = pokemons[i].imageUrl;
-      if (imageUrl != null) {
+      if (imageUrl != null && !_prefetchedImageUrls.contains(imageUrl)) {
+        _prefetchedImageUrls.add(imageUrl);
+        // Ignorar errores de prefetch ya que no afectan la funcionalidad principal
         precacheImage(
           CachedNetworkImageProvider(imageUrl),
           context,
-        );
+        ).catchError((_) {});
       }
     }
   }

@@ -159,7 +159,16 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   final GetPokemonListUseCase _useCase;
   
   /// Cache local de páginas ya cargadas para evitar recargas innecesarias.
-  /// La clave es una combinación de filtros + página.
+  /// 
+  /// **Formato de clave**: `{searchText}_{generation}_{types}_{page}`
+  /// Ejemplo: `pikachu_1_fire,electric_1`
+  /// 
+  /// **Política de evicción**: LRU (Least Recently Used) basado en timestamps.
+  /// Cuando el cache excede [_maxCacheSize], se eliminan las entradas con
+  /// el timestamp más antiguo.
+  /// 
+  /// **Limitaciones**: La operación de evicción es O(n), lo cual es aceptable
+  /// para el tamaño actual del cache (20 entradas máximo).
   final Map<String, _CachedPageData> _pageCache = {};
   
   /// Tamaño máximo del cache de páginas.
@@ -181,12 +190,20 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   }
   
   /// Limpia el cache si excede el tamaño máximo.
+  /// Elimina las entradas más antiguas basándose en el timestamp de acceso.
   void _trimCache() {
-    if (_pageCache.length > _maxCacheSize) {
-      // Eliminar las entradas más antiguas
-      final keysToRemove = _pageCache.keys.take(_pageCache.length - _maxCacheSize).toList();
-      for (final key in keysToRemove) {
-        _pageCache.remove(key);
+    while (_pageCache.length > _maxCacheSize) {
+      // Encontrar la entrada con el timestamp más antiguo
+      String? oldestKey;
+      DateTime? oldestTimestamp;
+      for (final entry in _pageCache.entries) {
+        if (oldestTimestamp == null || entry.value.lastAccessed.isBefore(oldestTimestamp)) {
+          oldestTimestamp = entry.value.lastAccessed;
+          oldestKey = entry.key;
+        }
+      }
+      if (oldestKey != null) {
+        _pageCache.remove(oldestKey);
       }
     }
   }
@@ -292,6 +309,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       // Verificar si la página está en cache
       final cachedData = _pageCache[cacheKey];
       if (cachedData != null) {
+        cachedData.touch(); // Actualizar timestamp de último acceso
         state = state.copyWith(
           pokemons: cachedData.pokemons,
           currentPage: cachedData.currentPage,
@@ -370,11 +388,18 @@ class _CachedPageData {
   final int currentPage;
   final int totalPages;
   final int totalCount;
+  DateTime lastAccessed;
   
-  const _CachedPageData({
+  _CachedPageData({
     required this.pokemons,
     required this.currentPage,
     required this.totalPages,
     required this.totalCount,
-  });
+    DateTime? lastAccessed,
+  }) : lastAccessed = lastAccessed ?? DateTime.now();
+  
+  /// Actualiza el timestamp de último acceso.
+  void touch() {
+    lastAccessed = DateTime.now();
+  }
 }
