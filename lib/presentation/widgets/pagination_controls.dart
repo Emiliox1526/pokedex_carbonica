@@ -48,12 +48,9 @@ class PaginationControls extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.red,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
+
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -63,7 +60,7 @@ class PaginationControls extends StatelessWidget {
             icon: Icons.chevron_left,
             enabled: hasPreviousPage && !isLoading,
             onPressed: onPreviousPage,
-            primaryColor: primaryColor,
+            primaryColor: Colors.white,
           ),
           
           const SizedBox(width: 16),
@@ -98,7 +95,7 @@ class PaginationControls extends StatelessWidget {
             icon: Icons.chevron_right,
             enabled: hasNextPage && !isLoading,
             onPressed: onNextPage,
-            primaryColor: primaryColor,
+            primaryColor: Colors.white,
           ),
         ],
       ),
