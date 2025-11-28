@@ -1,4 +1,4 @@
-import '../../pokemon.dart';
+import '../pokemon.dart';
 import 'game_achievement.dart';
 
 /// Estado del juego "¿Quién es este Pokémon?".
