@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
+import '../../../domain/entities/pokemon.dart';
 import '../../../domain/entities/detail/pokemon_form_variant.dart';
 import '../../providers/detail/pokemon_detail_provider.dart';
+import '../../providers/favorites/favorites_provider.dart';
 import '../../widgets/detail/detail_header.dart';
 import '../../widgets/detail/detail_image_section.dart';
 import '../../widgets/detail/detail_tab_bar.dart';
@@ -43,8 +44,6 @@ class PokemonDetailScreenNew extends ConsumerStatefulWidget {
 
 class _PokemonDetailScreenNewState
     extends ConsumerState<PokemonDetailScreenNew> {
-  static const _prefsKeyFavorites = 'favorite_pokemon_ids';
-
   @override
   void initState() {
     super.initState();
@@ -53,11 +52,10 @@ class _PokemonDetailScreenNewState
   }
 
   Future<void> _initializeData() async {
-    // Load favorite status
+    // Load favorite status from FavoritesLocalDataSource
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final favs = prefs.getStringList(_prefsKeyFavorites) ?? [];
-      final isFavorite = favs.contains(widget.pokemonId.toString());
+      final favoritesDataSource = ref.read(favoritesLocalDataSourceProvider);
+      final isFavorite = await favoritesDataSource.isFavorite(widget.pokemonId);
       ref.read(pokemonDetailProvider(widget.pokemonId).notifier).setFavorite(isFavorite);
     } catch (_) {
       // Ignore errors
@@ -70,25 +68,74 @@ class _PokemonDetailScreenNewState
   Future<void> _toggleFavorite() async {
     final notifier = ref.read(pokemonDetailProvider(widget.pokemonId).notifier);
     final state = ref.read(pokemonDetailProvider(widget.pokemonId));
+    final favoritesDataSource = ref.read(favoritesLocalDataSourceProvider);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final favs = prefs.getStringList(_prefsKeyFavorites) ?? [];
-
-      if (state.isFavorite) {
-        favs.remove(widget.pokemonId.toString());
+      // Get Pokemon data from detail or initial data
+      final detail = state.detail;
+      Pokemon pokemon;
+      
+      if (detail != null) {
+        pokemon = Pokemon(
+          id: detail.id,
+          name: detail.name,
+          types: detail.types,
+          imageUrl: detail.defaultSpriteUrl,
+          abilities: detail.abilities.map((a) => a.name).toList(),
+        );
+      } else if (widget.initialPokemon != null) {
+        // Fall back to initial Pokemon data
+        final data = widget.initialPokemon!;
+        final typesRaw = data['pokemon_v2_pokemontypes'] as List? ?? [];
+        final types = typesRaw
+            .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+            .toList();
+        
+        String? imageUrl;
+        final spritesList = data['pokemon_v2_pokemonsprites'] as List?;
+        if (spritesList != null && spritesList.isNotEmpty) {
+          final sprites = spritesList.first['sprites'];
+          if (sprites is Map) {
+            imageUrl = sprites['other']?['official-artwork']?['front_default'] as String? ??
+                       sprites['front_default'] as String?;
+          }
+        }
+        
+        final abilitiesRaw = data['pokemon_v2_pokemonabilities'] as List? ?? [];
+        final abilities = abilitiesRaw
+            .map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
+            .where((e) => e.isNotEmpty)
+            .toList();
+        
+        pokemon = Pokemon(
+          id: data['id'] as int,
+          name: data['name'] as String,
+          types: types,
+          imageUrl: imageUrl,
+          abilities: abilities,
+        );
       } else {
-        favs.add(widget.pokemonId.toString());
+        // Create minimal Pokemon object
+        pokemon = Pokemon(
+          id: widget.pokemonId,
+          name: 'Pokemon #${widget.pokemonId}',
+          types: ['normal'],
+        );
       }
 
-      await prefs.setStringList(_prefsKeyFavorites, favs);
+      if (state.isFavorite) {
+        await favoritesDataSource.removeFavorite(widget.pokemonId);
+      } else {
+        await favoritesDataSource.addFavorite(pokemon);
+      }
+
       notifier.toggleFavorite();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              !state.isFavorite ? 'Added to favorites' : 'Removed from favorites',
+              !state.isFavorite ? 'Agregado a favoritos' : 'Eliminado de favoritos',
             ),
           ),
         );
