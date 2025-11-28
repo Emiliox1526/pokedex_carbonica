@@ -7,17 +7,17 @@ import '../datasources/pokemon_local_datasource.dart';
 import '../models/pokemon_dto.dart';
 
 /// Implementación del repositorio de Pokémon.
-/// 
+///
 /// Esta clase implementa la lógica de obtención de datos con cache,
 /// combinando el data source remoto (GraphQL) y local (Hive).
 /// Sigue el patrón Repository del Domain-Driven Design.
 class PokemonRepositoryImpl implements PokemonRepository {
   /// Data source remoto para consultas GraphQL.
   final PokemonRemoteDataSource _remoteDataSource;
-  
+
   /// Data source local para persistencia con Hive.
   final PokemonLocalDataSource _localDataSource;
-  
+
   /// Servicio de conectividad.
   final Connectivity _connectivity;
 
@@ -37,21 +37,21 @@ class PokemonRepositoryImpl implements PokemonRepository {
   Future<PaginatedPokemonList> getPokemonList(PokemonFilter filter) async {
     // Forzar el tamaño de página a 20
     final normalizedFilter = filter.copyWith(pageSize: pageSize);
-    
+
     // Verificar conectividad
-    final connectivityResult = await _connectivity.checkConnectivity();
-    final hasConnection = !connectivityResult.contains(ConnectivityResult.none);
+    final connectivityResult = await _connectivity. checkConnectivity();
+    final hasConnection = connectivityResult != ConnectivityResult.none;
 
     if (hasConnection) {
       try {
         // Intentar obtener datos de la API
         final remotePokemon = await _remoteDataSource.getPokemonList(normalizedFilter);
         final totalCount = await _remoteDataSource.getTotalPokemonCount(normalizedFilter);
-        
+
         // Guardar en cache local
         await _localDataSource.cachePokemonList(remotePokemon, normalizedFilter);
         await _localDataSource.cacheTotalCount(totalCount, normalizedFilter);
-        
+
         return _buildPaginatedList(
           remotePokemon,
           normalizedFilter,
@@ -70,9 +70,9 @@ class PokemonRepositoryImpl implements PokemonRepository {
   @override
   Future<int> getTotalPokemonCount(PokemonFilter filter) async {
     final normalizedFilter = filter.copyWith(pageSize: pageSize);
-    
+
     final connectivityResult = await _connectivity.checkConnectivity();
-    final hasConnection = !connectivityResult.contains(ConnectivityResult.none);
+    final hasConnection = connectivityResult != ConnectivityResult.none;
 
     if (hasConnection) {
       try {
@@ -106,11 +106,11 @@ class PokemonRepositoryImpl implements PokemonRepository {
   ) async {
     final cached = await _localDataSource.getCachedPokemonList(filter);
     final cachedCount = await _localDataSource.getCachedTotalCount(filter);
-    
+
     if (cached != null && cached.isNotEmpty) {
       return _buildPaginatedList(cached, filter, cachedCount ?? cached.length);
     }
-    
+
     // Si no hay cache, relanzar el error original
     throw originalError;
   }
@@ -119,11 +119,11 @@ class PokemonRepositoryImpl implements PokemonRepository {
   Future<PaginatedPokemonList> _getFromCache(PokemonFilter filter) async {
     final cached = await _localDataSource.getCachedPokemonList(filter);
     final cachedCount = await _localDataSource.getCachedTotalCount(filter);
-    
+
     if (cached != null && cached.isNotEmpty) {
       return _buildPaginatedList(cached, filter, cachedCount ?? cached.length);
     }
-    
+
     throw PokemonRemoteException(
       message: 'Sin conexión a internet y no hay datos en cache',
       type: PokemonRemoteExceptionType.noConnection,
@@ -137,7 +137,7 @@ class PokemonRepositoryImpl implements PokemonRepository {
     int totalCount,
   ) {
     final totalPages = (totalCount / filter.pageSize).ceil();
-    
+
     return PaginatedPokemonList(
       pokemons: pokemons.map((dto) => dto.toEntity()).toList(),
       currentPage: filter.page,
