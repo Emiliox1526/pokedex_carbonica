@@ -7,8 +7,10 @@ import 'graphql_client.dart';
 import 'data/models/pokemon_dto.dart';
 import 'data/datasources/pokemon_local_datasource.dart';
 import 'data/datasources/detail/pokemon_detail_local_datasource.dart';
+import 'data/datasources/favorites/favorites_local_datasource.dart';
 import 'presentation/providers/pokemon_list_provider.dart';
 import 'presentation/providers/detail/pokemon_detail_provider.dart';
+import 'presentation/providers/favorites/favorites_provider.dart';
 import 'presentation/screens/pokemon_list_screen.dart';
 
 /// Punto de entrada de la aplicación Pokédex.
@@ -34,6 +36,10 @@ Future<void> main() async {
   final detailLocalDataSource = PokemonDetailLocalDataSource();
   await detailLocalDataSource.initialize();
 
+  // Inicializar el data source local para favoritos
+  final favoritesLocalDataSource = FavoritesLocalDataSource();
+  await favoritesLocalDataSource.initialize();
+
   // Inicializar cache de GraphQL
   await initHiveForFlutter();
 
@@ -48,6 +54,8 @@ Future<void> main() async {
         localDataSourceProvider.overrideWithValue(localDataSource),
         // Sobrescribir el provider del data source de detalles
         pokemonDetailLocalDataSourceProvider.overrideWithValue(detailLocalDataSource),
+        // Sobrescribir el provider del data source de favoritos
+        favoritesLocalDataSourceProvider.overrideWithValue(favoritesLocalDataSource),
         // Sobrescribir el provider del cliente GraphQL con el cliente real
         graphQLClientProvider. overrideWithValue(graphQLClient),
       ],

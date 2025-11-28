@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'type_chip.dart';
+import '../screens/favorites/favorites_screen.dart';
 
 /// Drawer de generaciones y filtros para la Pokédex.
 /// 
@@ -96,6 +97,21 @@ class GenerationDrawer extends StatelessWidget {
                 Container(height: 1.4, color: _dexWhite),
                 const SizedBox(height: 14),
 
+                // Favorites option
+                _FavoritesOption(
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close drawer
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const FavoritesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 14),
+                Container(height: 1.4, color: _dexWhite),
+                const SizedBox(height: 14),
+
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -159,6 +175,81 @@ class GenerationDrawer extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Favorites option button in the drawer.
+class _FavoritesOption extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _FavoritesOption({required this.onTap});
+
+  static const Color _dexWhite = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xCC7A0A16),
+                Color(0xCC4E0911),
+              ],
+            ),
+            border: Border.all(color: _dexWhite.withOpacity(0.5), width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.favorite,
+                  color: _dexWhite,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Mis Favoritos',
+                  style: TextStyle(
+                    color: _dexWhite,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: _dexWhite,
+                size: 24,
+              ),
+            ],
           ),
         ),
       ),
