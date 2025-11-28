@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../domain/entities/pokemon.dart';
 
@@ -139,19 +141,33 @@ class PokemonCard extends StatelessWidget {
                         ),
                       ),
 
-                      // Imagen del Pokémon
+                      // Imagen del Pokémon con CachedNetworkImage
                       const SizedBox(width: 16),
                       Hero(
                         tag: pokemon.heroTag,
                         child: pokemon.imageUrl != null
-                            ? Image.network(
-                                pokemon.imageUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: pokemon.imageUrl!,
                                 filterQuality: FilterQuality.high,
                                 key: ValueKey(pokemon.imageUrl),
                                 width: 120,
                                 height: 120,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Icon(
+                                placeholder: (context, url) => Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    width: 120,
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(60),
+                                    ),
+                                  ),
+                                ),
+                                fadeInDuration: const Duration(milliseconds: 300),
+                                fadeOutDuration: const Duration(milliseconds: 300),
+                                errorWidget: (_, __, ___) => const Icon(
                                   Icons.image_not_supported,
                                   size: 60,
                                   color: Colors.black26,

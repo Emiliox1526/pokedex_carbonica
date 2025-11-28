@@ -157,6 +157,22 @@ final pokemonListProvider =
 class PokemonListNotifier extends StateNotifier<PokemonListState> {
   /// Caso de uso para obtener la lista de Pokémon.
   final GetPokemonListUseCase _useCase;
+  
+  /// Cache local de páginas ya cargadas para evitar recargas innecesarias.
+  /// 
+  /// **Formato de clave**: `{searchText}_{generation}_{types}_{page}`
+  /// Ejemplo: `pikachu_1_fire,electric_1`
+  /// 
+  /// **Política de evicción**: LRU (Least Recently Used) basado en timestamps.
+  /// Cuando el cache excede [_maxCacheSize], se eliminan las entradas con
+  /// el timestamp más antiguo.
+  /// 
+  /// **Limitaciones**: La operación de evicción es O(n), lo cual es aceptable
+  /// para el tamaño actual del cache (20 entradas máximo).
+  final Map<String, _CachedPageData> _pageCache = {};
+  
+  /// Tamaño máximo del cache de páginas.
+  static const int _maxCacheSize = 20;
 
   /// Constructor que inyecta el caso de uso.
   PokemonListNotifier(this._useCase) : super(const PokemonListState());
@@ -166,6 +182,35 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
     PokemonLocalDataSource localDataSource,
   ) async {
     await localDataSource.initialize();
+  }
+  
+  /// Genera una clave de cache basada en los filtros actuales y la página.
+  String _getCacheKey(int page) {
+    return '${state.searchText}_${state.selectedGeneration}_${state.selectedTypes.join(',')}_$page';
+  }
+  
+  /// Limpia el cache si excede el tamaño máximo.
+  /// Elimina las entradas más antiguas basándose en el timestamp de acceso.
+  void _trimCache() {
+    while (_pageCache.length > _maxCacheSize) {
+      // Encontrar la entrada con el timestamp más antiguo
+      String? oldestKey;
+      DateTime? oldestTimestamp;
+      for (final entry in _pageCache.entries) {
+        if (oldestTimestamp == null || entry.value.lastAccessed.isBefore(oldestTimestamp)) {
+          oldestTimestamp = entry.value.lastAccessed;
+          oldestKey = entry.key;
+        }
+      }
+      if (oldestKey != null) {
+        _pageCache.remove(oldestKey);
+      }
+    }
+  }
+  
+  /// Limpia el cache cuando cambian los filtros.
+  void _clearCacheOnFilterChange() {
+    _pageCache.clear();
   }
 
   /// Carga la primera página de Pokémon.
@@ -207,6 +252,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
     final normalized = text.toLowerCase().trim();
     if (normalized == state.searchText) return;
     
+    _clearCacheOnFilterChange();
     state = state.copyWith(
       searchText: normalized,
       currentPage: 1,
@@ -218,6 +264,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   void selectGeneration(int? generation) {
     if (generation == state.selectedGeneration) return;
     
+    _clearCacheOnFilterChange();
     if (generation == null) {
       state = state.copyWith(clearGeneration: true, currentPage: 1);
     } else {
@@ -237,12 +284,14 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       newTypes.remove(normalized);
     }
     
+    _clearCacheOnFilterChange();
     state = state.copyWith(selectedTypes: newTypes, currentPage: 1);
     loadInitial();
   }
 
   /// Limpia todos los filtros.
   void clearFilters() {
+    _clearCacheOnFilterChange();
     state = state.copyWith(
       searchText: '',
       clearGeneration: true,
@@ -255,6 +304,25 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   /// Carga una página de Pokémon.
   Future<void> _loadPage(int page) async {
     try {
+      final cacheKey = _getCacheKey(page);
+      
+      // Verificar si la página está en cache
+      final cachedData = _pageCache[cacheKey];
+      if (cachedData != null) {
+        cachedData.touch(); // Actualizar timestamp de último acceso
+        state = state.copyWith(
+          pokemons: cachedData.pokemons,
+          currentPage: cachedData.currentPage,
+          totalPages: cachedData.totalPages,
+          totalCount: cachedData.totalCount,
+          isInitialLoading: false,
+          isLoading: false,
+          isFromCache: true,
+          clearError: true,
+        );
+        return;
+      }
+      
       final filter = PokemonFilter(
         searchText: state.searchText.isEmpty ? null : state.searchText,
         generation: state.selectedGeneration,
@@ -264,6 +332,15 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       );
 
       final result = await _useCase.execute(filter);
+      
+      // Guardar en cache
+      _pageCache[cacheKey] = _CachedPageData(
+        pokemons: result.pokemons,
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
+      );
+      _trimCache();
 
       state = state.copyWith(
         pokemons: result.pokemons,
@@ -272,6 +349,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
         totalCount: result.totalCount,
         isInitialLoading: false,
         isLoading: false,
+        isFromCache: false,
         clearError: true,
       );
     } on PokemonRemoteException catch (e) {
@@ -301,5 +379,27 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       case PokemonRemoteExceptionType.serverError:
         return 'Error del servidor. Intenta de nuevo más tarde.';
     }
+  }
+}
+
+/// Clase auxiliar para almacenar datos de página en cache.
+class _CachedPageData {
+  final List<Pokemon> pokemons;
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+  DateTime lastAccessed;
+  
+  _CachedPageData({
+    required this.pokemons,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalCount,
+    DateTime? lastAccessed,
+  }) : lastAccessed = lastAccessed ?? DateTime.now();
+  
+  /// Actualiza el timestamp de último acceso.
+  void touch() {
+    lastAccessed = DateTime.now();
   }
 }

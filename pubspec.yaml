@@ -24,6 +24,9 @@ dependencies:
   # Animaciones de carga elegantes
   flutter_spinkit: ^5.2.0
 
+  # Shimmer effect para skeleton loading
+  shimmer: ^3.0.0
+
   # Tipografía moderna (Google Fonts)
   google_fonts: ^6.2.1
 
