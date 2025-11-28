@@ -99,6 +99,27 @@ class PokemonRepositoryImpl implements PokemonRepository {
     return _localDataSource.hasData();
   }
 
+  @override
+  Future<List<Pokemon>> getRandomPokemonsForGame(int count) async {
+    // Verificar conectividad
+    final connectivityResult = await _connectivity.checkConnectivity();
+    final hasConnection = connectivityResult != ConnectivityResult.none;
+
+    if (hasConnection) {
+      try {
+        // Obtener Pokémon de la API para el juego
+        final remotePokemon = await _remoteDataSource.getPokemonForGame(count);
+        return remotePokemon.map((dto) => dto.toEntity()).toList();
+      } on PokemonRemoteException {
+        // Si hay error de red, retornar lista vacía
+        return [];
+      }
+    } else {
+      // Sin conexión, retornar lista vacía
+      return [];
+    }
+  }
+
   /// Intenta usar datos del cache local como fallback.
   Future<PaginatedPokemonList> _tryLocalFallback(
     PokemonFilter filter,

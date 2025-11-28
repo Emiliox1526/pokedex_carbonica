@@ -31,6 +31,22 @@ const String _pokemonCountQuery = r'''
   }
 ''';
 
+/// Consulta GraphQL para obtener Pokémon para el juego.
+/// Obtiene un rango amplio de Pokémon ordenados por ID.
+const String _pokemonForGameQuery = r'''
+  query PokemonForGame($limit: Int!, $offset: Int!) {
+    pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}) {
+      id
+      name
+      pokemon_v2_pokemonabilities(limit: 2) {
+        pokemon_v2_ability { name }
+      }
+      pokemon_v2_pokemontypes { pokemon_v2_type { name } }
+      pokemon_v2_pokemonsprites { sprites }
+    }
+  }
+''';
+
 /// Data source remoto para obtener datos de Pokémon desde PokeAPI GraphQL.
 /// 
 /// Esta clase maneja la comunicación con la API GraphQL de PokeAPI,
@@ -119,6 +135,47 @@ class PokemonRemoteDataSource {
       if (e is PokemonRemoteException) rethrow;
       throw PokemonRemoteException(
         message: 'Error al obtener conteo: ${e.toString()}',
+        type: PokemonRemoteExceptionType.noConnection,
+      );
+    }
+  }
+
+  /// Obtiene una lista de Pokémon para el juego.
+  /// 
+  /// [count] es la cantidad de Pokémon a obtener.
+  /// [offset] es el offset opcional para la consulta (por defecto 0).
+  /// 
+  /// Retorna una lista de [PokemonDTO].
+  Future<List<PokemonDTO>> getPokemonForGame(int count, {int offset = 0}) async {
+    try {
+      final result = await _client
+          .query(
+            QueryOptions(
+              document: gql(_pokemonForGameQuery),
+              variables: {
+                'limit': count,
+                'offset': offset,
+              },
+              fetchPolicy: FetchPolicy.networkOnly,
+            ),
+          )
+          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+
+      if (result.hasException) {
+        throw PokemonRemoteException(
+          message: _parseGraphQLException(result.exception!),
+          type: _getExceptionType(result.exception!),
+        );
+      }
+
+      final data = result.data?['pokemon_v2_pokemon'] as List<dynamic>? ?? [];
+      return data
+          .map((e) => PokemonDTO.fromGraphQL(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (e) {
+      if (e is PokemonRemoteException) rethrow;
+      throw PokemonRemoteException(
+        message: 'Error al obtener Pokémon para el juego: ${e.toString()}',
         type: PokemonRemoteExceptionType.noConnection,
       );
     }
