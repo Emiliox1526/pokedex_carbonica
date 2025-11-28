@@ -202,19 +202,17 @@ class PokemonDetailNotifier extends StateNotifier<PokemonDetailState> {
       int? defaultFormId;
       if (detail.forms.isNotEmpty) {
         // Priority 1: Form matching the Pokemon ID
-        final matchingForm = detail.forms.cast<PokemonFormVariant?>().firstWhere(
-              (f) => f!.pokemonId == _pokemonId,
-              orElse: () => null,
-            );
-        if (matchingForm != null) {
-          defaultFormId = matchingForm.id;
+        final matchingForms = detail.forms.where((f) => f.pokemonId == _pokemonId);
+        if (matchingForms.isNotEmpty) {
+          defaultFormId = matchingForms.first.id;
         } else {
           // Priority 2: Default form
-          final defaultForm = detail.forms.cast<PokemonFormVariant?>().firstWhere(
-                (f) => f!.isDefault && f.category == PokemonFormCategory.defaultForm,
-                orElse: () => null,
-              );
-          defaultFormId = defaultForm?.id ?? detail.forms.first.id;
+          final defaultForms = detail.forms.where(
+            (f) => f.isDefault && f.category == PokemonFormCategory.defaultForm,
+          );
+          defaultFormId = defaultForms.isNotEmpty
+              ? defaultForms.first.id
+              : detail.forms.first.id;
         }
       }
 

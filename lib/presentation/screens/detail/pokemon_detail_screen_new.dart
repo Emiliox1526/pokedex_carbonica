@@ -13,7 +13,7 @@ import '../../widgets/detail/detail_card.dart';
 import '../../widgets/detail/about_tab.dart';
 import '../../widgets/detail/evolution_tab.dart';
 import '../../widgets/detail/moves_tab.dart';
-import '../../../widgets/pokemon_options_modal.dart';
+import '../../widgets/detail/pokemon_options_modal.dart';
 
 /// Pokemon detail screen with Clean Architecture.
 ///

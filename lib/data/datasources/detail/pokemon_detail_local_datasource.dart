@@ -47,7 +47,7 @@ class PokemonDetailLocalDataSource {
         DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
-      debugPrint('Error caching Pokemon detail: $e');
+      debugPrint('Error caching Pokemon detail for ID $id: $e');
     }
   }
 
@@ -63,7 +63,7 @@ class PokemonDetailLocalDataSource {
 
       return _deserializePokemonDetail(jsonString);
     } catch (e) {
-      debugPrint('Error reading cached Pokemon detail: $e');
+      debugPrint('Error reading cached Pokemon detail for ID $id: $e');
       return null;
     }
   }

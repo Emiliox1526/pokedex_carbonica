@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../domain/entities/pokemon.dart';
-import '../../screens/pokemon_detail_screen.dart';
+import 'detail/pokemon_detail_screen_new.dart';
 import '../providers/pokemon_list_provider.dart';
 import '../widgets/pokemon_card.dart';
 import '../widgets/pokemon_card_skeleton.dart';
@@ -381,7 +381,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PokemonDetailScreen(
+        builder: (_) => PokemonDetailScreenNew(
           pokemonId: pokemon. id,
           heroTag: pokemon.heroTag,
           initialPokemon: _pokemonToMap(pokemon),
