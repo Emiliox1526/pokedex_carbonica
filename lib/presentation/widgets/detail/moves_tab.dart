@@ -7,6 +7,9 @@ import 'detail_card.dart';
 
 /// The Moves tab displaying the Pokemon's learnable moves with filtering and pagination.
 class MovesTab extends StatelessWidget {
+  /// Default number of moves per page.
+  static const int _defaultPerPage = 10;
+
   /// All moves for the Pokemon.
   final List<PokemonMove> moves;
 
@@ -297,7 +300,7 @@ class MovesTab extends StatelessWidget {
                 DropdownMenuItem(value: 15, child: Text('15')),
                 DropdownMenuItem(value: 20, child: Text('20')),
               ],
-              onChanged: (v) => onPerPageChange(v ?? 10),
+              onChanged: (v) => onPerPageChange(v ?? _defaultPerPage),
             ),
           ),
         ),
