@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/type_utils.dart';
 import '../../../domain/entities/pokemon.dart';
 import '../detail/pokemon_detail_screen.dart';
 import '../../providers/favorites/favorites_provider.dart';
@@ -32,28 +33,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   final Color _bg1 = _hex('#ff365a');
   final Color _bg2 = _hex('#8c0025');
 
-  /// Map of Pokemon type colors.
-  static final Map<String, Color> _typeColor = {
-    'normal': _hex('#9BA0A8'),
-    'fire': _hex('#FF6B3D'),
-    'water': _hex('#4C90FF'),
-    'electric': _hex('#FFD037'),
-    'grass': _hex('#6BD64A'),
-    'ice': _hex('#64DDF8'),
-    'fighting': _hex('#E34343'),
-    'poison': _hex('#B24ADD'),
-    'ground': _hex('#E2B36B'),
-    'flying': _hex('#A890F7'),
-    'psychic': _hex('#FF4888'),
-    'bug': _hex('#88C12F'),
-    'rock': _hex('#C9B68B'),
-    'ghost': _hex('#6F65D8'),
-    'dragon': _hex('#7366FF'),
-    'dark': _hex('#5A5A5A'),
-    'steel': _hex('#8AA4C1'),
-    'fairy': _hex('#FF78D5'),
-  };
-
   @override
   void initState() {
     super.initState();
@@ -61,48 +40,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(favoritesProvider.notifier).loadFavorites();
     });
-  }
-
-  /// Returns the icon for a Pokemon type.
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'fire':
-        return Icons.local_fire_department;
-      case 'water':
-        return Icons.water_drop;
-      case 'grass':
-        return Icons.eco;
-      case 'electric':
-        return Icons.bolt;
-      case 'ice':
-        return Icons.ac_unit;
-      case 'fighting':
-        return Icons.sports_mma;
-      case 'poison':
-        return Icons.coronavirus;
-      case 'ground':
-        return Icons.landscape;
-      case 'flying':
-        return Icons.air;
-      case 'psychic':
-        return Icons.psychology;
-      case 'bug':
-        return Icons.pest_control_rodent;
-      case 'rock':
-        return Icons.terrain;
-      case 'ghost':
-        return Icons.auto_awesome;
-      case 'dragon':
-        return Icons.adb;
-      case 'dark':
-        return Icons.dark_mode;
-      case 'steel':
-        return Icons.build;
-      case 'fairy':
-        return Icons.auto_fix_high;
-      default:
-        return Icons.blur_on;
-    }
   }
 
   @override
@@ -262,8 +199,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           final pokemon = state.favorites[index];
           return PokemonCard(
             pokemon: pokemon,
-            typeColors: _typeColor,
-            iconForType: _iconForType,
+            typeColors: typeColor,
+            iconForType: iconForType,
             onTap: () => _navigateToDetail(pokemon),
           );
         },
