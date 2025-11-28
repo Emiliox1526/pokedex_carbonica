@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../domain/entities/pokemon.dart';
-import 'detail/pokemon_detail_screen_new.dart';
+import 'detail/pokemon_detail_screen.dart';
 import '../providers/pokemon_list_provider.dart';
 import '../widgets/pokemon_card.dart';
 import '../widgets/pokemon_card_skeleton.dart';
