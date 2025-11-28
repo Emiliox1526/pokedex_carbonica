@@ -7,8 +7,11 @@ part 'game_score_dto.g.dart';
 /// Data Transfer Object para persistir puntuaciones con Hive.
 ///
 /// Esta clase mapea la entidad GameScore para almacenamiento local.
-@HiveType(typeId: 1)
+@HiveType(typeId: GameScoreDTO.hiveTypeId)
 class GameScoreDTO {
+  /// Hive type ID for this DTO.
+  static const int hiveTypeId = 1;
+
   /// Identificador único de la puntuación.
   @HiveField(0)
   final String id;

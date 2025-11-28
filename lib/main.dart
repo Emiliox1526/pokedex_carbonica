@@ -31,10 +31,10 @@ Future<void> main() async {
   if (!Hive. isAdapterRegistered(0)) {
     Hive.registerAdapter(PokemonDTOAdapter());
   }
-  if (!Hive.isAdapterRegistered(1)) {
+  if (!Hive.isAdapterRegistered(GameScoreDTO.hiveTypeId)) {
     Hive.registerAdapter(GameScoreDTOAdapter());
   }
-  if (!Hive.isAdapterRegistered(2)) {
+  if (!Hive.isAdapterRegistered(GameAchievementDTO.hiveTypeId)) {
     Hive.registerAdapter(GameAchievementDTOAdapter());
   }
 

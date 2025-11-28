@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/string_utils.dart';
+
 /// Estado del botón de respuesta.
 enum AnswerButtonState {
   /// Estado normal, esperando selección.
@@ -87,7 +89,7 @@ class AnswerButton extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _formatPokemonName(pokemonName),
+                    capitalize(pokemonName),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -191,10 +193,5 @@ class AnswerButton extends StatelessWidget {
       default:
         return Colors.black26;
     }
-  }
-
-  String _formatPokemonName(String name) {
-    if (name.isEmpty) return name;
-    return name[0].toUpperCase() + name.substring(1);
   }
 }

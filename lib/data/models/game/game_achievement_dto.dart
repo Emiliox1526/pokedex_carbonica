@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 import '../../../domain/entities/game/game_achievement.dart';
@@ -7,8 +8,11 @@ part 'game_achievement_dto.g.dart';
 /// Data Transfer Object para persistir logros con Hive.
 ///
 /// Esta clase mapea la entidad GameAchievement para almacenamiento local.
-@HiveType(typeId: 2)
+@HiveType(typeId: GameAchievementDTO.hiveTypeId)
 class GameAchievementDTO {
+  /// Hive type ID for this DTO.
+  static const int hiveTypeId = 2;
+
   /// Tipo de logro (como string para persistencia).
   @HiveField(0)
   final String type;
@@ -49,6 +53,7 @@ class GameAchievementDTO {
   }
 
   /// Parsea el string a AchievementType.
+  /// Throws [ArgumentError] if the type is unknown to aid debugging.
   static AchievementType _parseAchievementType(String type) {
     switch (type) {
       case 'noviceTrainer':
@@ -64,6 +69,11 @@ class GameAchievementDTO {
       case 'legend':
         return AchievementType.legend;
       default:
+        // Log warning for unknown types but don't crash the app
+        assert(() {
+          debugPrint('Warning: Unknown achievement type: $type');
+          return true;
+        }());
         return AchievementType.noviceTrainer;
     }
   }

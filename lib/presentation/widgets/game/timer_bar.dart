@@ -23,7 +23,9 @@ class TimerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = maxSeconds > 0 ? remainingSeconds / maxSeconds : 0.0;
+    final progress = maxSeconds > 0 
+        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0) 
+        : 0.0;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,

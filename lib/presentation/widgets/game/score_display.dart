@@ -71,7 +71,7 @@ class ScoreDisplay extends StatelessWidget {
   }
 
   Widget _buildScoreSection() {
-    final isNewHighScore = score > highScore && score > 0;
+    final isNewHighScore = score > highScore;
     
     return Column(
       children: [

@@ -88,7 +88,7 @@ class GameNotifier extends StateNotifier<GameState> {
   final Random _random = Random();
   
   Timer? _timer;
-  DateTime? _questionStartTime;
+  final Stopwatch _questionStopwatch = Stopwatch();
   
   /// Total de preguntas por partida.
   static const int _questionsPerGame = 10;
@@ -170,7 +170,8 @@ class GameNotifier extends StateNotifier<GameState> {
       clearLastAnswer: true,
     );
     
-    _questionStartTime = DateTime.now();
+    _questionStopwatch.reset();
+    _questionStopwatch.start();
     _startTimer();
   }
 
@@ -203,14 +204,13 @@ class GameNotifier extends StateNotifier<GameState> {
     if (selectedIndex < 0 || selectedIndex >= state.answerOptions.length) return;
     
     _stopTimer();
+    _questionStopwatch.stop();
     
     final selectedPokemon = state.answerOptions[selectedIndex];
     final isCorrect = selectedPokemon.id == state.currentPokemon?.id;
     
-    // Calcular tiempo de respuesta
-    final answerTime = _questionStartTime != null
-        ? DateTime.now().difference(_questionStartTime!).inMilliseconds / 1000.0
-        : _maxTimePerQuestion.toDouble();
+    // Calcular tiempo de respuesta usando Stopwatch para mayor precisión
+    final answerTime = _questionStopwatch.elapsedMilliseconds / 1000.0;
     
     // Calcular puntos
     int pointsEarned = 0;
@@ -261,6 +261,8 @@ class GameNotifier extends StateNotifier<GameState> {
   /// Maneja cuando se acaba el tiempo.
   void _handleTimeout() {
     if (state.status != GameStatus.waitingAnswer) return;
+    
+    _questionStopwatch.stop();
     
     state = state.copyWith(
       status: GameStatus.showingResult,
