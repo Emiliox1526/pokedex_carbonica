@@ -78,8 +78,8 @@ class PaginationControls extends StatelessWidget {
           else
             Text(
               totalPages > 0
-                  ? 'Página $currentPage de $totalPages'
-                  : 'Sin resultados',
+                  ? 'Page $currentPage of $totalPages'
+                  : 'No results',
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.w700,

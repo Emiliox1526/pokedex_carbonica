@@ -47,25 +47,26 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
 
   /// Mapa de colores por tipo de Pokémon.
   static final Map<String, Color> typeColor = {
-    'fire': hex('#F57D31'),
-    'water': hex('#6493EB'),
-    'grass': hex('#74CB48'),
-    'electric': hex('#F9CF30'),
-    'ice': hex('#9AD6DF'),
-    'fighting': hex('#C12239'),
-    'poison': hex('#A43E9E'),
-    'ground': hex('#DEC16B'),
-    'flying': hex('#A891EC'),
-    'psychic': hex('#FB5584'),
-    'bug': hex('#A7B723'),
-    'rock': hex('#B69E31'),
-    'ghost': hex('#70559B'),
-    'dragon': hex('#7037FF'),
-    'dark': hex('#75574C'),
-    'steel': hex('#B7B9D0'),
-    'fairy': hex('#E69EAC'),
-    'normal': hex('#AAA67F'),
+    'normal': hex('#9BA0A8'),
+    'fire': hex('#FF6B3D'),
+    'water': hex('#4C90FF'),
+    'electric': hex('#FFD037'),
+    'grass': hex('#6BD64A'),
+    'ice': hex('#64DDF8'),
+    'fighting': hex('#E34343'),
+    'poison': hex('#B24ADD'),
+    'ground': hex('#E2B36B'),
+    'flying': hex('#A890F7'),
+    'psychic': hex('#FF4888'),
+    'bug': hex('#88C12F'),
+    'rock': hex('#C9B68B'),
+    'ghost': hex('#6F65D8'),
+    'dragon': hex('#7366FF'),
+    'dark': hex('#5A5A5A'),
+    'steel': hex('#8AA4C1'),
+    'fairy': hex('#FF78D5'),
   };
+
 
   /// Retorna el icono correspondiente a un tipo de Pokémon.
   IconData iconForType(String type) {
