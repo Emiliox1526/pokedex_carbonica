@@ -157,6 +157,13 @@ final pokemonListProvider =
 class PokemonListNotifier extends StateNotifier<PokemonListState> {
   /// Caso de uso para obtener la lista de Pokémon.
   final GetPokemonListUseCase _useCase;
+  
+  /// Cache local de páginas ya cargadas para evitar recargas innecesarias.
+  /// La clave es una combinación de filtros + página.
+  final Map<String, _CachedPageData> _pageCache = {};
+  
+  /// Tamaño máximo del cache de páginas.
+  static const int _maxCacheSize = 20;
 
   /// Constructor que inyecta el caso de uso.
   PokemonListNotifier(this._useCase) : super(const PokemonListState());
@@ -166,6 +173,27 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
     PokemonLocalDataSource localDataSource,
   ) async {
     await localDataSource.initialize();
+  }
+  
+  /// Genera una clave de cache basada en los filtros actuales y la página.
+  String _getCacheKey(int page) {
+    return '${state.searchText}_${state.selectedGeneration}_${state.selectedTypes.join(',')}_$page';
+  }
+  
+  /// Limpia el cache si excede el tamaño máximo.
+  void _trimCache() {
+    if (_pageCache.length > _maxCacheSize) {
+      // Eliminar las entradas más antiguas
+      final keysToRemove = _pageCache.keys.take(_pageCache.length - _maxCacheSize).toList();
+      for (final key in keysToRemove) {
+        _pageCache.remove(key);
+      }
+    }
+  }
+  
+  /// Limpia el cache cuando cambian los filtros.
+  void _clearCacheOnFilterChange() {
+    _pageCache.clear();
   }
 
   /// Carga la primera página de Pokémon.
@@ -207,6 +235,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
     final normalized = text.toLowerCase().trim();
     if (normalized == state.searchText) return;
     
+    _clearCacheOnFilterChange();
     state = state.copyWith(
       searchText: normalized,
       currentPage: 1,
@@ -218,6 +247,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   void selectGeneration(int? generation) {
     if (generation == state.selectedGeneration) return;
     
+    _clearCacheOnFilterChange();
     if (generation == null) {
       state = state.copyWith(clearGeneration: true, currentPage: 1);
     } else {
@@ -237,12 +267,14 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       newTypes.remove(normalized);
     }
     
+    _clearCacheOnFilterChange();
     state = state.copyWith(selectedTypes: newTypes, currentPage: 1);
     loadInitial();
   }
 
   /// Limpia todos los filtros.
   void clearFilters() {
+    _clearCacheOnFilterChange();
     state = state.copyWith(
       searchText: '',
       clearGeneration: true,
@@ -255,6 +287,24 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
   /// Carga una página de Pokémon.
   Future<void> _loadPage(int page) async {
     try {
+      final cacheKey = _getCacheKey(page);
+      
+      // Verificar si la página está en cache
+      final cachedData = _pageCache[cacheKey];
+      if (cachedData != null) {
+        state = state.copyWith(
+          pokemons: cachedData.pokemons,
+          currentPage: cachedData.currentPage,
+          totalPages: cachedData.totalPages,
+          totalCount: cachedData.totalCount,
+          isInitialLoading: false,
+          isLoading: false,
+          isFromCache: true,
+          clearError: true,
+        );
+        return;
+      }
+      
       final filter = PokemonFilter(
         searchText: state.searchText.isEmpty ? null : state.searchText,
         generation: state.selectedGeneration,
@@ -264,6 +314,15 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
       );
 
       final result = await _useCase.execute(filter);
+      
+      // Guardar en cache
+      _pageCache[cacheKey] = _CachedPageData(
+        pokemons: result.pokemons,
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
+      );
+      _trimCache();
 
       state = state.copyWith(
         pokemons: result.pokemons,
@@ -272,6 +331,7 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
         totalCount: result.totalCount,
         isInitialLoading: false,
         isLoading: false,
+        isFromCache: false,
         clearError: true,
       );
     } on PokemonRemoteException catch (e) {
@@ -302,4 +362,19 @@ class PokemonListNotifier extends StateNotifier<PokemonListState> {
         return 'Error del servidor. Intenta de nuevo más tarde.';
     }
   }
+}
+
+/// Clase auxiliar para almacenar datos de página en cache.
+class _CachedPageData {
+  final List<Pokemon> pokemons;
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+  
+  const _CachedPageData({
+    required this.pokemons,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalCount,
+  });
 }
