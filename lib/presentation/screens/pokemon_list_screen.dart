@@ -14,13 +14,13 @@ import '../widgets/pagination_controls.dart';
 /// Función helper para convertir hex a Color.
 Color hex(String hex) {
   final buffer = StringBuffer();
-  if (hex.length == 6 || hex.length == 7) buffer.write('ff');
+  if (hex. length == 6 || hex. length == 7) buffer.write('ff');
   buffer.write(hex.replaceFirst('#', ''));
   return Color(int.parse(buffer.toString(), radix: 16));
 }
 
 /// Pantalla principal de lista de Pokémon con Clean Architecture.
-/// 
+///
 /// Esta pantalla utiliza Riverpod para la gestión de estado y sigue
 /// los principios de Clean Architecture separando la lógica de
 /// negocio de la presentación.
@@ -33,11 +33,17 @@ class PokemonListScreenNew extends ConsumerStatefulWidget {
 
 class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   /// Colores de fondo del gradiente.
-  final Color _bg1 = hex('#9e1932');
-  final Color _bg2 = hex('#520317');
-  
+  final Color _bg1 = hex('#ff365a');
+  final Color _bg2 = hex('#8c0025');
+
   /// Set de URLs de imágenes ya precargadas.
   final Set<String> _prefetchedImageUrls = {};
+
+  /// ScrollController para controlar el scroll de la lista.
+  final ScrollController _scrollController = ScrollController();
+
+  /// Página anterior para detectar cambios de página.
+  int _previousPage = 1;
 
   /// Mapa de colores por tipo de Pokémon.
   static final Map<String, Color> typeColor = {
@@ -65,7 +71,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   IconData iconForType(String type) {
     switch (type) {
       case 'fire':
-        return Icons.local_fire_department;
+        return Icons. local_fire_department;
       case 'water':
         return Icons.water_drop;
       case 'grass':
@@ -113,9 +119,34 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Hace scroll suave hacia arriba de la lista.
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(pokemonListProvider);
     final notifier = ref.read(pokemonListProvider.notifier);
+
+    // Detectar cambio de página y hacer scroll hacia arriba
+    if (state.currentPage != _previousPage) {
+      _previousPage = state.currentPage;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToTop();
+      });
+    }
 
     return Scaffold(
       backgroundColor: hex('#F5F7F9'),
@@ -144,51 +175,74 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-                  
-                  // Indicador de generación seleccionada
-                  if (state.selectedGeneration != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Text(
-                        'Mostrando: Generación ${state.selectedGeneration}',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+            child: Column(
+              children: [
+                // Parte superior: búsqueda y filtros
+                Padding(
+                  padding: const EdgeInsets. fromLTRB(16, 16, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+
+                      // Indicador de generación seleccionada
+                      if (state.selectedGeneration != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            'Mostrando: Generación ${state.selectedGeneration}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
                         ),
+
+                      // Barra de búsqueda
+                      PokemonSearchBar(
+                        onChanged: notifier.updateSearch,
                       ),
-                    ),
-                  
-                  // Barra de búsqueda
-                  PokemonSearchBar(
-                    onChanged: notifier.updateSearch,
+                      const SizedBox(height: 16),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Controles de paginación superiores
-                  PaginationControls(
-                    currentPage: state.currentPage,
-                    totalPages: state.totalPages,
-                    hasPreviousPage: state.hasPreviousPage,
-                    hasNextPage: state.hasNextPage,
-                    isLoading: state.isLoading,
-                    onPreviousPage: notifier.previousPage,
-                    onNextPage: notifier.nextPage,
-                    primaryColor: Colors.white,
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Contenido principal
-                  Expanded(
+                ),
+
+                // Contenido principal (lista de Pokémon)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _buildContent(state, notifier),
                   ),
-                ],
-              ),
+                ),
+
+                // Controles de paginación en la parte inferior
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        _bg2.withOpacity(0.8),
+                        _bg2,
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: PaginationControls(
+                      currentPage: state.currentPage,
+                      totalPages: state.totalPages,
+                      hasPreviousPage: state.hasPreviousPage,
+                      hasNextPage: state.hasNextPage,
+                      isLoading: state.isLoading,
+                      onPreviousPage: notifier.previousPage,
+                      onNextPage: notifier. nextPage,
+                      primaryColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -203,7 +257,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       return ListView.builder(
         itemCount: 5,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets. only(bottom: 24),
         itemBuilder: (context, index) {
           return const PokemonCardSkeleton();
         },
@@ -218,7 +272,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
           children: [
             const Icon(
               Icons.error_outline,
-              color: Colors.white70,
+              color: Colors. white70,
               size: 64,
             ),
             const SizedBox(height: 16),
@@ -267,6 +321,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
     return Stack(
       children: [
         ListView.builder(
+          controller: _scrollController,
           itemCount: state.pokemons.length,
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
@@ -275,10 +330,10 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final pokemon = state.pokemons[index];
-            
+
             // Prefetch de imágenes para los próximos 5 Pokémon
             _prefetchUpcomingImages(context, state.pokemons, index);
-            
+
             return PokemonCard(
               pokemon: pokemon,
               typeColors: typeColor,
@@ -287,7 +342,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
             );
           },
         ),
-        
+
         // Indicador de carga sobre la lista
         if (state.isLoading && !state.isInitialLoading)
           Positioned.fill(
@@ -301,13 +356,13 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       ],
     );
   }
-  
+
   /// Precarga las imágenes de los próximos Pokémon para mejorar el rendimiento.
   /// Silencia errores de red ya que el prefetching es una optimización no crítica.
   void _prefetchUpcomingImages(BuildContext context, List<Pokemon> pokemons, int currentIndex) {
     const prefetchCount = 5;
     final endIndex = (currentIndex + prefetchCount).clamp(0, pokemons.length);
-    
+
     for (int i = currentIndex + 1; i < endIndex; i++) {
       final imageUrl = pokemons[i].imageUrl;
       if (imageUrl != null && !_prefetchedImageUrls.contains(imageUrl)) {
@@ -327,7 +382,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       context,
       MaterialPageRoute(
         builder: (_) => PokemonDetailScreen(
-          pokemonId: pokemon.id,
+          pokemonId: pokemon. id,
           heroTag: pokemon.heroTag,
           initialPokemon: _pokemonToMap(pokemon),
         ),
@@ -342,15 +397,15 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       'name': pokemon.name,
       'pokemon_v2_pokemontypes': pokemon.types
           .map((t) => {
-                'pokemon_v2_type': {'name': t}
-              })
+        'pokemon_v2_type': {'name': t}
+      })
           .toList(),
       'pokemon_v2_pokemonsprites': [
         {
           'sprites': {
             'other': {
               'official-artwork': {
-                'front_default': pokemon.imageUrl,
+                'front_default': pokemon. imageUrl,
               }
             },
             'front_default': pokemon.imageUrl,
@@ -358,9 +413,9 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
         }
       ],
       'pokemon_v2_pokemonabilities': pokemon.abilities
-          .map((a) => {
-                'pokemon_v2_ability': {'name': a}
-              })
+          . map((a) => {
+        'pokemon_v2_ability': {'name': a}
+      })
           .toList(),
     };
   }
