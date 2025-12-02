@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/entities/game/game_score.dart';
+import '../../domain/game_score.dart';
 
 /// Lista de ranking con las mejores puntuaciones.
 ///

@@ -1,4 +1,4 @@
-import '../../entities/detail/pokemon_detail.dart';
+import 'pokemon_detail.dart';
 
 /// Abstract repository interface for Pokemon detail operations.
 ///

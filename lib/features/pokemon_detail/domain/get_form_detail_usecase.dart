@@ -1,5 +1,5 @@
-import '../../entities/detail/pokemon_detail.dart';
-import '../../repositories/detail/pokemon_detail_repository.dart';
+import 'pokemon_detail.dart';
+import 'pokemon_detail_repository.dart';
 
 /// Use case for fetching Pokemon form variant details.
 ///

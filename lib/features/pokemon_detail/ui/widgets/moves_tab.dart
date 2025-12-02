@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/entities/detail/pokemon_move.dart';
-import '../../../core/utils/type_utils.dart';
-import '../../../core/utils/string_utils.dart';
+import '../../domain/pokemon_move.dart';
+import '../../../../core/utils/type_utils.dart';
+import '../../../../core/utils/string_utils.dart';
 import 'detail_card.dart';
 
 /// The Moves tab displaying the Pokemon's learnable moves with filtering and pagination.

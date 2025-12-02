@@ -1,7 +1,7 @@
-import '../../../domain/entities/detail/pokemon_detail.dart';
-import '../../../domain/repositories/detail/pokemon_detail_repository.dart';
-import '../../datasources/detail/pokemon_detail_remote_datasource.dart';
-import '../../datasources/detail/pokemon_detail_local_datasource.dart';
+import '../domain/pokemon_detail.dart';
+import '../domain/pokemon_detail_repository.dart';
+import 'pokemon_detail_remote_datasource.dart';
+import 'pokemon_detail_local_datasource.dart';
 
 /// Implementation of [PokemonDetailRepository].
 ///

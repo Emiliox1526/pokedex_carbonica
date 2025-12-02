@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/entities/game/game_achievement.dart';
+import '../../domain/game_achievement.dart';
 
 /// Modal que muestra un logro recién desbloqueado.
 ///

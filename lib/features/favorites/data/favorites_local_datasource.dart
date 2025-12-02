@@ -1,8 +1,8 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/pokemon_dto.dart';
-import '../../../domain/entities/pokemon.dart';
+import '../../pokemon_list/data/pokemon_dto.dart';
+import '../../pokemon_list/domain/pokemon.dart';
 
 /// Local data source for storing favorite Pokemon data with Hive.
 ///

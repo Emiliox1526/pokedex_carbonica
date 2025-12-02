@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'type_chip.dart';
-import '../screens/favorites/favorites_screen.dart';
-import '../screens/game/who_is_pokemon_screen.dart';
+import '../../features/favorites/ui/favorites_screen.dart';
+import '../../features/game/ui/who_is_pokemon_screen.dart';
 
 /// Drawer de generaciones y filtros para la Pokédex.
 /// 

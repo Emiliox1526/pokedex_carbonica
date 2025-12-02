@@ -1,6 +1,6 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../../models/detail/pokemon_detail_dto.dart';
+import 'pokemon_detail_dto.dart';
 
 /// GraphQL query to get detailed Pokemon information by ID.
 const String _pokemonDetailQuery = r'''

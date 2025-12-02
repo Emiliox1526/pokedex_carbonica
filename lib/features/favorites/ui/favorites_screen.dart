@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/type_utils.dart';
-import '../../../domain/entities/pokemon.dart';
-import '../detail/pokemon_detail_screen.dart';
-import '../../providers/favorites/favorites_provider.dart';
-import '../../widgets/pokemon_card.dart';
-import '../../widgets/pokemon_card_skeleton.dart';
-import '../../widgets/favorites/favorites_empty_state.dart';
+import '../../pokemon_list/domain/pokemon.dart';
+import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
+import 'favorites_provider.dart';
+import '../../../common/widgets/pokemon_card.dart';
+import '../../../common/widgets/pokemon_card_skeleton.dart';
+import 'widgets/favorites_empty_state.dart';
 
 /// Converts a hex string to a Color.
 Color _hex(String hex) {

@@ -3,11 +3,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../../../domain/entities/detail/pokemon_detail.dart';
-import '../../../domain/entities/detail/pokemon_ability.dart';
-import '../../../domain/entities/detail/pokemon_stat.dart';
-import '../../../core/utils/type_utils.dart';
-import '../../../core/utils/string_utils.dart';
+import '../../domain/pokemon_detail.dart';
+import '../../domain/pokemon_ability.dart';
+import '../../domain/pokemon_stat.dart';
+import '../../../../core/utils/type_utils.dart';
+import '../../../../core/utils/string_utils.dart';
 import 'detail_card.dart';
 import 'type_chip.dart';
 

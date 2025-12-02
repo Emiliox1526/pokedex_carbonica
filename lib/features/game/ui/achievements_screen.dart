@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/game/game_provider.dart';
-import '../../widgets/game/achievement_badge.dart';
+import 'game_provider.dart';
+import 'widgets/achievement_badge.dart';
 
 /// Pantalla de logros del juego.
 ///

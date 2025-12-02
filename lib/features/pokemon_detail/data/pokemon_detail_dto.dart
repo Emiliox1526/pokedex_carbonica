@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import '../../../domain/entities/detail/pokemon_detail.dart';
-import '../../../domain/entities/detail/pokemon_ability.dart';
-import '../../../domain/entities/detail/pokemon_stat.dart';
-import '../../../domain/entities/detail/pokemon_move.dart';
-import '../../../domain/entities/detail/pokemon_form_variant.dart';
-import '../../../domain/entities/detail/pokemon_evolution.dart';
+import '../domain/pokemon_detail.dart';
+import '../domain/pokemon_ability.dart';
+import '../domain/pokemon_stat.dart';
+import '../domain/pokemon_move.dart';
+import '../domain/pokemon_form_variant.dart';
+import '../domain/pokemon_evolution.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../../../core/utils/string_utils.dart';
 

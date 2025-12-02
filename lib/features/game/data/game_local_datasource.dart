@@ -1,9 +1,9 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../../models/game/game_score_dto.dart';
-import '../../models/game/game_achievement_dto.dart';
-import '../../../domain/entities/game/game_score.dart';
-import '../../../domain/entities/game/game_achievement.dart';
+import 'game_score_dto.dart';
+import 'game_achievement_dto.dart';
+import '../domain/game_score.dart';
+import '../domain/game_achievement.dart';
 
 /// Data source local para persistencia del juego "¿Quién es este Pokémon?".
 ///

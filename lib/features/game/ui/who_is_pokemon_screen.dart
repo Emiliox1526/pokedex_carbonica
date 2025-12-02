@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/sprite_utils.dart';
-import '../../../domain/entities/game/game_state.dart';
-import '../../../domain/entities/game/game_achievement.dart';
-import '../../providers/game/game_provider.dart';
-import '../../widgets/game/pokemon_silhouette.dart';
-import '../../widgets/game/answer_button.dart';
-import '../../widgets/game/timer_bar.dart';
-import '../../widgets/game/score_display.dart';
-import '../../widgets/game/achievement_unlock_modal.dart';
+import '../domain/game_state.dart';
+import '../domain/game_achievement.dart';
+import 'game_provider.dart';
+import 'widgets/pokemon_silhouette.dart';
+import 'widgets/answer_button.dart';
+import 'widgets/timer_bar.dart';
+import 'widgets/score_display.dart';
+import 'widgets/achievement_unlock_modal.dart';
 import 'game_results_screen.dart';
 import 'achievements_screen.dart';
 

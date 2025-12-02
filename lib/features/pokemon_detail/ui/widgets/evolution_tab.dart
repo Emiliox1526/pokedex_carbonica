@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../../../domain/entities/detail/pokemon_evolution.dart';
-import '../../../core/utils/type_utils.dart';
-import '../../../core/utils/sprite_utils.dart';
+import '../../domain/pokemon_evolution.dart';
+import '../../../../core/utils/type_utils.dart';
+import '../../../../core/utils/sprite_utils.dart';
 import 'detail_card.dart';
 import 'type_chip.dart';
 

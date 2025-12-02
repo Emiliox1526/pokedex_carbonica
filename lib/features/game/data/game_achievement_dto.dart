@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
-import '../../../domain/entities/game/game_achievement.dart';
+import '../domain/game_achievement.dart';
 
 part 'game_achievement_dto.g.dart';
 

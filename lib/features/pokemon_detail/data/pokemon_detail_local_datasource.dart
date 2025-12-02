@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../domain/entities/detail/pokemon_detail.dart';
-import '../../../domain/entities/detail/pokemon_ability.dart';
-import '../../../domain/entities/detail/pokemon_stat.dart';
-import '../../../domain/entities/detail/pokemon_move.dart';
-import '../../../domain/entities/detail/pokemon_form_variant.dart';
-import '../../../domain/entities/detail/pokemon_evolution.dart';
+import '../domain/pokemon_detail.dart';
+import '../domain/pokemon_ability.dart';
+import '../domain/pokemon_stat.dart';
+import '../domain/pokemon_move.dart';
+import '../domain/pokemon_form_variant.dart';
+import '../domain/pokemon_evolution.dart';
 
 /// Local data source for caching Pokemon detail data with Hive.
 class PokemonDetailLocalDataSource {

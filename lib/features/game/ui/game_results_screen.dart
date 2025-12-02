@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../domain/entities/game/game_achievement.dart';
-import '../../providers/game/game_provider.dart';
-import '../../widgets/game/ranking_list.dart';
+import '../domain/game_achievement.dart';
+import 'game_provider.dart';
+import 'widgets/ranking_list.dart';
 import 'who_is_pokemon_screen.dart';
 
 /// Pantalla de resultados del juego.

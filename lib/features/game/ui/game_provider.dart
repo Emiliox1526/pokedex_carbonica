@@ -3,12 +3,12 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/datasources/game/game_local_datasource.dart';
-import '../../../domain/entities/game/game_state.dart';
-import '../../../domain/entities/game/game_score.dart';
-import '../../../domain/entities/game/game_achievement.dart';
-import '../../../domain/entities/pokemon.dart';
-import '../pokemon_list_provider.dart';
+import '../data/game_local_datasource.dart';
+import '../domain/game_state.dart';
+import '../domain/game_score.dart';
+import '../domain/game_achievement.dart';
+import '../../pokemon_list/domain/pokemon.dart';
+import '../../pokemon_list/ui/pokemon_list_provider.dart';
 
 /// Cantidad de Pokémon a cargar para el juego.
 const int _gamePokemonCount = 150;

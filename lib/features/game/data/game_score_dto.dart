@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-import '../../../domain/entities/game/game_score.dart';
+import '../domain/game_score.dart';
 
 part 'game_score_dto.g.dart';
 
