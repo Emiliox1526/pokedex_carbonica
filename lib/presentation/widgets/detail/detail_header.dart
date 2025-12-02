@@ -25,6 +25,9 @@ class DetailHeader extends StatelessWidget {
   /// Callback when the share button is pressed.
   final VoidCallback? onShare;
 
+  /// Whether a share action is currently running.
+  final bool isSharing;
+
   /// The image URL for sharing.
   final String? imageUrl;
 
@@ -37,6 +40,7 @@ class DetailHeader extends StatelessWidget {
     required this.onToggleFavorite,
     this.onShare,
     this.imageUrl,
+    this.isSharing = false,
   });
 
   void _handleShare(BuildContext context) {
@@ -95,8 +99,20 @@ class DetailHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () => _handleShare(context),
-          icon: const Icon(Icons.share, color: Colors.white),
+          onPressed: isSharing ? null : () => _handleShare(context),
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: isSharing
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.share, color: Colors.white),
+          ),
         ),
         const SizedBox(width: 4),
         Text(
