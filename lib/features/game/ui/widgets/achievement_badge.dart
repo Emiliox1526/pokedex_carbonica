@@ -26,7 +26,6 @@ class AchievementBadge extends StatelessWidget {
     this.onTap,
   });
 
-  // Colores del tema
   static const Color _dexBurgundy = Color(0xFF7A0A16);
   static const Color _dexDeep = Color(0xFF4E0911);
   static const Color _lockedColor = Color(0xFF424242);

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/type_utils.dart';
+import 'package:pokedex_carbonica/core/utils/type_utils.dart';
 import 'type_chip.dart';
 
 /// Widget displaying the Pokemon image with Hero animation and type chips.

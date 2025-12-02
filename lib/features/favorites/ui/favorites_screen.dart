@@ -17,10 +17,7 @@ Color _hex(String hex) {
   return Color(int.parse(buffer.toString(), radix: 16));
 }
 
-/// Screen that displays the user's favorite Pokemon.
-///
-/// Shows a list of favorited Pokemon with the same visual style
-/// as the main Pokemon list screen.
+/// Pantalla Favoritos
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -29,7 +26,6 @@ class FavoritesScreen extends ConsumerStatefulWidget {
 }
 
 class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
-  /// Background gradient colors (same as pokemon_list_screen).
   final Color _bg1 = _hex('#ff365a');
   final Color _bg2 = _hex('#8c0025');
 
@@ -49,7 +45,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -79,7 +74,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     );
   }
 
-  /// Builds the header with title and favorite count.
+  /// FavoriteHeader
   Widget _buildHeader(BuildContext context, FavoritesState state) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/string_utils.dart';
+import 'package:pokedex_carbonica/core/utils/string_utils.dart';
 
 /// Estado del botón de respuesta.
 enum AnswerButtonState {

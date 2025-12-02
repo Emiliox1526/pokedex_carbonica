@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/type_utils.dart';
+import 'package:pokedex_carbonica/core/utils/type_utils.dart';
 
 /// A chip widget displaying a Pokemon type with icon.
 class TypeChipDetail extends StatelessWidget {
