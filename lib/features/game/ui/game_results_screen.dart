@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../domain/game_achievement.dart';
+import '../domain/game_achievement_localizations.dart';
 import 'game_provider.dart';
 import 'widgets/ranking_list.dart';
 import 'who_is_pokemon_screen.dart';
+import 'package:pokedex_carbonica/common/extensions/l10n_extension.dart';
+import 'package:pokedex_carbonica/common/widgets/language_selector.dart';
 
 /// Pantalla de resultados del juego.
 ///
@@ -50,6 +54,7 @@ class GameResultsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rankingAsync = ref.watch(rankingProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: Stack(
@@ -71,13 +76,13 @@ class GameResultsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // Header
-                _buildHeader(context),
+                _buildHeader(context, l10n),
 
                 // Contenido
                 Expanded(
                   child: showRankingOnly
-                      ? _buildRankingOnlyView(rankingAsync)
-                      : _buildResultsView(context, ref, rankingAsync),
+                      ? _buildRankingOnlyView(rankingAsync, l10n)
+                      : _buildResultsView(context, ref, rankingAsync, l10n),
                 ),
               ],
             ),
@@ -87,30 +92,38 @@ class GameResultsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(width: 8),
-          Text(
-            showRankingOnly ? 'Ranking' : 'Resultados',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              showRankingOnly ? l10n.rankingTitle : l10n.resultsTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          const SizedBox(width: 4),
+          const LanguageSelector(iconColor: Colors.white),
         ],
       ),
     );
   }
 
-  Widget _buildRankingOnlyView(AsyncValue<dynamic> rankingAsync) {
+  Widget _buildRankingOnlyView(
+    AsyncValue<dynamic> rankingAsync,
+    AppLocalizations l10n,
+  ) {
     return rankingAsync.when(
       data: (scores) => RankingList(scores: scores),
       loading: () => const Center(
@@ -118,7 +131,7 @@ class GameResultsScreen extends ConsumerWidget {
       ),
       error: (error, _) => RankingList(
         scores: const [],
-        errorMessage: 'Error al cargar ranking',
+        errorMessage: l10n.errorLoadingRanking,
       ),
     );
   }
@@ -127,6 +140,7 @@ class GameResultsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AsyncValue<dynamic> rankingAsync,
+    AppLocalizations l10n,
   ) {
     final isNewHighScore = score > highScore && score > 0;
     final accuracy = totalQuestions > 0
@@ -155,9 +169,9 @@ class GameResultsScreen extends ConsumerWidget {
                     size: 48,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '¡NUEVO RÉCORD!',
-                    style: TextStyle(
+                  Text(
+                    l10n.newRecord,
+                    style: const TextStyle(
                       color: Colors.amber,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -172,9 +186,9 @@ class GameResultsScreen extends ConsumerWidget {
                     size: 48,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'PARTIDA FINALIZADA',
-                    style: TextStyle(
+                  Text(
+                    l10n.gameFinished,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -193,9 +207,9 @@ class GameResultsScreen extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'PUNTOS',
-                  style: TextStyle(
+                Text(
+                  l10n.pointsLabel,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 16,
                     letterSpacing: 3,
@@ -210,19 +224,19 @@ class GameResultsScreen extends ConsumerWidget {
                     _buildStatItem(
                       icon: Icons.check_circle,
                       value: '$correctAnswers/$totalQuestions',
-                      label: 'Aciertos',
+                      label: l10n.statsHits,
                       color: Colors.green.shade300,
                     ),
                     _buildStatItem(
                       icon: Icons.percent,
                       value: '$accuracy%',
-                      label: 'Precisión',
+                      label: l10n.statsAccuracy,
                       color: Colors.blue.shade300,
                     ),
                     _buildStatItem(
                       icon: Icons.local_fire_department,
                       value: '$bestStreak',
-                      label: 'Mejor racha',
+                      label: l10n.statsBestStreak,
                       color: Colors.orange,
                     ),
                   ],
@@ -245,13 +259,13 @@ class GameResultsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.emoji_events, color: Colors.amber, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Logros desbloqueados',
-                        style: TextStyle(
+                        l10n.unlockedAchievementsTitle,
+                        style: const TextStyle(
                           color: Colors.amber,
                           fontWeight: FontWeight.bold,
                         ),
@@ -263,6 +277,8 @@ class GameResultsScreen extends ConsumerWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: newlyUnlockedAchievements.map((achievement) {
+                      final achievementName =
+                          achievement.localizedName(l10n);
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -278,7 +294,7 @@ class GameResultsScreen extends ConsumerWidget {
                             Text(achievement.icon),
                             const SizedBox(width: 4),
                             Text(
-                              achievement.name,
+                              achievementName,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -302,9 +318,9 @@ class GameResultsScreen extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.home, color: Colors.white),
-                  label: const Text(
-                    'MENÚ',
-                    style: TextStyle(color: Colors.white),
+                  label: Text(
+                    l10n.menu,
+                    style: const TextStyle(color: Colors.white),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.white54),
@@ -327,7 +343,7 @@ class GameResultsScreen extends ConsumerWidget {
                     );
                   },
                   icon: const Icon(Icons.replay),
-                  label: const Text('JUGAR'),
+                  label: Text(l10n.play),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: _bg2,
@@ -343,11 +359,11 @@ class GameResultsScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // Ranking
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'RANKING',
-              style: TextStyle(
+              l10n.rankingSectionTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -370,12 +386,12 @@ class GameResultsScreen extends ConsumerWidget {
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
-              error: (error, _) => const Center(
+              error: (error, _) => Center(
                 child: Padding(
                   padding: EdgeInsets.all(32),
                   child: Text(
-                    'Error al cargar ranking',
-                    style: TextStyle(color: Colors.white54),
+                    l10n.errorLoadingRanking,
+                    style: const TextStyle(color: Colors.white54),
                   ),
                 ),
               ),
