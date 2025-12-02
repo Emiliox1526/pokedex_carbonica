@@ -1,14 +1,10 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE - MANUAL IMPLEMENTATION
 
 part of 'game_achievement_dto.dart';
 
-// **************************************************************************
-// TypeAdapterGenerator
-// **************************************************************************
-
 class GameAchievementDTOAdapter extends TypeAdapter<GameAchievementDTO> {
   @override
-  final int typeId = 2;
+  final int typeId = GameAchievementDTO.hiveTypeId;
 
   @override
   GameAchievementDTO read(BinaryReader reader) {
@@ -34,14 +30,4 @@ class GameAchievementDTOAdapter extends TypeAdapter<GameAchievementDTO> {
       ..writeByte(2)
       ..write(obj.unlockedDateTimestamp);
   }
-
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GameAchievementDTOAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
 }

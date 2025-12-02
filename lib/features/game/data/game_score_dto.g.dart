@@ -1,14 +1,10 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE - MANUAL IMPLEMENTATION
 
 part of 'game_score_dto.dart';
 
-// **************************************************************************
-// TypeAdapterGenerator
-// **************************************************************************
-
 class GameScoreDTOAdapter extends TypeAdapter<GameScoreDTO> {
   @override
-  final int typeId = 1;
+  final int typeId = GameScoreDTO.hiveTypeId;
 
   @override
   GameScoreDTO read(BinaryReader reader) {
@@ -46,14 +42,4 @@ class GameScoreDTOAdapter extends TypeAdapter<GameScoreDTO> {
       ..writeByte(6)
       ..write(obj.totalTimeSeconds);
   }
-
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GameScoreDTOAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
 }

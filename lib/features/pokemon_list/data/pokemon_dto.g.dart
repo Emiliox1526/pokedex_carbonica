@@ -1,15 +1,7 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE - MANUAL IMPLEMENTATION
 
 part of 'pokemon_dto.dart';
 
-// **************************************************************************
-// TypeAdapterGenerator
-// **************************************************************************
-
-/// Adaptador de Hive para la clase PokemonDTO.
-/// 
-/// Este adaptador permite serializar y deserializar objetos PokemonDTO
-/// para almacenamiento local con Hive.
 class PokemonDTOAdapter extends TypeAdapter<PokemonDTO> {
   @override
   final int typeId = 0;
@@ -25,7 +17,7 @@ class PokemonDTOAdapter extends TypeAdapter<PokemonDTO> {
       name: fields[1] as String,
       types: (fields[2] as List).cast<String>(),
       imageUrl: fields[3] as String?,
-      abilities: (fields[4] as List?)?.cast<String>() ?? const [],
+      abilities: (fields[4] as List).cast<String>(),
     );
   }
 
@@ -44,14 +36,4 @@ class PokemonDTOAdapter extends TypeAdapter<PokemonDTO> {
       ..writeByte(4)
       ..write(obj.abilities);
   }
-
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PokemonDTOAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
 }
