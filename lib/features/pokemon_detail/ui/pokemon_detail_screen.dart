@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/type_utils.dart';
@@ -177,19 +179,10 @@ class _PokemonDetailScreenNewState
     try {
       await WidgetsBinding.instance.endOfFrame;
 
-      RenderRepaintBoundary? boundary;
-      for (int i = 0; i < 3; i++) {
-        boundary = _shareCardKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary?;
+      final boundary =
+          _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
 
-        if (boundary != null && !boundary.debugNeedsPaint) {
-          break;
-        }
-
-        await Future.delayed(const Duration(milliseconds: 16));
-      }
-
-      if (boundary == null || boundary.debugNeedsPaint) {
+      if (boundary == null) {
         throw Exception('Share card not ready');
       }
 
@@ -201,14 +194,16 @@ class _PokemonDetailScreenNewState
       }
 
       final pngBytes = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/pokemon_${detail.id}.png';
+      final file = await File(filePath).create(recursive: true);
+      await file.writeAsBytes(pngBytes);
 
-      await Share.shareXFiles([
-        XFile.fromData(
-          pngBytes,
-          name: 'pokemon_${detail.id}.png',
-          mimeType: 'image/png',
-        )
-      ], text: '${detail.displayName} ${detail.formattedId} — ¡Mira mi Pokémon legendario! 🧬');
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text:
+            '${detail.displayName} ${detail.formattedId} — ¡Mira mi Pokémon legendario! 🧬',
+      );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
