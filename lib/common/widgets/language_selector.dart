@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
 
 import '../../core/providers/locale_provider.dart';
 

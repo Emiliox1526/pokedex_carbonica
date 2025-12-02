@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokedex_carbonica/common/widgets/language_selector.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
 import '../../../common/extensions/l10n_extension.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../domain/game_state.dart';
@@ -378,7 +377,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.resultAnswer(pokemonName: pokemonName.toUpperCase()),
+            l10n.resultAnswer(pokemonName.toUpperCase()),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -418,7 +417,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           pokemonName: pokemon.name,
           state: state,
           index: index,
-          semanticsLabel: l10n.answerOption(pokemonName: pokemon.name),
+          semanticsLabel: l10n.answerOption(pokemon.name),
           onPressed: () => ref.read(gameProvider.notifier).submitAnswer(index),
         );
       }).toList(),
