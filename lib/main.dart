@@ -3,19 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'graphql_client.dart';
-import 'data/models/pokemon_dto.dart';
-import 'data/models/game/game_score_dto.dart';
-import 'data/models/game/game_achievement_dto.dart';
-import 'data/datasources/pokemon_local_datasource.dart';
-import 'data/datasources/detail/pokemon_detail_local_datasource.dart';
-import 'data/datasources/favorites/favorites_local_datasource.dart';
-import 'data/datasources/game/game_local_datasource.dart';
-import 'presentation/providers/pokemon_list_provider.dart';
-import 'presentation/providers/detail/pokemon_detail_provider.dart';
-import 'presentation/providers/favorites/favorites_provider.dart';
-import 'presentation/providers/game/game_provider.dart';
-import 'presentation/screens/pokemon_list_screen.dart';
+import 'app.dart';
+import 'di/graphql_client.dart';
+import 'features/pokemon_list/data/pokemon_dto.dart';
+import 'features/game/data/game_score_dto.dart';
+import 'features/game/data/game_achievement_dto.dart';
+import 'features/pokemon_list/data/pokemon_local_datasource.dart';
+import 'features/pokemon_detail/data/pokemon_detail_local_datasource.dart';
+import 'features/favorites/data/favorites_local_datasource.dart';
+import 'features/game/data/game_local_datasource.dart';
+import 'features/pokemon_list/ui/pokemon_list_provider.dart';
+import 'features/pokemon_detail/ui/pokemon_detail_provider.dart';
+import 'features/favorites/ui/favorites_provider.dart';
+import 'features/game/ui/game_provider.dart';
 
 /// Punto de entrada de la aplicación Pokédex.
 ///
@@ -25,10 +25,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inicializar Hive para cache local
-  await Hive. initFlutter();
+  await Hive.initFlutter();
 
   // Registrar adaptadores de Hive
-  if (!Hive. isAdapterRegistered(0)) {
+  if (!Hive.isAdapterRegistered(0)) {
     Hive.registerAdapter(PokemonDTOAdapter());
   }
   if (!Hive.isAdapterRegistered(GameScoreDTO.hiveTypeId)) {
@@ -73,38 +73,9 @@ Future<void> main() async {
         // Sobrescribir el provider del data source del juego
         gameLocalDataSourceProvider.overrideWithValue(gameLocalDataSource),
         // Sobrescribir el provider del cliente GraphQL con el cliente real
-        graphQLClientProvider. overrideWithValue(graphQLClient),
+        graphQLClientProvider.overrideWithValue(graphQLClient),
       ],
       child: PokedexApp(graphQLClient: graphQLClientNotifier),
     ),
   );
-}
-
-/// Widget principal de la aplicación Pokédex.
-///
-/// Configura los providers de GraphQL y Riverpod necesarios
-/// para el funcionamiento de la aplicación.
-class PokedexApp extends StatelessWidget {
-  final ValueNotifier<GraphQLClient> graphQLClient;
-
-  const PokedexApp({super.key, required this.graphQLClient});
-
-  @override
-  Widget build(BuildContext context) {
-    return GraphQLProvider(
-      client: graphQLClient,
-      child: CacheProvider(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Pokédex Carbonica',
-          theme: ThemeData(
-            colorSchemeSeed: Colors. red,
-            useMaterial3: true,
-          ),
-          // Usar la nueva pantalla con Clean Architecture
-          home: const PokemonListScreenNew(),
-        ),
-      ),
-    );
-  }
 }
