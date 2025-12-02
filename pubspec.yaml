@@ -8,61 +8,56 @@ environment:
   sdk: ^3.9.2
 
 dependencies:
-  shared_preferences: ^2.2.2
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
 
-  intl: ^0.19.0
+  intl: ^0.20.2
 
-  # Compartir y manejo de archivos temporales
+  shared_preferences: ^2.2.2
   share_plus: ^10.1.3
   path_provider: ^2.1.4
-
-  # Iconos de iOS
   cupertino_icons: ^1.0.8
 
-  # Cliente GraphQL para Flutter
   graphql_flutter: ^5.1.2
-
-  # Cache y carga optimizada de imágenes
   cached_network_image: ^3.2.3
-
-  # Animaciones de carga elegantes
   flutter_spinkit: ^5.2.0
-
-  # Shimmer effect para skeleton loading
   shimmer: ^3.0.0
-
-  # Tipografía moderna (Google Fonts)
   google_fonts: ^6.2.1
 
-  # Manejo de estados con Riverpod
   flutter_riverpod: ^2.4.0
   riverpod_annotation: ^2.3.0
-  
-  # Cache local con Hive
+
   hive_flutter: ^1.1.0
-  
-  # Verificación de conectividad
   connectivity_plus: ^5.0.0
-  
-  # Provider mantenido para compatibilidad con otras pantallas
   provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
-  
-  # Generadores de código para Riverpod y Hive
-  riverpod_generator: ^2.3.0
+
+  # Generadores y herramientas
+  flutter_gen_runner: ^5.3.2
   build_runner: ^2.4.0
+  riverpod_generator: ^2.3.0
   hive_generator: ^2.0.0
 
 flutter:
   uses-material-design: true
+
+  # Habilita la generación automática de AppLocalizations
+  generate: true
+
   assets:
     - lib/assets/
+
+  # Carpeta de localización (ARB)
+  # Asegúrate de tener tus archivos .arb dentro de /lib/l10n/
+  # Ejemplo:
+  # - lib/l10n/
+
+# Configuración de flutter_gen (obligatorio)
+flutter_gen:
+  output: lib/gen/
