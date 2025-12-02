@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../domain/game_score.dart';
+import 'package:pokedex_carbonica/common/extensions/l10n_extension.dart';
 
 /// Lista de ranking con las mejores puntuaciones.
 ///
@@ -28,6 +30,7 @@ class RankingList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Colors.white),
@@ -67,7 +70,7 @@ class RankingList extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No hay puntuaciones aún',
+              l10n.noScores,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 16,
@@ -75,7 +78,7 @@ class RankingList extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '¡Juega para entrar en el ranking!',
+              l10n.playToRank,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.4),
                 fontSize: 14,
@@ -93,6 +96,7 @@ class RankingList extends StatelessWidget {
         return _RankingItem(
           score: scores[index],
           rank: index + 1,
+          l10n: l10n,
         );
       },
     );
@@ -103,10 +107,12 @@ class RankingList extends StatelessWidget {
 class _RankingItem extends StatelessWidget {
   final GameScore score;
   final int rank;
+  final AppLocalizations l10n;
 
   const _RankingItem({
     required this.score,
     required this.rank,
+    required this.l10n,
   });
 
   @override
@@ -161,7 +167,7 @@ class _RankingItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${score.score} puntos',
+                      l10n.scorePoints('${score.score}'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,

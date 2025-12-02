@@ -36,12 +36,16 @@ class AnswerButton extends StatelessWidget {
   /// Índice del botón (para animaciones escalonadas).
   final int index;
 
+  /// Etiqueta de accesibilidad opcional.
+  final String? semanticsLabel;
+
   const AnswerButton({
     super.key,
     required this.pokemonName,
     required this.state,
     this.onPressed,
     this.index = 0,
+    this.semanticsLabel,
   });
 
   // Colores del tema
@@ -52,66 +56,72 @@ class AnswerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: state == AnswerButtonState.idle ? onPressed : null,
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: _getGradientColors(),
-              ),
-              border: Border.all(
-                color: _getBorderColor(),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _getShadowColor(),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+    return Semantics(
+      button: true,
+      enabled: state == AnswerButtonState.idle,
+      label: semanticsLabel ?? capitalize(pokemonName),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: state == AnswerButtonState.idle ? onPressed : null,
+            borderRadius: BorderRadius.circular(16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              constraints: const BoxConstraints(minHeight: 56),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: _getGradientColors(),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _buildStateIcon(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    capitalize(pokemonName),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          offset: const Offset(0, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
+                border: Border.all(
+                  color: _getBorderColor(),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getShadowColor(),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _buildStateIcon(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      capitalize(pokemonName),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: const Offset(0, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                if (state == AnswerButtonState.idle)
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white70,
-                    size: 24,
-                  ),
-              ],
+                  if (state == AnswerButtonState.idle)
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white70,
+                      size: 24,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

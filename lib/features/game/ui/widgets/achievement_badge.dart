@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../domain/game_achievement.dart';
+import '../../domain/game_achievement_localizations.dart';
 
 /// Badge que muestra un logro del juego.
 ///
@@ -32,15 +34,23 @@ class AchievementBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final name = achievement.localizedName(l10n);
+    final description = achievement.localizedDescription(l10n);
+
     if (compact) {
-      return _buildCompactBadge();
+      return _buildCompactBadge(name, description);
     }
-    return _buildFullBadge();
+    return Semantics(
+      label: name,
+      hint: description,
+      child: _buildFullBadge(l10n, name, description),
+    );
   }
 
-  Widget _buildCompactBadge() {
+  Widget _buildCompactBadge(String name, String description) {
     return Tooltip(
-      message: '${achievement.name}\n${achievement.description}',
+      message: '$name\n$description',
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -72,7 +82,11 @@ class AchievementBadge extends StatelessWidget {
     );
   }
 
-  Widget _buildFullBadge() {
+  Widget _buildFullBadge(
+    AppLocalizations l10n,
+    String name,
+    String description,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -136,7 +150,7 @@ class AchievementBadge extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      achievement.name,
+                      name,
                       style: TextStyle(
                         color: achievement.isUnlocked
                             ? Colors.white
@@ -148,7 +162,7 @@ class AchievementBadge extends StatelessWidget {
                     if (showDescription) ...[
                       const SizedBox(height: 4),
                       Text(
-                        achievement.description,
+                        description,
                         style: TextStyle(
                           color: achievement.isUnlocked
                               ? Colors.white70
@@ -168,7 +182,9 @@ class AchievementBadge extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Desbloqueado el ${_formatDate(achievement.unlockedDate!)}',
+                            l10n.unlockedOnDate(
+                              _formatDate(achievement.unlockedDate!),
+                            ),
                             style: TextStyle(
                               color: Colors.green.shade300,
                               fontSize: 11,

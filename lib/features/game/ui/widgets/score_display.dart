@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import '../../../../common/extensions/l10n_extension.dart';
 
 /// Widget que muestra la puntuación actual y racha.
 ///
@@ -33,6 +36,7 @@ class ScoreDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -44,7 +48,7 @@ class ScoreDisplay extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Puntuación
-          _buildScoreSection(),
+          _buildScoreSection(l10n),
           
           // Separador
           Container(
@@ -54,7 +58,7 @@ class ScoreDisplay extends StatelessWidget {
           ),
           
           // Pregunta actual
-          _buildQuestionSection(),
+          _buildQuestionSection(l10n),
           
           // Separador
           Container(
@@ -64,15 +68,15 @@ class ScoreDisplay extends StatelessWidget {
           ),
           
           // Racha
-          _buildStreakSection(),
+          _buildStreakSection(l10n),
         ],
       ),
     );
   }
 
-  Widget _buildScoreSection() {
+  Widget _buildScoreSection(AppLocalizations l10n) {
     final isNewHighScore = score > highScore;
-    
+
     return Column(
       children: [
         Row(
@@ -85,7 +89,7 @@ class ScoreDisplay extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              'Puntos',
+              l10n.scoreLabel,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 12,
@@ -120,7 +124,7 @@ class ScoreDisplay extends StatelessWidget {
     );
   }
 
-  Widget _buildQuestionSection() {
+  Widget _buildQuestionSection(AppLocalizations l10n) {
     return Column(
       children: [
         Row(
@@ -133,7 +137,7 @@ class ScoreDisplay extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              'Pregunta',
+              l10n.questionLabel,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 12,
@@ -155,7 +159,7 @@ class ScoreDisplay extends StatelessWidget {
     );
   }
 
-  Widget _buildStreakSection() {
+  Widget _buildStreakSection(AppLocalizations l10n) {
     final hasMultiplier = currentStreak >= 3;
     
     return Column(
@@ -170,7 +174,7 @@ class ScoreDisplay extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              'Racha',
+              l10n.streakLabel,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 12,
@@ -198,9 +202,9 @@ class ScoreDisplay extends StatelessWidget {
                   color: Colors.orange.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text(
-                  'x1.5',
-                  style: TextStyle(
+                child: Text(
+                  l10n.streakMultiplier,
+                  style: const TextStyle(
                     color: Colors.orange,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

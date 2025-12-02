@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/extensions/l10n_extension.dart';
+
 /// Barra de progreso del tiempo restante.
 ///
 /// Muestra visualmente el tiempo restante para responder
@@ -23,8 +25,9 @@ class TimerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = maxSeconds > 0 
-        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0) 
+    final l10n = context.l10n;
+    final progress = maxSeconds > 0
+        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0)
         : 0.0;
     
     return Column(
@@ -45,7 +48,7 @@ class TimerBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Tiempo',
+                    l10n.timerLabel,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 14,
