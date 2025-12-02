@@ -12,6 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Compartir y manejo de archivos temporales
+  share_plus: ^10.1.3
+  path_provider: ^2.1.4
+
   # Iconos de iOS
   cupertino_icons: ^1.0.8
 

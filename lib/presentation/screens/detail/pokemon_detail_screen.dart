@@ -1,5 +1,11 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
@@ -15,6 +21,7 @@ import '../../widgets/detail/about_tab.dart';
 import '../../widgets/detail/evolution_tab.dart';
 import '../../widgets/detail/moves_tab.dart';
 import '../../widgets/detail/pokemon_options_modal.dart';
+import '../../widgets/detail/pokemon_share_card.dart';
 
 /// Pokemon detail screen with Clean Architecture.
 ///
@@ -44,6 +51,9 @@ class PokemonDetailScreenNew extends ConsumerStatefulWidget {
 
 class _PokemonDetailScreenNewState
     extends ConsumerState<PokemonDetailScreenNew> {
+  final GlobalKey _shareCardKey = GlobalKey();
+  bool _isSharing = false;
+
   @override
   void initState() {
     super.initState();
@@ -142,6 +152,69 @@ class _PokemonDetailScreenNewState
       }
     } catch (_) {
       // Ignore errors
+    }
+  }
+
+  Future<void> _sharePokemonCard() async {
+    final state = ref.read(pokemonDetailProvider(widget.pokemonId));
+    final detail = state.activeDetail;
+
+    if (_isSharing) {
+      return;
+    }
+
+    if (detail == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Carga el Pokémon antes de compartir su tarjeta.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isSharing = true);
+
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+
+      final boundary =
+          _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+
+      if (boundary == null) {
+        throw Exception('Share card not ready');
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.2);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData == null) {
+        throw Exception('No image data');
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/pokemon_${detail.id}.png';
+      final file = await File(filePath).create(recursive: true);
+      await file.writeAsBytes(pngBytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text:
+            '${detail.displayName} ${detail.formattedId} — ¡Mira mi Pokémon legendario! 🧬',
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo compartir la tarjeta. Intenta nuevamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
     }
   }
 
@@ -291,6 +364,8 @@ class _PokemonDetailScreenNewState
                         isFavorite: state.isFavorite,
                         onBack: () => Navigator.of(context).maybePop(),
                         onToggleFavorite: _toggleFavorite,
+                        onShare: _sharePokemonCard,
+                        isSharing: _isSharing,
                         imageUrl: displayedDefaultUrl ?? artworkUrlForId(detail.id),
                       ),
                       const SizedBox(height: 18),
@@ -336,6 +411,29 @@ class _PokemonDetailScreenNewState
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+
+              // Invisible shareable card for capture
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0.0,
+                    child: Center(
+                      child: PokemonShareCard(
+                        detail: detail,
+                        baseColor: baseColor,
+                        secondaryColor: secondaryColor,
+                        imageUrl: state.showShiny
+                            ? displayedShinyUrl ??
+                                displayedDefaultUrl ??
+                                artworkUrlForId(detail.id)
+                            : displayedDefaultUrl ?? artworkUrlForId(detail.id),
+                        showShiny: state.showShiny,
+                        repaintBoundaryKey: _shareCardKey,
+                      ),
+                    ),
                   ),
                 ),
               ),
