@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../domain/game_achievement.dart';
+import '../../domain/game_achievement_localizations.dart';
 
 /// Modal que muestra un logro recién desbloqueado.
 ///
@@ -27,7 +29,7 @@ class AchievementUnlockModal extends StatefulWidget {
     return showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Cerrar',
+      barrierLabel: AppLocalizations.of(context)!.cancel,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, animation, secondaryAnimation) {
@@ -105,6 +107,10 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final achievementName = widget.achievement.localizedName(l10n);
+    final achievementDescription =
+        widget.achievement.localizedDescription(l10n);
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -134,9 +140,9 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
             mainAxisSize: MainAxisSize.min,
             children: [
               // Título
-              const Text(
-                '¡LOGRO DESBLOQUEADO!',
-                style: TextStyle(
+              Text(
+                l10n.achievementUnlockTitle,
+                style: const TextStyle(
                   color: Colors.amber,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -188,7 +194,7 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
 
               // Nombre del logro
               Text(
-                widget.achievement.name,
+                achievementName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -200,7 +206,7 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
 
               // Descripción
               Text(
-                widget.achievement.description,
+                achievementDescription,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.8),
                   fontSize: 16,
@@ -226,9 +232,9 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  '¡GENIAL!',
-                  style: TextStyle(
+                child: Text(
+                  l10n.great,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import 'package:pokedex_carbonica/common/extensions/l10n_extension.dart';
+import 'package:pokedex_carbonica/common/widgets/language_selector.dart';
 import 'game_provider.dart';
 import 'widgets/achievement_badge.dart';
 
@@ -16,6 +19,7 @@ class AchievementsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final achievementsAsync = ref.watch(achievementsProvider);
     final statsAsync = ref.watch(gameStatsProvider);
 
@@ -39,11 +43,11 @@ class AchievementsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // Header
-                _buildHeader(context),
+                _buildHeader(context, l10n),
 
                 // Estadísticas
                 statsAsync.when(
-                  data: (stats) => _buildStats(stats),
+                  data: (stats) => _buildStats(stats, l10n),
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
@@ -51,7 +55,8 @@ class AchievementsScreen extends ConsumerWidget {
                 // Lista de logros
                 Expanded(
                   child: achievementsAsync.when(
-                    data: (achievements) => _buildAchievementsList(achievements),
+                    data: (achievements) =>
+                        _buildAchievementsList(achievements, l10n),
                     loading: () => const Center(
                       child: CircularProgressIndicator(color: Colors.white),
                     ),
@@ -66,7 +71,7 @@ class AchievementsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Error al cargar logros',
+                            l10n.achievementsError,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.7),
                             ),
@@ -84,32 +89,37 @@ class AchievementsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(width: 8),
           const Icon(Icons.emoji_events, color: Colors.amber, size: 28),
           const SizedBox(width: 12),
-          const Text(
-            'Logros',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              l10n.achievementsTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          const SizedBox(width: 4),
+          const LanguageSelector(),
         ],
       ),
     );
   }
 
-  Widget _buildStats(GameStats stats) {
+  Widget _buildStats(GameStats stats, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -124,22 +134,22 @@ class AchievementsScreen extends ConsumerWidget {
           _buildStatItem(
             icon: Icons.sports_esports,
             value: '${stats.totalGames}',
-            label: 'Partidas',
+            label: l10n.statsGames,
           ),
           _buildStatItem(
             icon: Icons.check_circle,
             value: '${stats.totalCorrect}',
-            label: 'Aciertos',
+            label: l10n.statsHits,
           ),
           _buildStatItem(
             icon: Icons.local_fire_department,
             value: '${stats.bestStreak}',
-            label: 'Mejor racha',
+            label: l10n.statsBestStreak,
           ),
           _buildStatItem(
             icon: Icons.emoji_events,
             value: '${stats.unlockedAchievements}/6',
-            label: 'Logros',
+            label: l10n.statsAchievements,
             color: Colors.amber,
           ),
         ],
@@ -176,7 +186,10 @@ class AchievementsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAchievementsList(List<dynamic> achievements) {
+  Widget _buildAchievementsList(
+    List<dynamic> achievements,
+    AppLocalizations l10n,
+  ) {
     // Ordenar: desbloqueados primero
     final sorted = List.from(achievements)
       ..sort((a, b) {
@@ -192,7 +205,7 @@ class AchievementsScreen extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            'Progreso: $unlocked/${achievements.length} logros desbloqueados',
+            l10n.progressUnlocked('$unlocked', '${achievements.length}'),
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,

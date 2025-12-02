@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pokedex_carbonica/common/widgets/language_selector.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../../../common/extensions/l10n_extension.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../domain/game_state.dart';
 import '../domain/game_achievement.dart';
@@ -38,6 +41,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final gameState = ref.watch(gameProvider);
 
     // Mostrar resultados si la partida terminó
@@ -67,7 +71,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             child: Column(
               children: [
                 // Header
-                _buildHeader(gameState),
+                _buildHeader(gameState, l10n),
 
                 // Contenido principal
                 Expanded(
@@ -81,7 +85,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
     );
   }
 
-  Widget _buildHeader(GameState gameState) {
+  Widget _buildHeader(GameState gameState, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
       child: Row(
@@ -89,6 +93,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           // Botón de volver
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () {
               if (gameState.isPlaying) {
                 _showExitConfirmation();
@@ -98,12 +103,12 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             },
           ),
           const SizedBox(width: 8),
-          
+
           // Título
-          const Expanded(
+          Expanded(
             child: Text(
-              '¿Quién es este Pokémon?',
-              style: TextStyle(
+              l10n.whoIsPokemonTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -115,8 +120,11 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           if (gameState.status == GameStatus.initial)
             IconButton(
               icon: const Icon(Icons.emoji_events, color: Colors.amber),
+              tooltip: l10n.achievementsTitle,
               onPressed: () => _navigateToAchievements(),
             ),
+          const SizedBox(width: 4),
+          LanguageSelector(iconColor: Colors.white),
         ],
       ),
     );
@@ -138,6 +146,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   Widget _buildInitialMenu(GameState gameState) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -164,7 +173,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
 
           // Descripción
           Text(
-            '¡Adivina el Pokémon\npor su silueta!',
+            l10n.whoIsPokemonDescription,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 24,
@@ -176,7 +185,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           const SizedBox(height: 16),
 
           Text(
-            '10 preguntas • 15 segundos cada una\n+10 puntos por acierto • Bonus por velocidad',
+            l10n.whoIsPokemonRules,
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
@@ -202,7 +211,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                   const Icon(Icons.emoji_events, color: Colors.amber, size: 24),
                   const SizedBox(width: 12),
                   Text(
-                    'Mejor puntuación: ${gameState.highScore}',
+                    l10n.highScoreLabel('${gameState.highScore}'),
                     style: const TextStyle(
                       color: Colors.amber,
                       fontSize: 16,
@@ -225,14 +234,14 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ),
               elevation: 8,
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.play_arrow, size: 28),
-                SizedBox(width: 8),
+                const Icon(Icons.play_arrow, size: 28),
+                const SizedBox(width: 8),
                 Text(
-                  'INICIAR PARTIDA',
-                  style: TextStyle(
+                  l10n.startGame,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
@@ -247,9 +256,9 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           TextButton.icon(
             onPressed: () => _navigateToResults(),
             icon: const Icon(Icons.leaderboard, color: Colors.white70),
-            label: const Text(
-              'Ver Ranking',
-              style: TextStyle(
+            label: Text(
+              l10n.viewRanking,
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
               ),
@@ -261,6 +270,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   Widget _buildGameView(GameState gameState) {
+    final l10n = context.l10n;
     final showSilhouette = gameState.status == GameStatus.waitingAnswer;
     final imageUrl = gameState.currentPokemon != null
         ? artworkUrlForId(gameState.currentPokemon!.id)
@@ -293,15 +303,21 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PokemonSilhouette(
-                    imageUrl: imageUrl,
-                    showSilhouette: showSilhouette,
-                    size: 180,
+                  Semantics(
+                    label: showSilhouette
+                        ? l10n.silhouetteHiddenLabel
+                        : l10n.silhouetteRevealedLabel,
+                    image: true,
+                    child: PokemonSilhouette(
+                      imageUrl: imageUrl,
+                      showSilhouette: showSilhouette,
+                      size: 180,
+                    ),
                   ),
-                  
+
                   // Mensaje de resultado
                   if (gameState.status == GameStatus.showingResult)
-                    _buildResultMessage(gameState),
+                    _buildResultMessage(gameState, l10n),
                 ],
               ),
             ),
@@ -330,8 +346,8 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                 ),
                 child: Text(
                   gameState.currentQuestion >= gameState.totalQuestions
-                      ? 'VER RESULTADOS'
-                      : 'SIGUIENTE',
+                      ? l10n.showResults
+                      : l10n.nextQuestion,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -344,7 +360,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
     );
   }
 
-  Widget _buildResultMessage(GameState gameState) {
+  Widget _buildResultMessage(GameState gameState, AppLocalizations l10n) {
     final isCorrect = gameState.lastAnswerCorrect ?? false;
     final pokemonName = gameState.currentPokemon?.name ?? '';
     
@@ -353,7 +369,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
       child: Column(
         children: [
           Text(
-            isCorrect ? '¡Correcto!' : 'Incorrecto',
+            isCorrect ? l10n.resultCorrect : l10n.resultIncorrect,
             style: TextStyle(
               color: isCorrect ? Colors.green.shade300 : Colors.red.shade300,
               fontSize: 24,
@@ -362,7 +378,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Es ${pokemonName.toUpperCase()}',
+            l10n.resultAnswer(pokemonName: pokemonName.toUpperCase()),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -373,8 +389,10 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 gameState.lastAnswerTimeSeconds! < 5
-                    ? '¡Bonus de tiempo! +5 puntos'
-                    : 'Tiempo: ${gameState.lastAnswerTimeSeconds!.toStringAsFixed(1)}s',
+                    ? l10n.timeBonus
+                    : l10n.timeElapsed(
+                        gameState.lastAnswerTimeSeconds!.toStringAsFixed(1),
+                      ),
                 style: TextStyle(
                   color: gameState.lastAnswerTimeSeconds! < 5
                       ? Colors.amber
@@ -389,6 +407,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   Widget _buildAnswerOptions(GameState gameState) {
+    final l10n = context.l10n;
     return Column(
       children: gameState.answerOptions.asMap().entries.map((entry) {
         final index = entry.key;
@@ -399,6 +418,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           pokemonName: pokemon.name,
           state: state,
           index: index,
+          semanticsLabel: l10n.answerOption(pokemonName: pokemon.name),
           onPressed: () => ref.read(gameProvider.notifier).submitAnswer(index),
         );
       }).toList(),
@@ -480,25 +500,26 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   void _showExitConfirmation() {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF4E0911),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          '¿Salir del juego?',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          l10n.exitGameTitle,
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'Perderás el progreso de la partida actual.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          l10n.exitGameMessage,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'CANCELAR',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
           TextButton(
@@ -507,9 +528,9 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ref.read(gameProvider.notifier).resetToMenu();
               Navigator.of(context).pop();
             },
-            child: const Text(
-              'SALIR',
-              style: TextStyle(color: Colors.red),
+            child: Text(
+              l10n.exit,
+              style: const TextStyle(color: Colors.red),
             ),
           ),
         ],

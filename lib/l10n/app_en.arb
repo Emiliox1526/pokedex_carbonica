@@ -1,0 +1,111 @@
+{
+  "appTitle": "Pokédex Carbonica",
+  "whoIsPokemonTitle": "Who is this Pokémon?",
+  "whoIsPokemonDescription": "Guess the Pokémon\nby its silhouette!",
+  "whoIsPokemonRules": "10 questions • 15 seconds each\n+10 points per correct answer • Speed bonus",
+  "highScoreLabel": "Best score: {score}",
+  "@highScoreLabel": {
+    "placeholders": {
+      "score": {}
+    }
+  },
+  "startGame": "START GAME",
+  "viewRanking": "View Ranking",
+  "resultCorrect": "Correct!",
+  "resultIncorrect": "Incorrect",
+  "resultAnswer": "It's {pokemonName}",
+  "@resultAnswer": {
+    "placeholders": {
+      "pokemonName": {}
+    }
+  },
+  "answerOption": "Answer option {pokemonName}",
+  "@answerOption": {
+    "placeholders": {
+      "pokemonName": {}
+    }
+  },
+  "timeBonus": "Time bonus! +5 points",
+  "timeElapsed": "Time: {seconds}s",
+  "@timeElapsed": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "showResults": "VIEW RESULTS",
+  "nextQuestion": "NEXT",
+  "exitGameTitle": "Exit the game?",
+  "exitGameMessage": "You will lose the current game progress.",
+  "cancel": "CANCEL",
+  "exit": "EXIT",
+  "timerLabel": "Time",
+  "scoreLabel": "Points",
+  "questionLabel": "Question",
+  "streakLabel": "Streak",
+  "achievementsTitle": "Achievements",
+  "statsGames": "Games",
+  "statsHits": "Correct",
+  "statsBestStreak": "Best streak",
+  "statsAchievements": "Achievements",
+  "achievementsError": "Error loading achievements",
+  "progressUnlocked": "Progress: {unlocked}/{total} achievements unlocked",
+  "@progressUnlocked": {
+    "placeholders": {
+      "unlocked": {},
+      "total": {}
+    }
+  },
+  "rankingTitle": "Ranking",
+  "resultsTitle": "Results",
+  "newRecord": "NEW RECORD!",
+  "gameFinished": "GAME FINISHED",
+  "pointsLabel": "POINTS",
+  "statsAccuracy": "Accuracy",
+  "unlockedAchievementsTitle": "Unlocked achievements",
+  "menu": "MENU",
+  "play": "PLAY",
+  "rankingSectionTitle": "RANKING",
+  "errorLoadingRanking": "Error loading ranking",
+  "noScores": "No scores yet",
+  "playToRank": "Play to enter the ranking!",
+  "scorePoints": "{points} points",
+  "@scorePoints": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "unlockedOnDate": "Unlocked on {date}",
+  "@unlockedOnDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementUnlockTitle": "ACHIEVEMENT UNLOCKED!",
+  "great": "AWESOME!",
+  "languageButtonTooltip": "Change language",
+  "languageButtonLabel": "Language selector. Current: {language}",
+  "@languageButtonLabel": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "languageEnglish": "English",
+  "languageSpanish": "Spanish",
+  "achievementNoviceTrainerName": "Rookie Trainer",
+  "achievementConnoisseurName": "Connoisseur",
+  "achievementPokemonMasterName": "Pokémon Master",
+  "achievementSpeedsterName": "Speedster",
+  "achievementOnFireName": "On Fire",
+  "achievementLegendName": "Legend",
+  "achievementNoviceTrainerDescription": "First completed game",
+  "achievementConnoisseurDescription": "50 points in one game",
+  "achievementPokemonMasterDescription": "100 points in one game",
+  "achievementSpeedsterDescription": "5 correct answers under 3 seconds",
+  "achievementOnFireDescription": "10 correct answers in a row",
+  "achievementLegendDescription": "200 points in one game",
+  "silhouetteHiddenLabel": "Pokémon silhouette hidden",
+  "silhouetteRevealedLabel": "Pokémon image revealed",
+  "languageToggle": "Language",
+  "speedBonusLabel": "Speed bonus",
+  "streakMultiplier": "x1.5"
+}
