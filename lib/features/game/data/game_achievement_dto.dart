@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 
 import '../domain/game_achievement.dart';
 
-part 'game_achievement_dto.g.dart';
+part "game_achievement_dto.g.dart";
 
 /// Data Transfer Object para persistir logros con Hive.
 ///
