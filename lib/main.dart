@@ -4,15 +4,18 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app.dart';
-import 'core/network/api_client.dart';
-import 'screens/pokemon_list/data/datasource.dart';
-import 'screens/minigame/data/datasource.dart';
-import 'screens/pokemon_detail/data/datasource.dart';
-import 'screens/favorites/data/datasource.dart';
-import 'screens/pokemon_list/presentation/controller.dart';
-import 'screens/pokemon_detail/presentation/controller.dart';
-import 'screens/favorites/presentation/controller.dart';
-import 'screens/minigame/presentation/controller.dart';
+import 'di/graphql_client.dart';
+import 'features/pokemon_list/data/pokemon_dto.dart';
+import 'features/game/data/game_score_dto.dart';
+import 'features/game/data/game_achievement_dto.dart';
+import 'features/pokemon_list/data/pokemon_local_datasource.dart';
+import 'features/pokemon_detail/data/pokemon_detail_local_datasource.dart';
+import 'features/favorites/data/favorites_local_datasource.dart';
+import 'features/game/data/game_local_datasource.dart';
+import 'features/pokemon_list/ui/pokemon_list_provider.dart';
+import 'features/pokemon_detail/ui/pokemon_detail_provider.dart';
+import 'features/favorites/ui/favorites_provider.dart';
+import 'features/game/ui/game_provider.dart';
 
 /// Punto de entrada de la aplicación Pokédex.
 ///

@@ -1,4 +1,4 @@
 /// Barrel file for core utilities.
-/// 
-/// Exports all helper utilities for easy importing throughout the app.
-export 'helpers.dart';
+export 'sprite_utils.dart';
+export 'string_utils.dart';
+export 'type_utils.dart';
