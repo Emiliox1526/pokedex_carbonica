@@ -9,7 +9,7 @@ import '../domain/get_form_detail_usecase.dart';
 import '../data/pokemon_detail_remote_datasource.dart';
 import '../data/pokemon_detail_local_datasource.dart';
 import '../data/pokemon_detail_repository_impl.dart';
-import '../../pokemon_list/presentation/pokemon_list_provider.dart';
+import '../../pokemon_list/presentation/controller.dart';
 
 // ============================================================================
 // Data Layer Providers

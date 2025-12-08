@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/type_utils.dart';
-import '../../pokemon_list/domain/pokemon.dart';
-import '../../pokemon_detail/presentation/pokemon_detail_screen.dart';
+import '../../pokemon_list/domain/model.dart';
+import '../../pokemon_detail/presentation/page.dart';
 import 'favorites_provider.dart';
 import '../../../common/widgets/pokemon_card.dart';
 import '../../../common/widgets/pokemon_card_skeleton.dart';

@@ -1,6 +1,8 @@
-/// Domain models for the pokemon_list feature.
+/// Domain models and entities for this feature.
 ///
-/// This file contains all entities, value objects, and domain models.
+/// Contains all business objects, value objects, and domain entities.
+
+import 'package:flutter/material.dart';
 
 /// Entidad de dominio que representa un Pokémon.
 /// 
@@ -98,4 +100,5 @@ class PaginatedPokemonList {
         hasNextPage: false,
         hasPreviousPage: false,
       );
-}\n\n
+}
+

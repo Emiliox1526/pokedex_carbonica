@@ -1,724 +1,18 @@
-/// UI widgets for the minigame feature.
+/// UI widgets for this feature.
 ///
-/// This file contains all auxiliary UI widgets.
+/// Contains all reusable UI components and widgets.
 
 import 'package:flutter/material.dart';
-
-import '../../../../common/extensions/l10n_extension.dart';
-
-/// Barra de progreso del tiempo restante.
-///
-/// Muestra visualmente el tiempo restante para responder
-/// la pregunta actual con un gradiente animado.
-class TimerBar extends StatelessWidget {
-  /// Tiempo restante en segundos.
-  final int remainingSeconds;
-
-  /// Tiempo máximo en segundos.
-  final int maxSeconds;
-
-  /// Altura de la barra.
-  final double height;
-
-  const TimerBar({
-    super.key,
-    required this.remainingSeconds,
-    required this.maxSeconds,
-    this.height = 12,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final progress = maxSeconds > 0
-        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0)
-        : 0.0;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Texto del tiempo
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    color: _getTimerColor(progress),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.timerLabel,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  color: _getTimerColor(progress),
-                  fontSize: progress < 0.3 ? 18 : 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                child: Text('${remainingSeconds}s'),
-              ),
-            ],
-          ),
-        ),
-        
-        // Barra de progreso
-        Container(
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(height / 2),
-            color: Colors.white.withOpacity(0.2),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(height / 2),
-            child: Stack(
-              children: [
-                // Fondo animado
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: MediaQuery.of(context).size.width * progress * 0.85,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: _getGradientColors(progress),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getTimerColor(progress).withOpacity(0.5),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Efecto de brillo
-                if (progress > 0.1)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 20,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withOpacity(0.3),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getTimerColor(double progress) {
-    if (progress > 0.5) {
-      return const Color(0xFF4CAF50); // Verde
-    } else if (progress > 0.25) {
-      return const Color(0xFFFFA726); // Naranja
-    } else {
-      return const Color(0xFFEF5350); // Rojo
-    }
-  }
-
-  List<Color> _getGradientColors(double progress) {
-    if (progress > 0.5) {
-      return [
-        const Color(0xFF66BB6A),
-        const Color(0xFF4CAF50),
-      ];
-    } else if (progress > 0.25) {
-      return [
-        const Color(0xFFFFB74D),
-        const Color(0xFFFFA726),
-      ];
-    } else {
-      return [
-        const Color(0xFFEF5350),
-        const Color(0xFFE53935),
-      ];
-    }
-  }
-}\nimport 'package:flutter/material.dart';
-
-import 'package:pokedex_carbonica/core/utils/string_utils.dart';
-
-/// Estado del botón de respuesta.
-enum AnswerButtonState {
-  /// Estado normal, esperando selección.
-  idle,
-
-  /// Seleccionado como respuesta correcta.
-  correct,
-
-  /// Seleccionado como respuesta incorrecta.
-  incorrect,
-
-  /// Es la respuesta correcta pero el usuario eligió otra.
-  revealedCorrect,
-
-  /// Deshabilitado mientras se muestra el resultado.
-  disabled,
-}
-
-/// Botón de opción de respuesta para el juego.
-///
-/// Muestra el nombre del Pokémon y cambia de color según el estado.
-class AnswerButton extends StatelessWidget {
-  /// Nombre del Pokémon a mostrar.
-  final String pokemonName;
-
-  /// Estado actual del botón.
-  final AnswerButtonState state;
-
-  /// Callback cuando se presiona el botón.
-  final VoidCallback? onPressed;
-
-  /// Índice del botón (para animaciones escalonadas).
-  final int index;
-
-  /// Etiqueta de accesibilidad opcional.
-  final String? semanticsLabel;
-
-  const AnswerButton({
-    super.key,
-    required this.pokemonName,
-    required this.state,
-    this.onPressed,
-    this.index = 0,
-    this.semanticsLabel,
-  });
-
-  // Colores del tema
-  static const Color _dexBurgundy = Color(0xFF7A0A16);
-  static const Color _dexDeep = Color(0xFF4E0911);
-  static const Color _correctGreen = Color(0xFF2E7D32);
-  static const Color _incorrectRed = Color(0xFFB71C1C);
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      enabled: state == AnswerButtonState.idle,
-      label: semanticsLabel ?? capitalize(pokemonName),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: state == AnswerButtonState.idle ? onPressed : null,
-            borderRadius: BorderRadius.circular(16),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              constraints: const BoxConstraints(minHeight: 56),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _getGradientColors(),
-                ),
-                border: Border.all(
-                  color: _getBorderColor(),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getShadowColor(),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  _buildStateIcon(),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      capitalize(pokemonName),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: const Offset(0, 1),
-                            blurRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (state == AnswerButtonState.idle)
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white70,
-                      size: 24,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStateIcon() {
-    IconData icon;
-    Color iconColor;
-
-    switch (state) {
-      case AnswerButtonState.correct:
-        icon = Icons.check_circle;
-        iconColor = Colors.white;
-        break;
-      case AnswerButtonState.incorrect:
-        icon = Icons.cancel;
-        iconColor = Colors.white;
-        break;
-      case AnswerButtonState.revealedCorrect:
-        icon = Icons.check_circle_outline;
-        iconColor = Colors.white;
-        break;
-      case AnswerButtonState.idle:
-      case AnswerButtonState.disabled:
-        icon = Icons.catching_pokemon;
-        iconColor = Colors.white70;
-        break;
-    }
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: Icon(
-        icon,
-        key: ValueKey(state),
-        color: iconColor,
-        size: 28,
-      ),
-    );
-  }
-
-  List<Color> _getGradientColors() {
-    switch (state) {
-      case AnswerButtonState.correct:
-        return [_correctGreen, _correctGreen.withOpacity(0.8)];
-      case AnswerButtonState.incorrect:
-        return [_incorrectRed, _incorrectRed.withOpacity(0.8)];
-      case AnswerButtonState.revealedCorrect:
-        return [_correctGreen.withOpacity(0.7), _correctGreen.withOpacity(0.5)];
-      case AnswerButtonState.disabled:
-        return [_dexDeep.withOpacity(0.5), _dexBurgundy.withOpacity(0.3)];
-      case AnswerButtonState.idle:
-        return [_dexDeep, _dexBurgundy];
-    }
-  }
-
-  Color _getBorderColor() {
-    switch (state) {
-      case AnswerButtonState.correct:
-        return Colors.white;
-      case AnswerButtonState.incorrect:
-        return Colors.white;
-      case AnswerButtonState.revealedCorrect:
-        return Colors.white70;
-      case AnswerButtonState.disabled:
-        return Colors.white24;
-      case AnswerButtonState.idle:
-        return Colors.white54;
-    }
-  }
-
-  Color _getShadowColor() {
-    switch (state) {
-      case AnswerButtonState.correct:
-        return _correctGreen.withOpacity(0.5);
-      case AnswerButtonState.incorrect:
-        return _incorrectRed.withOpacity(0.5);
-      default:
-        return Colors.black26;
-    }
-  }
-}\nimport 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
-/// Widget que muestra la silueta de un Pokémon.
-///
-/// Usa ColorFiltered para mostrar la imagen en negro (silueta)
-/// y puede revelar la imagen original con una animación.
-class PokemonSilhouette extends StatelessWidget {
-  /// URL de la imagen del Pokémon.
-  final String? imageUrl;
-
-  /// Si debe mostrar la silueta (true) o la imagen original (false).
-  final bool showSilhouette;
-
-  /// Tamaño del widget.
-  final double size;
-
-  /// Duración de la animación de revelación.
-  final Duration animationDuration;
-
-  const PokemonSilhouette({
-    super.key,
-    required this.imageUrl,
-    this.showSilhouette = true,
-    this.size = 200,
-    this.animationDuration = const Duration(milliseconds: 500),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (imageUrl == null) {
-      return _buildPlaceholder();
-    }
-
-    return AnimatedSwitcher(
-      duration: animationDuration,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOut),
-            ),
-            child: child,
-          ),
-        );
-      },
-      child: showSilhouette
-          ? _buildSilhouette()
-          : _buildRevealedImage(),
-    );
-  }
-
-  Widget _buildSilhouette() {
-    return ColorFiltered(
-      key: const ValueKey('silhouette'),
-      colorFilter: const ColorFilter.mode(
-        Colors.black,
-        BlendMode.srcIn,
-      ),
-      child: _buildImage(),
-    );
-  }
-
-  Widget _buildRevealedImage() {
-    return Container(
-      key: const ValueKey('revealed'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withOpacity(0.3),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: _buildImage(),
-    );
-  }
-
-  Widget _buildImage() {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CachedNetworkImage(
-        imageUrl: imageUrl!,
-        fit: BoxFit.contain,
-        placeholder: (context, url) => _buildLoadingIndicator(),
-        errorWidget: (context, url, error) => _buildErrorWidget(),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder() {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.catching_pokemon,
-          size: 80,
-          color: Colors.white30,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: Colors.white,
-        strokeWidth: 2,
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget() {
-    return const Center(
-      child: Icon(
-        Icons.error_outline,
-        size: 60,
-        color: Colors.white54,
-      ),
-    );
-  }
-}\nimport 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
-import '../../../../common/extensions/l10n_extension.dart';
+import 'package:pokedex_carbonica/core/utils/utils.dart';
+import 'package:pokedex_carbonica/common/widgets/type_chip.dart';
+import '../domain/model.dart';
+import 'controller.dart';
 
-/// Widget que muestra la puntuación actual y racha.
-///
-/// Incluye la puntuación, número de pregunta actual y racha de aciertos.
-class ScoreDisplay extends StatelessWidget {
-  /// Puntuación actual.
-  final int score;
-
-  /// Pregunta actual (1-10).
-  final int currentQuestion;
-
-  /// Total de preguntas.
-  final int totalQuestions;
-
-  /// Racha actual de aciertos.
-  final int currentStreak;
-
-  /// Mejor puntuación histórica.
-  final int highScore;
-
-  const ScoreDisplay({
-    super.key,
-    required this.score,
-    required this.currentQuestion,
-    required this.totalQuestions,
-    required this.currentStreak,
-    required this.highScore,
-  });
-
-  // Colores del tema
-  static const Color _dexBurgundy = Color(0xFF7A0A16);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white30),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Puntuación
-          _buildScoreSection(l10n),
-          
-          // Separador
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.white30,
-          ),
-          
-          // Pregunta actual
-          _buildQuestionSection(l10n),
-          
-          // Separador
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.white30,
-          ),
-          
-          // Racha
-          _buildStreakSection(l10n),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScoreSection(AppLocalizations l10n) {
-    final isNewHighScore = score > highScore;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.stars_rounded,
-              color: Colors.amber,
-              size: 20,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l10n.scoreLabel,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Text(
-              score.toString(),
-              style: TextStyle(
-                color: isNewHighScore ? Colors.amber : Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (isNewHighScore)
-              const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Icon(
-                  Icons.arrow_upward,
-                  color: Colors.amber,
-                  size: 16,
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuestionSection(AppLocalizations l10n) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.help_outline_rounded,
-              color: Colors.white70,
-              size: 20,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l10n.questionLabel,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '$currentQuestion/$totalQuestions',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStreakSection(AppLocalizations l10n) {
-    final hasMultiplier = currentStreak >= 3;
-    
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.local_fire_department,
-              color: currentStreak > 0 ? Colors.orange : Colors.white54,
-              size: 20,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l10n.streakLabel,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Text(
-              currentStreak.toString(),
-              style: TextStyle(
-                color: currentStreak > 0 ? Colors.orange : Colors.white54,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (hasMultiplier)
-              Container(
-                margin: const EdgeInsets.only(left: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  l10n.streakMultiplier,
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}\nimport 'package:flutter/material.dart';
-import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
-import '../../domain/game_achievement.dart';
-import '../../domain/game_achievement_localizations.dart';
 
 /// Badge que muestra un logro del juego.
 ///
@@ -766,10 +60,173 @@ class AchievementBadge extends StatelessWidget {
 
   Widget _buildCompactBadge(String name, String description) {
     return Tooltip(
-      message: '$name\nimport 'package:flutter/material.dart';
-import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
-import '../../domain/game_achievement.dart';
-import '../../domain/game_achievement_localizations.dart';
+      message: '$name\n$description',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: achievement.isUnlocked
+                  ? Colors.white.withOpacity(0.15)
+                  : Colors.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: achievement.isUnlocked
+                    ? Colors.white38
+                    : Colors.white12,
+              ),
+            ),
+            child: Text(
+              achievement.icon,
+              style: TextStyle(
+                fontSize: 24,
+                color: achievement.isUnlocked ? null : Colors.white38,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullBadge(
+    AppLocalizations l10n,
+    String name,
+    String description,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: achievement.isUnlocked
+                  ? [_dexDeep, _dexBurgundy]
+                  : [_lockedColor.withOpacity(0.5), _lockedColor.withOpacity(0.3)],
+            ),
+            border: Border.all(
+              color: achievement.isUnlocked
+                  ? Colors.white54
+                  : Colors.white24,
+              width: 1.5,
+            ),
+            boxShadow: achievement.isUnlocked
+                ? [
+                    BoxShadow(
+                      color: _dexBurgundy.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Row(
+            children: [
+              // Icono del logro
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: achievement.isUnlocked
+                      ? Colors.white.withOpacity(0.15)
+                      : Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    achievement.icon,
+                    style: TextStyle(
+                      fontSize: 32,
+                      color: achievement.isUnlocked ? null : Colors.white38,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              
+              // Información del logro
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: achievement.isUnlocked
+                            ? Colors.white
+                            : Colors.white54,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (showDescription) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          color: achievement.isUnlocked
+                              ? Colors.white70
+                              : Colors.white38,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                    if (achievement.isUnlocked && achievement.unlockedDate != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green.shade300,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.unlockedOnDate(
+                              _formatDate(achievement.unlockedDate!),
+                            ),
+                            style: TextStyle(
+                              color: Colors.green.shade300,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
+              // Indicador de estado
+              if (!achievement.isUnlocked)
+                const Icon(
+                  Icons.lock_outline,
+                  color: Colors.white38,
+                  size: 24,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+}
+
 
 /// Modal que muestra un logro recién desbloqueado.
 ///
@@ -1013,10 +470,344 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
       ),
     );
   }
-}\nimport 'package:flutter/material.dart';
-import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
-import '../../domain/game_score.dart';
-import 'package:pokedex_carbonica/common/extensions/l10n_extension.dart';
+}
+
+
+
+/// Estado del botón de respuesta.
+enum AnswerButtonState {
+  /// Estado normal, esperando selección.
+  idle,
+
+  /// Seleccionado como respuesta correcta.
+  correct,
+
+  /// Seleccionado como respuesta incorrecta.
+  incorrect,
+
+  /// Es la respuesta correcta pero el usuario eligió otra.
+  revealedCorrect,
+
+  /// Deshabilitado mientras se muestra el resultado.
+  disabled,
+}
+
+/// Botón de opción de respuesta para el juego.
+///
+/// Muestra el nombre del Pokémon y cambia de color según el estado.
+class AnswerButton extends StatelessWidget {
+  /// Nombre del Pokémon a mostrar.
+  final String pokemonName;
+
+  /// Estado actual del botón.
+  final AnswerButtonState state;
+
+  /// Callback cuando se presiona el botón.
+  final VoidCallback? onPressed;
+
+  /// Índice del botón (para animaciones escalonadas).
+  final int index;
+
+  /// Etiqueta de accesibilidad opcional.
+  final String? semanticsLabel;
+
+  const AnswerButton({
+    super.key,
+    required this.pokemonName,
+    required this.state,
+    this.onPressed,
+    this.index = 0,
+    this.semanticsLabel,
+  });
+
+  // Colores del tema
+  static const Color _dexBurgundy = Color(0xFF7A0A16);
+  static const Color _dexDeep = Color(0xFF4E0911);
+  static const Color _correctGreen = Color(0xFF2E7D32);
+  static const Color _incorrectRed = Color(0xFFB71C1C);
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: state == AnswerButtonState.idle,
+      label: semanticsLabel ?? capitalize(pokemonName),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: state == AnswerButtonState.idle ? onPressed : null,
+            borderRadius: BorderRadius.circular(16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              constraints: const BoxConstraints(minHeight: 56),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: _getGradientColors(),
+                ),
+                border: Border.all(
+                  color: _getBorderColor(),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getShadowColor(),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _buildStateIcon(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      capitalize(pokemonName),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: const Offset(0, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (state == AnswerButtonState.idle)
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white70,
+                      size: 24,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStateIcon() {
+    IconData icon;
+    Color iconColor;
+
+    switch (state) {
+      case AnswerButtonState.correct:
+        icon = Icons.check_circle;
+        iconColor = Colors.white;
+        break;
+      case AnswerButtonState.incorrect:
+        icon = Icons.cancel;
+        iconColor = Colors.white;
+        break;
+      case AnswerButtonState.revealedCorrect:
+        icon = Icons.check_circle_outline;
+        iconColor = Colors.white;
+        break;
+      case AnswerButtonState.idle:
+      case AnswerButtonState.disabled:
+        icon = Icons.catching_pokemon;
+        iconColor = Colors.white70;
+        break;
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: Icon(
+        icon,
+        key: ValueKey(state),
+        color: iconColor,
+        size: 28,
+      ),
+    );
+  }
+
+  List<Color> _getGradientColors() {
+    switch (state) {
+      case AnswerButtonState.correct:
+        return [_correctGreen, _correctGreen.withOpacity(0.8)];
+      case AnswerButtonState.incorrect:
+        return [_incorrectRed, _incorrectRed.withOpacity(0.8)];
+      case AnswerButtonState.revealedCorrect:
+        return [_correctGreen.withOpacity(0.7), _correctGreen.withOpacity(0.5)];
+      case AnswerButtonState.disabled:
+        return [_dexDeep.withOpacity(0.5), _dexBurgundy.withOpacity(0.3)];
+      case AnswerButtonState.idle:
+        return [_dexDeep, _dexBurgundy];
+    }
+  }
+
+  Color _getBorderColor() {
+    switch (state) {
+      case AnswerButtonState.correct:
+        return Colors.white;
+      case AnswerButtonState.incorrect:
+        return Colors.white;
+      case AnswerButtonState.revealedCorrect:
+        return Colors.white70;
+      case AnswerButtonState.disabled:
+        return Colors.white24;
+      case AnswerButtonState.idle:
+        return Colors.white54;
+    }
+  }
+
+  Color _getShadowColor() {
+    switch (state) {
+      case AnswerButtonState.correct:
+        return _correctGreen.withOpacity(0.5);
+      case AnswerButtonState.incorrect:
+        return _incorrectRed.withOpacity(0.5);
+      default:
+        return Colors.black26;
+    }
+  }
+}
+
+
+/// Widget que muestra la silueta de un Pokémon.
+///
+/// Usa ColorFiltered para mostrar la imagen en negro (silueta)
+/// y puede revelar la imagen original con una animación.
+class PokemonSilhouette extends StatelessWidget {
+  /// URL de la imagen del Pokémon.
+  final String? imageUrl;
+
+  /// Si debe mostrar la silueta (true) o la imagen original (false).
+  final bool showSilhouette;
+
+  /// Tamaño del widget.
+  final double size;
+
+  /// Duración de la animación de revelación.
+  final Duration animationDuration;
+
+  const PokemonSilhouette({
+    super.key,
+    required this.imageUrl,
+    this.showSilhouette = true,
+    this.size = 200,
+    this.animationDuration = const Duration(milliseconds: 500),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null) {
+      return _buildPlaceholder();
+    }
+
+    return AnimatedSwitcher(
+      duration: animationDuration,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: showSilhouette
+          ? _buildSilhouette()
+          : _buildRevealedImage(),
+    );
+  }
+
+  Widget _buildSilhouette() {
+    return ColorFiltered(
+      key: const ValueKey('silhouette'),
+      colorFilter: const ColorFilter.mode(
+        Colors.black,
+        BlendMode.srcIn,
+      ),
+      child: _buildImage(),
+    );
+  }
+
+  Widget _buildRevealedImage() {
+    return Container(
+      key: const ValueKey('revealed'),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.3),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: _buildImage(),
+    );
+  }
+
+  Widget _buildImage() {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CachedNetworkImage(
+        imageUrl: imageUrl!,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => _buildLoadingIndicator(),
+        errorWidget: (context, url, error) => _buildErrorWidget(),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.catching_pokemon,
+          size: 80,
+          color: Colors.white30,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: Colors.white,
+        strokeWidth: 2,
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return const Center(
+      child: Icon(
+        Icons.error_outline,
+        size: 60,
+        color: Colors.white54,
+      ),
+    );
+  }
+}
+
 
 /// Lista de ranking con las mejores puntuaciones.
 ///
@@ -1336,169 +1127,381 @@ class _RankingItem extends StatelessWidget {
         ];
     }
   }
-}\n\n\n\n\n\n\n\n\n\n\n\n$description',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: achievement.isUnlocked
-                  ? Colors.white.withOpacity(0.15)
-                  : Colors.black.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: achievement.isUnlocked
-                    ? Colors.white38
-                    : Colors.white12,
-              ),
-            ),
-            child: Text(
-              achievement.icon,
-              style: TextStyle(
-                fontSize: 24,
-                color: achievement.isUnlocked ? null : Colors.white38,
-              ),
-            ),
+}
+
+
+/// Widget que muestra la puntuación actual y racha.
+///
+/// Incluye la puntuación, número de pregunta actual y racha de aciertos.
+class ScoreDisplay extends StatelessWidget {
+  /// Puntuación actual.
+  final int score;
+
+  /// Pregunta actual (1-10).
+  final int currentQuestion;
+
+  /// Total de preguntas.
+  final int totalQuestions;
+
+  /// Racha actual de aciertos.
+  final int currentStreak;
+
+  /// Mejor puntuación histórica.
+  final int highScore;
+
+  const ScoreDisplay({
+    super.key,
+    required this.score,
+    required this.currentQuestion,
+    required this.totalQuestions,
+    required this.currentStreak,
+    required this.highScore,
+  });
+
+  // Colores del tema
+  static const Color _dexBurgundy = Color(0xFF7A0A16);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white30),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Puntuación
+          _buildScoreSection(l10n),
+          
+          // Separador
+          Container(
+            height: 40,
+            width: 1,
+            color: Colors.white30,
           ),
-        ),
+          
+          // Pregunta actual
+          _buildQuestionSection(l10n),
+          
+          // Separador
+          Container(
+            height: 40,
+            width: 1,
+            color: Colors.white30,
+          ),
+          
+          // Racha
+          _buildStreakSection(l10n),
+        ],
       ),
     );
   }
 
-  Widget _buildFullBadge(
-    AppLocalizations l10n,
-    String name,
-    String description,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: achievement.isUnlocked
-                  ? [_dexDeep, _dexBurgundy]
-                  : [_lockedColor.withOpacity(0.5), _lockedColor.withOpacity(0.3)],
+  Widget _buildScoreSection(AppLocalizations l10n) {
+    final isNewHighScore = score > highScore;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.stars_rounded,
+              color: Colors.amber,
+              size: 20,
             ),
-            border: Border.all(
-              color: achievement.isUnlocked
-                  ? Colors.white54
-                  : Colors.white24,
-              width: 1.5,
+            const SizedBox(width: 4),
+            Text(
+              l10n.scoreLabel,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            boxShadow: achievement.isUnlocked
-                ? [
-                    BoxShadow(
-                      color: _dexBurgundy.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            children: [
-              // Icono del logro
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: achievement.isUnlocked
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Text(
+              score.toString(),
+              style: TextStyle(
+                color: isNewHighScore ? Colors.amber : Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (isNewHighScore)
+              const Padding(
+                padding: EdgeInsets.only(left: 4),
+                child: Icon(
+                  Icons.arrow_upward,
+                  color: Colors.amber,
+                  size: 16,
                 ),
-                child: Center(
-                  child: Text(
-                    achievement.icon,
-                    style: TextStyle(
-                      fontSize: 32,
-                      color: achievement.isUnlocked ? null : Colors.white38,
-                    ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuestionSection(AppLocalizations l10n) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.help_outline_rounded,
+              color: Colors.white70,
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              l10n.questionLabel,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$currentQuestion/$totalQuestions',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStreakSection(AppLocalizations l10n) {
+    final hasMultiplier = currentStreak >= 3;
+    
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.local_fire_department,
+              color: currentStreak > 0 ? Colors.orange : Colors.white54,
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              l10n.streakLabel,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Text(
+              currentStreak.toString(),
+              style: TextStyle(
+                color: currentStreak > 0 ? Colors.orange : Colors.white54,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (hasMultiplier)
+              Container(
+                margin: const EdgeInsets.only(left: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l10n.streakMultiplier,
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              
-              // Información del logro
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: achievement.isUnlocked
-                            ? Colors.white
-                            : Colors.white54,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
+
+/// Barra de progreso del tiempo restante.
+///
+/// Muestra visualmente el tiempo restante para responder
+/// la pregunta actual con un gradiente animado.
+class TimerBar extends StatelessWidget {
+  /// Tiempo restante en segundos.
+  final int remainingSeconds;
+
+  /// Tiempo máximo en segundos.
+  final int maxSeconds;
+
+  /// Altura de la barra.
+  final double height;
+
+  const TimerBar({
+    super.key,
+    required this.remainingSeconds,
+    required this.maxSeconds,
+    this.height = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final progress = maxSeconds > 0
+        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0)
+        : 0.0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // Texto del tiempo
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.timer_outlined,
+                    color: _getTimerColor(progress),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.timerLabel,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
-                    if (showDescription) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          color: achievement.isUnlocked
-                              ? Colors.white70
-                              : Colors.white38,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                    if (achievement.isUnlocked && achievement.unlockedDate != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: Colors.green.shade300,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.unlockedOnDate(
-                              _formatDate(achievement.unlockedDate!),
-                            ),
-                            style: TextStyle(
-                              color: Colors.green.shade300,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
               ),
-              
-              // Indicador de estado
-              if (!achievement.isUnlocked)
-                const Icon(
-                  Icons.lock_outline,
-                  color: Colors.white38,
-                  size: 24,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  color: _getTimerColor(progress),
+                  fontSize: progress < 0.3 ? 18 : 16,
+                  fontWeight: FontWeight.bold,
                 ),
+                child: Text('${remainingSeconds}s'),
+              ),
             ],
           ),
         ),
-      ),
+        
+        // Barra de progreso
+        Container(
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(height / 2),
+            color: Colors.white.withOpacity(0.2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(height / 2),
+            child: Stack(
+              children: [
+                // Fondo animado
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: MediaQuery.of(context).size.width * progress * 0.85,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: _getGradientColors(progress),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _getTimerColor(progress).withOpacity(0.5),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Efecto de brillo
+                if (progress > 0.1)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 20,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  Color _getTimerColor(double progress) {
+    if (progress > 0.5) {
+      return const Color(0xFF4CAF50); // Verde
+    } else if (progress > 0.25) {
+      return const Color(0xFFFFA726); // Naranja
+    } else {
+      return const Color(0xFFEF5350); // Rojo
+    }
   }
-}\n\n\n\n
+
+  List<Color> _getGradientColors(double progress) {
+    if (progress > 0.5) {
+      return [
+        const Color(0xFF66BB6A),
+        const Color(0xFF4CAF50),
+      ];
+    } else if (progress > 0.25) {
+      return [
+        const Color(0xFFFFB74D),
+        const Color(0xFFFFA726),
+      ];
+    } else {
+      return [
+        const Color(0xFFEF5350),
+        const Color(0xFFE53935),
+      ];
+    }
+  }
+}
+

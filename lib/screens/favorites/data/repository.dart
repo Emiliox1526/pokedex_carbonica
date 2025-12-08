@@ -1,7 +1,8 @@
-/// Repository for the favorites feature.
+/// Repository implementations for this feature.
 ///
-/// This file contains both the repository interface and its implementation.
+/// Contains both repository interfaces and implementations.
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../domain/model.dart';
 import 'datasource.dart';
 

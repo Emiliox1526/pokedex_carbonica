@@ -7,8 +7,8 @@ import '../data/game_local_datasource.dart';
 import '../domain/game_state.dart';
 import '../domain/game_score.dart';
 import '../domain/game_achievement.dart';
-import '../../pokemon_list/domain/pokemon.dart';
-import '../../pokemon_list/presentation/pokemon_list_provider.dart';
+import '../../pokemon_list/domain/model.dart';
+import '../../pokemon_list/presentation/controller.dart';
 
 /// Cantidad de Pokémon a cargar para el juego.
 const int _gamePokemonCount = 150;

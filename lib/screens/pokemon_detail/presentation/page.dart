@@ -9,10 +9,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
-import '../../pokemon_list/domain/pokemon.dart';
+import '../../pokemon_list/domain/model.dart';
 import '../domain/pokemon_form_variant.dart';
 import 'pokemon_detail_provider.dart';
-import '../../favorites/presentation/favorites_provider.dart';
+import '../../favorites/presentation/controller.dart';
 import 'widgets/detail_header.dart';
 import 'widgets/detail_image_section.dart';
 import 'widgets/detail_tab_bar.dart';

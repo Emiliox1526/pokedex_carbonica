@@ -1,6 +1,6 @@
-/// Use cases for the minigame feature.
+/// Use cases and repository contracts for this feature.
 ///
-/// This file contains all business logic use cases.
+/// Contains all business logic use cases and repository interfaces.
 
 import 'model.dart';
 

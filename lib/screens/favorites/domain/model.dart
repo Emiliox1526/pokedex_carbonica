@@ -1,4 +1,6 @@
-/// Domain models for the favorites feature.
+/// Domain models and entities for this feature.
 ///
-/// This file contains all entities, value objects, and domain models.
+/// Contains all business objects, value objects, and domain entities.
+
+import 'package:flutter/material.dart';
 
