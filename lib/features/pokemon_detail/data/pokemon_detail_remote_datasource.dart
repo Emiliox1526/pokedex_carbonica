@@ -1,6 +1,7 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'pokemon_detail_dto.dart';
+import '../../common/data/helpers/graphql_error_handler.dart';
 
 /// GraphQL query to get detailed Pokemon information by ID.
 const String _pokemonDetailQuery = r'''
@@ -330,8 +331,9 @@ class PokemonDetailRemoteDataSource {
 
       if (result.hasException) {
         throw PokemonDetailException(
-          message: _parseGraphQLException(result.exception!),
-          type: _getExceptionType(result.exception!),
+          message: GraphQLErrorHandler.parseException(result.exception!),
+          type: _mapToDetailExceptionType(
+              GraphQLErrorHandler.getExceptionType(result.exception!)),
         );
       }
 
@@ -372,8 +374,9 @@ class PokemonDetailRemoteDataSource {
 
       if (result.hasException) {
         throw PokemonDetailException(
-          message: _parseGraphQLException(result.exception!),
-          type: _getExceptionType(result.exception!),
+          message: GraphQLErrorHandler.parseException(result.exception!),
+          type: _mapToDetailExceptionType(
+              GraphQLErrorHandler.getExceptionType(result.exception!)),
         );
       }
 
@@ -395,27 +398,20 @@ class PokemonDetailRemoteDataSource {
     }
   }
 
-  String _parseGraphQLException(OperationException exception) {
-    if (exception.linkException != null) {
-      return 'Server connection error';
+  /// Maps the common RemoteExceptionType to PokemonDetailExceptionType.
+  PokemonDetailExceptionType _mapToDetailExceptionType(RemoteExceptionType type) {
+    switch (type) {
+      case RemoteExceptionType.noConnection:
+        return PokemonDetailExceptionType.noConnection;
+      case RemoteExceptionType.timeout:
+        return PokemonDetailExceptionType.timeout;
+      case RemoteExceptionType.rateLimit:
+        return PokemonDetailExceptionType.rateLimit;
+      case RemoteExceptionType.serverError:
+        return PokemonDetailExceptionType.serverError;
+      case RemoteExceptionType.notFound:
+        return PokemonDetailExceptionType.notFound;
     }
-    if (exception.graphqlErrors.isNotEmpty) {
-      return exception.graphqlErrors.first.message;
-    }
-    return 'Unknown query error';
-  }
-
-  PokemonDetailExceptionType _getExceptionType(OperationException exception) {
-    if (exception.linkException != null) {
-      return PokemonDetailExceptionType.noConnection;
-    }
-    final errorMessage =
-        exception.graphqlErrors.isEmpty ? '' : exception.graphqlErrors.first.message;
-    if (errorMessage.contains('rate limit') ||
-        errorMessage.contains('too many requests')) {
-      return PokemonDetailExceptionType.rateLimit;
-    }
-    return PokemonDetailExceptionType.serverError;
   }
 }
 

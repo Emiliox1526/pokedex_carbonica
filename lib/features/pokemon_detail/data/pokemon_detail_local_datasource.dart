@@ -9,6 +9,7 @@ import '../domain/pokemon_stat.dart';
 import '../domain/pokemon_move.dart';
 import '../domain/pokemon_form_variant.dart';
 import '../domain/pokemon_evolution.dart';
+import '../../common/data/helpers/cache_helper.dart';
 
 /// Local data source for caching Pokemon detail data with Hive.
 class PokemonDetailLocalDataSource {
@@ -44,7 +45,7 @@ class PokemonDetailLocalDataSource {
       await _detailBox!.put('pokemon_$id', jsonString);
       await _metadataBox!.put(
         '${_lastCacheTimeKey}_$id',
-        DateTime.now().millisecondsSinceEpoch,
+        CacheHelper.getCurrentTimestamp(),
       );
     } catch (e) {
       debugPrint('Error caching Pokemon detail for ID $id: $e');
@@ -74,13 +75,7 @@ class PokemonDetailLocalDataSource {
 
     final lastCacheTime =
         _metadataBox!.get('${_lastCacheTimeKey}_$id') as int?;
-    if (lastCacheTime == null) return false;
-
-    final cacheDate = DateTime.fromMillisecondsSinceEpoch(lastCacheTime);
-    final now = DateTime.now();
-    final difference = now.difference(cacheDate);
-
-    return difference.inHours < _cacheDurationHours;
+    return CacheHelper.isCacheValid(lastCacheTime, durationHours: _cacheDurationHours);
   }
 
   /// Checks if there is any cached data for a Pokemon.

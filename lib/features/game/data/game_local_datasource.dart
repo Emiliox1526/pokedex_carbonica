@@ -4,6 +4,7 @@ import 'game_score_dto.dart';
 import 'game_achievement_dto.dart';
 import '../domain/game_score.dart';
 import '../domain/game_achievement.dart';
+import '../../common/data/helpers/cache_helper.dart';
 
 /// Data source local para persistencia del juego "¿Quién es este Pokémon?".
 ///
@@ -189,7 +190,7 @@ class GameLocalDataSource {
       GameAchievementDTO(
         type: type.name,
         isUnlocked: true,
-        unlockedDateTimestamp: DateTime.now().millisecondsSinceEpoch,
+        unlockedDateTimestamp: CacheHelper.getCurrentTimestamp(),
       ),
     );
 

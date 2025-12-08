@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'pokemon_dto.dart';
 import '../domain/pokemon_repository.dart';
+import '../../common/data/helpers/cache_helper.dart';
 
 /// Data source local para persistencia de Pokémon con Hive.
 /// 
@@ -68,7 +69,7 @@ class PokemonLocalDataSource {
     // Actualizar timestamp del cache
     await _metadataBox!.put(
       _lastCacheTimeKey,
-      DateTime.now().millisecondsSinceEpoch,
+      CacheHelper.getCurrentTimestamp(),
     );
   }
 
@@ -117,13 +118,7 @@ class PokemonLocalDataSource {
     await _ensureInitialized();
     
     final lastCacheTime = _metadataBox!.get(_lastCacheTimeKey) as int?;
-    if (lastCacheTime == null) return false;
-    
-    final cacheDate = DateTime.fromMillisecondsSinceEpoch(lastCacheTime);
-    final now = DateTime.now();
-    final difference = now.difference(cacheDate);
-    
-    return difference.inHours < _cacheDurationHours;
+    return CacheHelper.isCacheValid(lastCacheTime, durationHours: _cacheDurationHours);
   }
 
   /// Verifica si hay datos en el cache.

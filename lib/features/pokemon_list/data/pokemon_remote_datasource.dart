@@ -2,6 +2,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'pokemon_dto.dart';
 import '../domain/pokemon_repository.dart';
+import '../../common/data/helpers/graphql_error_handler.dart';
 
 /// Consulta GraphQL optimizada para obtener lista de Pokémon con paginación.
 /// 
@@ -123,8 +124,9 @@ class PokemonRemoteDataSource {
 
       if (result.hasException) {
         throw PokemonRemoteException(
-          message: _parseGraphQLException(result.exception!),
-          type: _getExceptionType(result.exception!),
+          message: GraphQLErrorHandler.parseException(result.exception!),
+          type: _mapToRemoteExceptionType(
+              GraphQLErrorHandler.getExceptionType(result.exception!)),
         );
       }
 
@@ -163,8 +165,9 @@ class PokemonRemoteDataSource {
 
       if (result.hasException) {
         throw PokemonRemoteException(
-          message: _parseGraphQLException(result.exception!),
-          type: _getExceptionType(result.exception!),
+          message: GraphQLErrorHandler.parseException(result.exception!),
+          type: _mapToRemoteExceptionType(
+              GraphQLErrorHandler.getExceptionType(result.exception!)),
         );
       }
 
@@ -245,30 +248,20 @@ class PokemonRemoteDataSource {
     return gen >= 1 && gen <= endIds.length ? endIds[gen - 1] : 1025;
   }
 
-  /// Parsea las excepciones de GraphQL a mensajes legibles.
-  String _parseGraphQLException(OperationException exception) {
-    if (exception.linkException != null) {
-      return 'Error de conexión con el servidor';
+  /// Maps the common RemoteExceptionType to PokemonRemoteExceptionType.
+  PokemonRemoteExceptionType _mapToRemoteExceptionType(RemoteExceptionType type) {
+    switch (type) {
+      case RemoteExceptionType.noConnection:
+        return PokemonRemoteExceptionType.noConnection;
+      case RemoteExceptionType.timeout:
+        return PokemonRemoteExceptionType.timeout;
+      case RemoteExceptionType.rateLimit:
+        return PokemonRemoteExceptionType.rateLimit;
+      case RemoteExceptionType.serverError:
+        return PokemonRemoteExceptionType.serverError;
+      case RemoteExceptionType.notFound:
+        return PokemonRemoteExceptionType.serverError;
     }
-    if (exception.graphqlErrors.isNotEmpty) {
-      return exception.graphqlErrors.first.message;
-    }
-    return 'Error desconocido en la consulta';
-  }
-
-  /// Determina el tipo de excepción basado en el error de GraphQL.
-  PokemonRemoteExceptionType _getExceptionType(OperationException exception) {
-    if (exception.linkException != null) {
-      return PokemonRemoteExceptionType.noConnection;
-    }
-    final errorMessage = exception.graphqlErrors.isEmpty 
-        ? '' 
-        : exception.graphqlErrors.first.message;
-    if (errorMessage.contains('rate limit') ||
-        errorMessage.contains('too many requests')) {
-      return PokemonRemoteExceptionType.rateLimit;
-    }
-    return PokemonRemoteExceptionType.serverError;
   }
 }
 
