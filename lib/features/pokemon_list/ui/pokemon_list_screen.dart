@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,6 +12,7 @@ import '../../../common/widgets/pokemon_card_skeleton.dart';
 import '../../../common/widgets/search_bar.dart';
 import '../../../common/widgets/generation_drawer.dart';
 import '../../../common/widgets/pagination_controls.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 
 /// Función helper para convertir hex a Color.
 Color hex(String hex) {
@@ -32,6 +35,22 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   /// Colores de fondo del gradiente.
   final Color _bg1 = hex('#ff365a');
   final Color _bg2 = hex('#8c0025');
+  static const Map<int, String> _generationBackgroundImages = {
+    1: 'lib/assets/kanto.png',
+    2: 'lib/assets/johto.png',
+    3: 'lib/assets/hoenn.png',
+    4: 'lib/assets/sinnoh.png',
+    5: 'lib/assets/unova.png',
+    6: 'lib/assets/kalos.png',
+    7: 'lib/assets/alola.png',
+    8: 'lib/assets/galar.png',
+    9: 'lib/assets/paldea.png',
+  };
+
+  String _assetForGeneration(int? generation) {
+    // Si no hay generación seleccionada, usa Kanto por defecto
+    return _generationBackgroundImages[generation] ?? _generationBackgroundImages[1]!;
+  }
 
   /// Set de URLs de imágenes ya precargadas.
   final Set<String> _prefetchedImageUrls = {};
@@ -147,7 +166,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
     }
 
     return Scaffold(
-      backgroundColor: hex('#F5F7F9'),
+      backgroundColor: Colors.transparent,
       drawer: GenerationDrawer(
         onSelectGeneration: (int gen) {
           notifier.selectGeneration(gen == 0 ? null : gen);
@@ -160,24 +179,33 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       ),
       body: Stack(
         children: [
-          // Fondo con gradiente estático
+          // Fondo con imagen de región + blur + opacidad
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_bg1, _bg2],
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Opacity(
+                opacity: 0.80, // qué tan visible es la foto
+                child: Image.asset(
+                  _assetForGeneration(state.selectedGeneration),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
+
+          // Capa oscura ligera para mejorar contraste del contenido
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.25),
+            ),
+          ),
+
           SafeArea(
             child: Column(
               children: [
                 // Parte superior: búsqueda y filtros
                 Padding(
-                  padding: const EdgeInsets. fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -235,7 +263,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
                       hasNextPage: state.hasNextPage,
                       isLoading: state.isLoading,
                       onPreviousPage: notifier.previousPage,
-                      onNextPage: notifier. nextPage,
+                      onNextPage: notifier.nextPage,
                       primaryColor: Colors.white,
                     ),
                   ),
@@ -246,6 +274,8 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
         ],
       ),
     );
+
+
   }
 
   /// Construye el contenido principal según el estado actual.
