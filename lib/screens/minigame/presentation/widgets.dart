@@ -299,12 +299,12 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
     _iconScaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.0, end: 1.2)
-           .chain(CurveTween(curve: Curves.easeOut)),
+.chain(CurveTween(curve: Curves.easeOut)),
         weight: 40,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.2, end: 1.0)
-           .chain(CurveTween(curve: Curves.bounceOut)),
+.chain(CurveTween(curve: Curves.bounceOut)),
         weight: 60,
       ),
     ]).animate(_controller);

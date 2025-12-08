@@ -227,10 +227,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       'id': pokemon.id,
       'name': pokemon.name,
       'pokemon_v2_pokemontypes': pokemon.types
-         .map((t) => {
+.map((t) => {
                 'pokemon_v2_type': {'name': t}
               })
-         .toList(),
+.toList(),
       'pokemon_v2_pokemonsprites': [
         {
           'sprites': {
@@ -244,10 +244,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         }
       ],
       'pokemon_v2_pokemonabilities': pokemon.abilities
-         .map((a) => {
+.map((a) => {
                 'pokemon_v2_ability': {'name': a}
               })
-         .toList(),
+.toList(),
     };
   }
 }

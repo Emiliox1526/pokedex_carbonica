@@ -26,13 +26,13 @@ class GameAchievementDTOAdapter extends TypeAdapter<GameAchievementDTO> {
   @override
   void write(BinaryWriter writer, GameAchievementDTO obj) {
     writer
-     ..writeByte(3)
-     ..writeByte(0)
-     ..write(obj.type)
-     ..writeByte(1)
-     ..write(obj.isUnlocked)
-     ..writeByte(2)
-     ..write(obj.unlockedDateTimestamp);
+..writeByte(3)
+..writeByte(0)
+..write(obj.type)
+..writeByte(1)
+..write(obj.isUnlocked)
+..writeByte(2)
+..write(obj.unlockedDateTimestamp);
   }
 
   @override

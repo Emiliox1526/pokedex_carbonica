@@ -98,8 +98,8 @@ class _PokemonDetailScreenNewState
         final data = widget.initialPokemon!;
         final typesRaw = data['pokemon_v2_pokemontypes'] as List? ?? [];
         final types = typesRaw
-           .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-           .toList();
+.map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+.toList();
         
         String? imageUrl;
         final spritesList = data['pokemon_v2_pokemonsprites'] as List?;
@@ -113,9 +113,9 @@ class _PokemonDetailScreenNewState
         
         final abilitiesRaw = data['pokemon_v2_pokemonabilities'] as List? ?? [];
         final abilities = abilitiesRaw
-           .map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
-           .where((e) => e.isNotEmpty)
-           .toList();
+.map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
+.where((e) => e.isNotEmpty)
+.toList();
         
         pokemon = Pokemon(
           id: data['id'] as int,

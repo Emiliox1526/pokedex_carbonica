@@ -124,10 +124,10 @@ class PokemonDetail {
   /// Formatted name with proper capitalization.
   String get displayName {
     return name
-       .replaceAll('-', ' ')
-       .split(' ')
-       .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
-       .join(' ');
+.replaceAll('-', ' ')
+.split(' ')
+.map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
+.join(' ');
   }
 
   /// The primary type of this Pokemon.
