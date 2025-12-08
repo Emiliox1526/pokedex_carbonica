@@ -5,7 +5,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'common/widgets/language_selector.dart';
 import 'core/providers/locale_provider.dart';
-import 'features/pokemon_list/ui/pokemon_list_screen.dart';
+import 'core/theme/app_theme.dart';
+import 'screens/pokemon_list/presentation/page.dart';
 
 /// Widget principal de la aplicación Pokédex.
 ///
@@ -26,14 +27,10 @@ class PokedexApp extends ConsumerWidget {
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Pokédex Carbonica',
-          theme: ThemeData(
-            colorSchemeSeed: Colors.red,
-            useMaterial3: true,
-          ),
+          theme: AppTheme.defaultTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale,
-          // Usar la nueva pantalla con Clean Architecture
           home: Stack(
             children: [
               const PokemonListScreenNew(),
