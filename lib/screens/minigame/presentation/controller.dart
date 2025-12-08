@@ -206,8 +206,8 @@ class GameNotifier extends StateNotifier<GameState> {
   List<Pokemon> _generateAnswerOptions(Pokemon correctPokemon) {
     final options = <Pokemon>[correctPokemon];
     final availableForOptions = _availablePokemons
-        .where((p) => p.id != correctPokemon.id)
-        .toList();
+       .where((p) => p.id != correctPokemon.id)
+       .toList();
     
     // Mezclar y tomar 3 opciones incorrectas
     availableForOptions.shuffle(_random);

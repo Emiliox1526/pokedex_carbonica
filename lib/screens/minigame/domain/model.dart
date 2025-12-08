@@ -413,7 +413,7 @@ class GameState {
   int get correctAnswerIndex {
     if (currentPokemon == null) return -1;
     return answerOptions
-        .indexWhere((p) => p.id == currentPokemon!.id);
+       .indexWhere((p) => p.id == currentPokemon!.id);
   }
 
   /// Estado inicial del juego.

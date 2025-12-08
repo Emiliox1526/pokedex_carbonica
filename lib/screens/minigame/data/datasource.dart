@@ -317,8 +317,8 @@ class GameLocalDataSource {
     await _ensureInitialized();
 
     final scores = _scoresBox!.values
-        .map((dto) => dto.toEntity())
-        .toList();
+       .map((dto) => dto.toEntity())
+       .toList();
 
     // Ordenar por fecha descendente
     scores.sort((a, b) => b.date.compareTo(a.date));
@@ -331,8 +331,8 @@ class GameLocalDataSource {
     await _ensureInitialized();
 
     final scores = _scoresBox!.values
-        .map((dto) => dto.toEntity())
-        .toList();
+       .map((dto) => dto.toEntity())
+       .toList();
 
     // Ordenar por puntuación descendente
     scores.sort((a, b) => b.score.compareTo(a.score));
@@ -369,8 +369,8 @@ class GameLocalDataSource {
     await _ensureInitialized();
 
     return _achievementsBox!.values
-        .map((dto) => dto.toEntity())
-        .toList();
+       .map((dto) => dto.toEntity())
+       .toList();
   }
 
   /// Obtiene un logro específico.
@@ -477,8 +477,8 @@ class GameLocalDataSource {
     await _ensureInitialized();
 
     return _achievementsBox!.values
-        .where((dto) => dto.isUnlocked)
-        .length;
+       .where((dto) => dto.isUnlocked)
+       .length;
   }
 
   /// Limpia todos los datos del juego.

@@ -58,10 +58,10 @@ class PokemonDetailDTO {
     // Extract types
     final typesRaw = json['pokemon_v2_pokemontypes'] as List? ?? [];
     final types = typesRaw
-        .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-        .where((t) => t.isNotEmpty)
-        .cast<String>()
-        .toList();
+       .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+       .where((t) => t.isNotEmpty)
+       .cast<String>()
+       .toList();
 
     // Extract abilities
     final abilities = _parseAbilities(json['pokemon_v2_pokemonabilities'] as List? ?? []);
@@ -258,9 +258,9 @@ class PokemonDetailDTO {
     
     final eggGroupsRaw = (speciesObj['pokemon_v2_pokemonegggroups'] as List?) ?? [];
     return eggGroupsRaw
-        .map((e) => (e['pokemon_v2_egggroup']?['name'] as String?) ?? '')
-        .where((e) => e.isNotEmpty)
-        .toList();
+       .map((e) => (e['pokemon_v2_egggroup']?['name'] as String?) ?? '')
+       .where((e) => e.isNotEmpty)
+       .toList();
   }
 
   static List<PokemonEvolution> _parseEvolutionChain(Map<String, dynamic>? speciesObj) {
@@ -305,9 +305,9 @@ class PokemonDetailDTO {
     
     final pokemonTypes = (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
     final types = pokemonTypes
-        .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-        .where((t) => t.isNotEmpty)
-        .toList();
+       .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+       .where((t) => t.isNotEmpty)
+       .toList();
     
     return types.isNotEmpty ? types : ['normal'];
   }
@@ -331,10 +331,10 @@ class PokemonDetailDTO {
 
       // Get types from the variant
       final variantTypes = ((variant['pokemon_v2_pokemontypes'] as List?) ?? [])
-          .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-          .where((t) => t.isNotEmpty)
-          .cast<String>()
-          .toList();
+         .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+         .where((t) => t.isNotEmpty)
+         .cast<String>()
+         .toList();
 
       // Get sprites from variant
       final variantSprites = _extractVariantSprites(variant);
@@ -347,10 +347,10 @@ class PokemonDetailDTO {
 
         // Get form-specific types if available
         final formTypes = ((form['pokemon_v2_pokemonformtypes'] as List?) ?? [])
-            .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? '')
-            .where((t) => t.isNotEmpty)
-            .cast<String>()
-            .toList();
+           .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? '')
+           .where((t) => t.isNotEmpty)
+           .cast<String>()
+           .toList();
 
         // Get form-specific sprites if available
         final formSprites = _extractFormSpritesFromData(form);
@@ -569,20 +569,20 @@ class PokemonDetailLocalDataSource {
       'baseExperience': detail.baseExperience,
       'types': detail.types,
       'abilities': detail.abilities
-          .map((a) => {
+         .map((a) => {
                 'name': a.name,
                 'isHidden': a.isHidden,
                 'shortEffect': a.shortEffect,
               })
-          .toList(),
+         .toList(),
       'stats': detail.stats
-          .map((s) => {
+         .map((s) => {
                 'name': s.name,
                 'value': s.value,
               })
-          .toList(),
+         .toList(),
       'moves': detail.moves
-          .map((m) => {
+         .map((m) => {
                 'name': m.name,
                 'type': m.type,
                 'damageClass': m.damageClass,
@@ -592,9 +592,9 @@ class PokemonDetailLocalDataSource {
                 'tmNumber': m.tmNumber,
                 'tmSpriteUrl': m.tmSpriteUrl,
               })
-          .toList(),
+         .toList(),
       'forms': detail.forms
-          .map((f) => {
+         .map((f) => {
                 'id': f.id,
                 'name': f.name,
                 'displayName': f.displayName,
@@ -605,9 +605,9 @@ class PokemonDetailLocalDataSource {
                 'isDefault': f.isDefault,
                 'category': f.category.index,
               })
-          .toList(),
+         .toList(),
       'evolutionChain': detail.evolutionChain
-          .map((e) => {
+         .map((e) => {
                 'speciesId': e.speciesId,
                 'name': e.name,
                 'minLevel': e.minLevel,
@@ -615,7 +615,7 @@ class PokemonDetailLocalDataSource {
                 'item': e.item,
                 'types': e.types,
               })
-          .toList(),
+         .toList(),
       'defaultSpriteUrl': detail.defaultSpriteUrl,
       'shinySpriteUrl': detail.shinySpriteUrl,
       'eggGroups': detail.eggGroups,
@@ -636,20 +636,20 @@ class PokemonDetailLocalDataSource {
       baseExperience: map['baseExperience'] as int,
       types: (map['types'] as List).cast<String>(),
       abilities: (map['abilities'] as List)
-          .map((a) => PokemonAbility(
+         .map((a) => PokemonAbility(
                 name: a['name'] as String,
                 isHidden: a['isHidden'] as bool,
                 shortEffect: a['shortEffect'] as String,
               ))
-          .toList(),
+         .toList(),
       stats: (map['stats'] as List)
-          .map((s) => PokemonStat(
+         .map((s) => PokemonStat(
                 name: s['name'] as String,
                 value: s['value'] as int,
               ))
-          .toList(),
+         .toList(),
       moves: (map['moves'] as List)
-          .map((m) => PokemonMove(
+         .map((m) => PokemonMove(
                 name: m['name'] as String,
                 type: m['type'] as String,
                 damageClass: m['damageClass'] as String,
@@ -659,9 +659,9 @@ class PokemonDetailLocalDataSource {
                 tmNumber: m['tmNumber'] as int?,
                 tmSpriteUrl: m['tmSpriteUrl'] as String?,
               ))
-          .toList(),
+         .toList(),
       forms: (map['forms'] as List)
-          .map((f) => PokemonFormVariant(
+         .map((f) => PokemonFormVariant(
                 id: f['id'] as int,
                 name: f['name'] as String,
                 displayName: f['displayName'] as String,
@@ -672,9 +672,9 @@ class PokemonDetailLocalDataSource {
                 isDefault: f['isDefault'] as bool,
                 category: PokemonFormCategory.values[f['category'] as int],
               ))
-          .toList(),
+         .toList(),
       evolutionChain: (map['evolutionChain'] as List)
-          .map((e) => PokemonEvolution(
+         .map((e) => PokemonEvolution(
                 speciesId: e['speciesId'] as int,
                 name: e['name'] as String,
                 minLevel: e['minLevel'] as int?,
@@ -682,7 +682,7 @@ class PokemonDetailLocalDataSource {
                 item: e['item'] as String?,
                 types: (e['types'] as List).cast<String>(),
               ))
-          .toList(),
+         .toList(),
       defaultSpriteUrl: map['defaultSpriteUrl'] as String?,
       shinySpriteUrl: map['shinySpriteUrl'] as String?,
       eggGroups: (map['eggGroups'] as List?)?.cast<String>() ?? [],
@@ -1011,14 +1011,14 @@ class PokemonDetailRemoteDataSource {
   Future<PokemonDetailDTO> getPokemonDetail(int id) async {
     try {
       final result = await _client
-          .query(
+         .query(
             QueryOptions(
               document: gql(_pokemonDetailQuery),
               variables: {'id': id},
               fetchPolicy: FetchPolicy.cacheFirst,
             ),
           )
-          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+         .timeout(const Duration(seconds: _queryTimeoutSeconds));
 
       if (result.hasException) {
         throw PokemonDetailException(
@@ -1053,14 +1053,14 @@ class PokemonDetailRemoteDataSource {
   Future<PokemonDetailDTO> getFormDetail(int pokemonId) async {
     try {
       final result = await _client
-          .query(
+         .query(
             QueryOptions(
               document: gql(_formDetailQuery),
               variables: {'pokemonId': pokemonId},
               fetchPolicy: FetchPolicy.cacheFirst,
             ),
           )
-          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+         .timeout(const Duration(seconds: _queryTimeoutSeconds));
 
       if (result.hasException) {
         throw PokemonDetailException(

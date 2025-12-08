@@ -37,9 +37,9 @@ class AboutTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final abilityNames = detail.visibleAbilities
-        .map((a) => capitalize(a.name))
-        .take(2)
-        .toList();
+       .map((a) => capitalize(a.name))
+       .take(2)
+       .toList();
 
     return DetailCard(
       background: Colors.white,
@@ -95,8 +95,8 @@ class AboutTab extends StatelessWidget {
                 child: _RadarChart(
                   data: detail.stats.map((s) => s.value.toDouble()).toList(),
                   labels: detail.stats
-                      .map((s) => getAbbreviatedStatName(s.name))
-                      .toList(),
+                     .map((s) => getAbbreviatedStatName(s.name))
+                     .toList(),
                   maxValue: 255,
                   baseColor: baseColor,
                   secondaryColor: secondaryColor,
@@ -327,7 +327,7 @@ class AboutTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...nonEmptyCategories.map(
+         ...nonEmptyCategories.map(
             (category) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Column(
@@ -420,8 +420,8 @@ class _RadarPainter extends CustomPainter {
 
     // Background circle
     final Paint backgroundPaint = Paint()
-      ..color = Colors.grey.shade300
-      ..style = PaintingStyle.fill;
+     ..color = Colors.grey.shade300
+     ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, backgroundPaint);
 
     // Data points
@@ -457,18 +457,18 @@ class _RadarPainter extends CustomPainter {
 
     // Vivid gradient colors
     final vividBase = HSLColor.fromColor(baseColor)
-        .withSaturation(
+       .withSaturation(
             (HSLColor.fromColor(baseColor).saturation * 1.4).clamp(0.0, 1.0))
-        .withLightness(
+       .withLightness(
             (HSLColor.fromColor(baseColor).lightness * 1.15).clamp(0.0, 1.0))
-        .toColor();
+       .toColor();
 
     final vividSecondary = HSLColor.fromColor(secondaryColor)
-        .withSaturation(
+       .withSaturation(
             (HSLColor.fromColor(secondaryColor).saturation * 1.4).clamp(0.0, 1.0))
-        .withLightness(
+       .withLightness(
             (HSLColor.fromColor(secondaryColor).lightness * 1.15).clamp(0.0, 1.0))
-        .toColor();
+       .toColor();
 
     final vividMiddle = Color.fromARGB(
       255,
@@ -478,7 +478,7 @@ class _RadarPainter extends CustomPainter {
     );
 
     final paintGradientFill = Paint()
-      ..shader = ui.Gradient.linear(
+     ..shader = ui.Gradient.linear(
         Offset(cx - radius * 0.35, cy - radius * 0.35),
         Offset(cx + radius * 0.35, cy + radius * 0.35),
         [
@@ -488,15 +488,15 @@ class _RadarPainter extends CustomPainter {
         ],
         [0.0, 0.5, 1.0],
       )
-      ..style = PaintingStyle.fill;
+     ..style = PaintingStyle.fill;
 
     // Draw polygon with gradient
     canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
     canvas.drawPath(
       pathData,
       Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill,
+       ..color = Colors.white
+       ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
       pathData,
@@ -506,21 +506,21 @@ class _RadarPainter extends CustomPainter {
 
     // Polygon border
     final Paint paintStroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2;
+     ..color = Colors.white
+     ..style = PaintingStyle.stroke
+     ..strokeWidth = 2.2;
     canvas.drawPath(pathData, paintStroke);
 
     // Grid lines
     final Paint gridPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
+     ..color = Colors.white
+     ..style = PaintingStyle.stroke
+     ..strokeWidth = 1.4;
 
     final Paint radialPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
+     ..color = Colors.white
+     ..style = PaintingStyle.stroke
+     ..strokeWidth = 1.4;
 
     const int rings = 6;
     for (int r = 1; r <= rings; r++) {
@@ -536,17 +536,17 @@ class _RadarPainter extends CustomPainter {
 
     // Data points
     final Paint paintVertex = Paint()
-      ..color = Colors.black87
-      ..style = PaintingStyle.fill;
+     ..color = Colors.black87
+     ..style = PaintingStyle.fill;
     for (final p in dataPoints) {
       canvas.drawCircle(p, _vertexCircleRadius, paintVertex);
     }
 
     // Center circle
     final Paint centerStroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+     ..color = Colors.white
+     ..style = PaintingStyle.stroke
+     ..strokeWidth = 2.0;
     canvas.drawCircle(center, _centerCircleRadius * 1.5, centerStroke);
 
     // Labels
@@ -793,7 +793,7 @@ class ErrorBanner extends StatelessWidget {
             message,
             style: const TextStyle(color: Colors.white),
           ),
-          if (onRetry != null) ...[
+          if (onRetry != null)...[
             const SizedBox(height: 12),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -1298,7 +1298,7 @@ class EvolutionTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
       child: Column(
         children: [
-          for (var i = 0; i < chain.length; i++) ...[
+          for (var i = 0; i < chain.length; i++)...[
             _EvolutionNode(
               id: chain[i].speciesId,
               name: chain[i].name,
@@ -1364,7 +1364,7 @@ class EvolutionTab extends StatelessWidget {
 
           return Column(
             children: [
-              for (var i = 0; i < chainItems.length; i++) ...[
+              for (var i = 0; i < chainItems.length; i++)...[
                 _EvolutionNode(
                   id: (chainItems[i]['id'] as int?) ?? 0,
                   name: (chainItems[i]['name'] as String?) ?? '',
@@ -1391,9 +1391,9 @@ class EvolutionTab extends StatelessWidget {
     final pokemonTypes =
         (pokemons.first['pokemon_v2_pokemontypes'] as List?) ?? [];
     final types = pokemonTypes
-        .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-        .where((t) => t.isNotEmpty)
-        .toList();
+       .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+       .where((t) => t.isNotEmpty)
+       .toList();
     return types.isNotEmpty ? types : ['normal'];
   }
 
@@ -1459,10 +1459,10 @@ class _EvolutionNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayName = name
-        .replaceAll('-', ' ')
-        .split(' ')
-        .map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w)
-        .join(' ');
+       .replaceAll('-', ' ')
+       .split(' ')
+       .map((w) => w.isNotEmpty ? (w[0].toUpperCase() + w.substring(1)) : w)
+       .join(' ');
 
     final artworkUrl = artworkUrlForId(id);
     final primaryType = types.isNotEmpty ? types.first : 'normal';
@@ -2400,7 +2400,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
     try {
       return widget.availableForms!.firstWhere((f) => f.id == _internalSelectedFormId);
     } catch (_) {
-      return widget.availableForms!.isNotEmpty ? widget.availableForms! .first : null;
+      return widget.availableForms!.isNotEmpty ? widget.availableForms!.first : null;
     }
   }
 
@@ -2466,7 +2466,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
               ],
             ),
             const SizedBox(height: 20),
-            if (hasMultipleForms) ...[
+            if (hasMultipleForms)...[
         _buildFormDropdown(),
     const SizedBox(height: 12),
     ],
@@ -2713,7 +2713,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final entry in groupedForms.entries) ...[
+                    for (final entry in groupedForms.entries)...[
                       _buildCategoryHeader(entry.key),
                       for (final form in entry.value)
                         _buildFormItem(form, form.id == _internalSelectedFormId),
@@ -2999,11 +2999,11 @@ class PokemonShareCard extends StatelessWidget {
     if (detail.stats.isEmpty) return 0;
 
     return detail.stats
-        .firstWhere(
+       .firstWhere(
           (s) => s.name == name,
           orElse: () => detail.stats.first,
         )
-        .value;
+       .value;
   }
 
   @override
@@ -3112,11 +3112,11 @@ class PokemonShareCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: detail.types
-                      .map((t) => TypeChipDetail(
+                     .map((t) => TypeChipDetail(
                             typeName: t,
                             scale: 1.1,
                           ))
-                      .toList(),
+                     .toList(),
                 ),
                 const SizedBox(height: 18),
                 Container(
@@ -3146,13 +3146,13 @@ class PokemonShareCard extends StatelessWidget {
                               spacing: 8,
                               runSpacing: 8,
                               children: detail.abilities
-                                  .map(
+                                 .map(
                                     (a) => _pill(
                                       a.name,
                                       a.isHidden ? Icons.visibility_off : Icons.auto_awesome,
                                     ),
                                   )
-                                  .toList(),
+                                 .toList(),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -3229,7 +3229,7 @@ class PokemonShareCard extends StatelessWidget {
                         Wrap(
                           spacing: 10,
                           children: detail.eggGroups
-                              .map(
+                             .map(
                                 (g) => Text(
                                   g.toUpperCase(),
                                   style: const TextStyle(
@@ -3238,7 +3238,7 @@ class PokemonShareCard extends StatelessWidget {
                                   ),
                                 ),
                               )
-                              .toList(),
+                             .toList(),
                         ),
                       ],
                     ),

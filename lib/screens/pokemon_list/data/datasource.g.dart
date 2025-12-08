@@ -28,17 +28,17 @@ class PokemonDTOAdapter extends TypeAdapter<PokemonDTO> {
   @override
   void write(BinaryWriter writer, PokemonDTO obj) {
     writer
-      ..writeByte(5)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.name)
-      ..writeByte(2)
-      ..write(obj.types)
-      ..writeByte(3)
-      ..write(obj.imageUrl)
-      ..writeByte(4)
-      ..write(obj.abilities);
+     ..writeByte(5)
+     ..writeByte(0)
+     ..write(obj.id)
+     ..writeByte(1)
+     ..write(obj.name)
+     ..writeByte(2)
+     ..write(obj.types)
+     ..writeByte(3)
+     ..write(obj.imageUrl)
+     ..writeByte(4)
+     ..write(obj.abilities);
   }
 
   @override

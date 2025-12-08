@@ -169,7 +169,7 @@ class AchievementBadge extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (showDescription) ...[
+                    if (showDescription)...[
                       const SizedBox(height: 4),
                       Text(
                         description,
@@ -181,7 +181,7 @@ class AchievementBadge extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (achievement.isUnlocked && achievement.unlockedDate != null) ...[
+                    if (achievement.isUnlocked && achievement.unlockedDate != null)...[
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -299,12 +299,12 @@ class _AchievementUnlockModalState extends State<AchievementUnlockModal>
     _iconScaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.0, end: 1.2)
-            .chain(CurveTween(curve: Curves.easeOut)),
+           .chain(CurveTween(curve: Curves.easeOut)),
         weight: 40,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.2, end: 1.0)
-            .chain(CurveTween(curve: Curves.bounceOut)),
+           .chain(CurveTween(curve: Curves.bounceOut)),
         weight: 60,
       ),
     ]).animate(_controller);

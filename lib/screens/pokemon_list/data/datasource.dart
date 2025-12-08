@@ -60,17 +60,17 @@ class PokemonDTO {
     // Extraer tipos
     final typesRaw = json['pokemon_v2_pokemontypes'] as List? ?? [];
     final List<String> types = typesRaw
-        .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
-        .where((e) => e.isNotEmpty)
-        .toList();
+       .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
+       .where((e) => e.isNotEmpty)
+       .toList();
 
     // Extraer habilidades
     final abilitiesRaw = json['pokemon_v2_pokemonabilities'] as List? ?? [];
     final List<String> abilities = abilitiesRaw
-        .take(2)
-        .map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
-        .where((e) => e.isNotEmpty)
-        .toList();
+       .take(2)
+       .map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
+       .where((e) => e.isNotEmpty)
+       .toList();
 
     // Extraer URL de imagen
     String? imageUrl;
@@ -376,7 +376,7 @@ class PokemonRemoteDataSource {
   Future<List<PokemonDTO>> getPokemonList(PokemonFilter filter) async {
     try {
       final result = await _client
-          .query(
+         .query(
             QueryOptions(
               document: gql(_paginatedPokemonListQuery),
               variables: {
@@ -387,7 +387,7 @@ class PokemonRemoteDataSource {
               fetchPolicy: FetchPolicy.networkOnly,
             ),
           )
-          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+         .timeout(const Duration(seconds: _queryTimeoutSeconds));
 
       if (result.hasException) {
         throw PokemonRemoteException(
@@ -398,8 +398,8 @@ class PokemonRemoteDataSource {
 
       final data = result.data?['pokemon_v2_pokemon'] as List<dynamic>? ?? [];
       return data
-          .map((e) => PokemonDTO.fromGraphQL(Map<String, dynamic>.from(e as Map)))
-          .toList();
+         .map((e) => PokemonDTO.fromGraphQL(Map<String, dynamic>.from(e as Map)))
+         .toList();
     } catch (e) {
       if (e is PokemonRemoteException) rethrow;
       throw PokemonRemoteException(
@@ -415,7 +415,7 @@ class PokemonRemoteDataSource {
   Future<int> getTotalPokemonCount(PokemonFilter filter) async {
     try {
       final result = await _client
-          .query(
+         .query(
             QueryOptions(
               document: gql(_pokemonCountQuery),
               variables: {
@@ -424,7 +424,7 @@ class PokemonRemoteDataSource {
               fetchPolicy: FetchPolicy.networkOnly,
             ),
           )
-          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+         .timeout(const Duration(seconds: _queryTimeoutSeconds));
 
       if (result.hasException) {
         throw PokemonRemoteException(
@@ -454,7 +454,7 @@ class PokemonRemoteDataSource {
   Future<List<PokemonDTO>> getPokemonForGame(int count, {int offset = 0}) async {
     try {
       final result = await _client
-          .query(
+         .query(
             QueryOptions(
               document: gql(_pokemonForGameQuery),
               variables: {
@@ -464,7 +464,7 @@ class PokemonRemoteDataSource {
               fetchPolicy: FetchPolicy.networkOnly,
             ),
           )
-          .timeout(const Duration(seconds: _queryTimeoutSeconds));
+         .timeout(const Duration(seconds: _queryTimeoutSeconds));
 
       if (result.hasException) {
         throw PokemonRemoteException(
@@ -475,8 +475,8 @@ class PokemonRemoteDataSource {
 
       final data = result.data?['pokemon_v2_pokemon'] as List<dynamic>? ?? [];
       return data
-          .map((e) => PokemonDTO.fromGraphQL(Map<String, dynamic>.from(e as Map)))
-          .toList();
+         .map((e) => PokemonDTO.fromGraphQL(Map<String, dynamic>.from(e as Map)))
+         .toList();
     } catch (e) {
       if (e is PokemonRemoteException) rethrow;
       throw PokemonRemoteException(
