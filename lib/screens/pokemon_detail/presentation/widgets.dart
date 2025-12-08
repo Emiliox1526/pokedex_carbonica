@@ -2393,7 +2393,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
     });
   }
 
-  PokemonFormVariant?  get _selectedForm {
+  PokemonFormVariant get _selectedForm {
     if (widget.availableForms == null || _internalSelectedFormId == null) {
       return null;
     }
@@ -2580,7 +2580,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
 
     final categoryColor = selectedForm.category.color;
     final categoryIcon = selectedForm.category.icon;
-    final formsCount = widget.availableForms?.length ??  0;
+    final formsCount = widget.availableForms?.length ?? 0;
 
     return Column(
       children: [
@@ -2862,7 +2862,7 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
                             color: isAnimating
                                 ? categoryColor. withOpacity(0.3 * glowValue)
                                 : Colors.black.withOpacity(0.08),
-                            blurRadius: isAnimating ?  8 * glowValue : 4,
+                            blurRadius: isAnimating ? 8 * glowValue : 4,
                             offset: const Offset(0, 2),
                             spreadRadius: isAnimating ? glowValue : 0,
                           ),

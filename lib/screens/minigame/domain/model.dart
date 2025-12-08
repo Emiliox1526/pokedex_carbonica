@@ -101,7 +101,7 @@ class GameAchievement {
   }
 
   /// Puntos requeridos para el logro (si aplica).
-  int? get requiredScore {
+  int get requiredScore {
     switch (type) {
       case AchievementType.connoisseur:
         return 50;

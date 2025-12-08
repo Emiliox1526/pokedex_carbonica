@@ -149,13 +149,13 @@ class PokemonDetailState {
   }
 
   /// Gets the currently active detail (form or base).
-  PokemonDetail? get activeDetail => formDetail ?? detail;
+  PokemonDetail get activeDetail => formDetail ?? detail;
 
   /// Gets available forms from the base detail.
   List<PokemonFormVariant> get availableForms => detail?.forms ?? [];
 
   /// Gets the currently selected form.
-  PokemonFormVariant? get selectedForm {
+  PokemonFormVariant get selectedForm {
     if (selectedFormId == null || availableForms.isEmpty) return null;
     try {
       return availableForms.firstWhere((f) => f.id == selectedFormId);

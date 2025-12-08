@@ -518,7 +518,7 @@ class PokemonMove {
   bool get isTutor => learnMethod == 'tutor';
 
   /// Gets the TM/HM label (e.g., 'TM01', 'HM03').
-  String? get tmLabel {
+  String get tmLabel {
     if (!isMachine || tmNumber == null) return null;
     final isHm = tmName?.toLowerCase().startsWith('hm') ?? false;
     final prefix = isHm ? 'HM' : 'TM';
