@@ -19,11 +19,8 @@ Color hex(String hex) {
   return Color(int.parse(buffer.toString(), radix: 16));
 }
 
-/// Pantalla principal de lista de Pokémon con Clean Architecture.
-///
-/// Esta pantalla utiliza Riverpod para la gestión de estado y sigue
-/// los principios de Clean Architecture separando la lógica de
-/// negocio de la presentación.
+/// Pantalla principal de lista de Pokémon
+
 class PokemonListScreenNew extends ConsumerStatefulWidget {
   const PokemonListScreenNew({super.key});
 
