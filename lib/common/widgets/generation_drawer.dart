@@ -4,6 +4,7 @@ import 'type_chip.dart';
 import '../../features/favorites/ui/favorites_screen.dart';
 import '../../features/game/ui/who_is_pokemon_screen.dart';
 import 'language_selector.dart';
+import '../extensions/l10n_extension.dart';
 /// Drawer de generaciones y filtros para la Pokédex.
 /// 
 /// Permite al usuario filtrar Pokémon por generación y tipos.
@@ -74,17 +75,17 @@ class GenerationDrawer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Título
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.catching_pokemon,
                       color: _dexWhite,
                       size: 28,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text(
-                      "Pokédex Regional",
-                      style: TextStyle(
+                      context.l10n.pokedexRegional,
+                      style: const TextStyle(
                         color: _dexWhite,
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
@@ -137,9 +138,9 @@ class GenerationDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Sección de configuración
-                        const Text(
-                          "Configuración",
-                          style: TextStyle(
+                        Text(
+                          context.l10n.configuration,
+                          style: const TextStyle(
                             color: _dexWhite,
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -161,9 +162,9 @@ class GenerationDrawer extends StatelessWidget {
                         const SizedBox(height: 14),
 
                         // Sección de filtro por generación
-                        const Text(
-                          "Generación",
-                          style: TextStyle(
+                        Text(
+                          context.l10n.generation,
+                          style: const TextStyle(
                             color: _dexWhite,
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -208,7 +209,9 @@ class _LanguageOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context);
     final String code = locale.languageCode.toLowerCase();
-    final String label = code == 'en' ? 'English' : 'Español';
+    final String label = code == 'en' 
+        ? context.l10n.languageEnglish 
+        : context.l10n.languageSpanish;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -232,9 +235,9 @@ class _LanguageOption extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Idioma de la Aplicacion',
-                  style: TextStyle(
+                Text(
+                  context.l10n.appLanguage,
+                  style: const TextStyle(
                     color: _dexWhite,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -315,14 +318,16 @@ class _FavoritesOption extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
-                child: Text(
-                  'Mis Favoritos',
-                  style: TextStyle(
-                    color: _dexWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+              Expanded(
+                child: Builder(
+                  builder: (context) => Text(
+                    context.l10n.myFavorites,
+                    style: const TextStyle(
+                      color: _dexWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -390,29 +395,31 @@ class _GameOption extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '¿Quién es este Pokémon?',
-                      style: TextStyle(
-                        color: _dexWhite,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
+              Expanded(
+                child: Builder(
+                  builder: (context) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.whoIsPokemonGame,
+                        style: const TextStyle(
+                          color: _dexWhite,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Juego de trivia',
-                      style: TextStyle(
-                        color: Colors.amber,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.triviaGame,
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const Icon(

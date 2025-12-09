@@ -107,5 +107,62 @@
   "silhouetteRevealedLabel": "Imagen del Pokémon revelada",
   "languageToggle": "Idioma",
   "speedBonusLabel": "Bonus de velocidad",
-  "streakMultiplier": "x1.5"
+  "streakMultiplier": "x1.5",
+  
+  "pokedexRegional": "Pokédex Regional",
+  "myFavorites": "Mis Favoritos",
+  "whoIsPokemonGame": "¿Quién es este Pokémon?",
+  "triviaGame": "Juego de trivia",
+  "appLanguage": "Idioma de la Aplicación",
+  "configuration": "Configuración",
+  "generation": "Generación",
+  "showingGeneration": "Mostrando: Generación {generation}",
+  "@showingGeneration": {
+    "placeholders": {
+      "generation": {}
+    }
+  },
+  "searchByNameOrId": "Buscar por nombre o #ID",
+  "pageOf": "Página {current} de {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
+  "loading": "Cargando...",
+  "retry": "Reintentar",
+  "noPokemonFound": "No se encontraron Pokémon",
+  "pokemonCount": "{count} Pokémon{plural} favorito{plural}",
+  "@pokemonCount": {
+    "placeholders": {
+      "count": {},
+      "plural": {}
+    }
+  },
+  "noFavoritesYet": "¡Aún no tienes favoritos!",
+  "exploreFavoritesHint": "Explora la Pokédex y marca tus Pokémon favoritos tocando el corazón en la pantalla de detalles.",
+  "tapHeartToAddFavorites": "Toca el corazón para agregar favoritos",
+  "shareBeforeLoading": "Carga el Pokémon antes de compartir su tarjeta.",
+  "shareError": "No se pudo compartir la tarjeta. Intenta nuevamente.",
+  "pokemonNotFound": "Pokémon no encontrado",
+  
+  "typeNormal": "Normal",
+  "typeFire": "Fuego",
+  "typeWater": "Agua",
+  "typeGrass": "Planta",
+  "typeElectric": "Eléctrico",
+  "typeIce": "Hielo",
+  "typeFighting": "Lucha",
+  "typePoison": "Veneno",
+  "typeGround": "Tierra",
+  "typeFlying": "Volador",
+  "typePsychic": "Psíquico",
+  "typeBug": "Bicho",
+  "typeRock": "Roca",
+  "typeGhost": "Fantasma",
+  "typeDragon": "Dragón",
+  "typeDark": "Siniestro",
+  "typeSteel": "Acero",
+  "typeFairy": "Hada"
 }

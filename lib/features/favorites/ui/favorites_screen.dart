@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/type_utils.dart';
+import '../../../common/extensions/l10n_extension.dart';
 import '../../pokemon_list/domain/pokemon.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'favorites_provider.dart';
@@ -97,10 +98,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 size: 28,
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Mis Favoritos',
-                  style: TextStyle(
+                  context.l10n.myFavorites,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -116,8 +117,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             padding: const EdgeInsets.only(left: 56),
             child: Text(
               state.isLoading
-                  ? 'Cargando...'
-                  : '${state.count} Pokémon${state.count == 1 ? '' : 's'} favorito${state.count == 1 ? '' : 's'}',
+                  ? context.l10n.loading
+                  : context.l10n.pokemonCount(
+                      state.count.toString(),
+                      state.count == 1 ? '' : 's',
+                    ),
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 14,
@@ -167,7 +171,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               onPressed: () =>
                   ref.read(favoritesProvider.notifier).loadFavorites(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(context.l10n.retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: _hex('#9e1932'),

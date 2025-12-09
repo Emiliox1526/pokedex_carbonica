@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../extensions/l10n_extension.dart';
+
 /// Barra de búsqueda personalizada para la Pokédex.
 /// 
 /// Incluye un botón de menú para abrir el drawer y un campo
@@ -7,15 +9,11 @@ import 'package:flutter/material.dart';
 class PokemonSearchBar extends StatelessWidget {
   /// Callback cuando cambia el texto de búsqueda.
   final ValueChanged<String>? onChanged;
-  
-  /// Texto placeholder del campo de búsqueda.
-  final String hintText;
 
   /// Constructor del widget.
   const PokemonSearchBar({
     super.key,
     this.onChanged,
-    this.hintText = 'Buscar por nombre o #ID',
   });
 
   @override
@@ -42,7 +40,7 @@ class PokemonSearchBar extends StatelessWidget {
           child: TextField(
             onChanged: onChanged,
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: context.l10n.searchByNameOrId,
               prefixIcon: const Icon(Icons.search, color: Colors.black54),
               filled: true,
               fillColor: Colors.white.withOpacity(0.9),

@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../features/pokemon_list/domain/pokemon.dart';
+import '../../core/utils/type_translation.dart';
 
 /// Extensión para oscurecer colores.
 extension ColorDarken on Color {
@@ -334,13 +335,15 @@ class _TypeChipSmall extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 6),
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-              fontSize: 13,
+          Builder(
+            builder: (context) => Text(
+              translateType(context, label).toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+                fontSize: 13,
+              ),
             ),
           ),
         ],
