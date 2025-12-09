@@ -4,6 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../domain/pokemon_evolution.dart';
 import '../../../../core/utils/type_utils.dart';
 import '../../../../core/utils/sprite_utils.dart';
+import '../../../../common/extensions/l10n_extension.dart';
 import 'detail_card.dart';
 import 'type_chip.dart';
 
@@ -100,9 +101,9 @@ class EvolutionTab extends StatelessWidget {
           final speciesList =
               (result.data?['pokemon_v2_pokemonspecies'] as List?) ?? [];
           if (speciesList.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.only(top: 64.0),
-              child: Center(child: Text('No evolution data available')),
+            return Padding(
+              padding: const EdgeInsets.only(top: 64.0),
+              child: Center(child: Text(context.l10n.noEvolutionData)),
             );
           }
 
@@ -112,9 +113,9 @@ class EvolutionTab extends StatelessWidget {
           final chainItems = chain.cast<Map<String, dynamic>>();
 
           if (chainItems.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.only(top: 64.0),
-              child: Center(child: Text('No evolution data available')),
+            return Padding(
+              padding: const EdgeInsets.only(top: 64.0),
+              child: Center(child: Text(context.l10n.noEvolutionData)),
             );
           }
 

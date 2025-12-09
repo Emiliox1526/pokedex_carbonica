@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:pokedex_carbonica/core/utils/type_utils.dart';
+import 'package:pokedex_carbonica/core/utils/type_translation.dart';
 
 /// A chip widget displaying a Pokemon type with icon.
 class TypeChipDetail extends StatelessWidget {
@@ -46,13 +47,15 @@ class TypeChipDetail extends StatelessWidget {
             color: Colors.white.withOpacity(0.9),
           ),
           SizedBox(width: 6 * scale),
-          Text(
-            typeName.toUpperCase(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11 * scale,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+          Builder(
+            builder: (context) => Text(
+              translateType(context, typeName).toUpperCase(),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11 * scale,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
         ],
@@ -163,7 +166,7 @@ class _TypeLabelChip extends StatelessWidget {
         ),
       ),
       child: Text(
-        label.toUpperCase(),
+        translateType(context, label).toUpperCase(),
         style: TextStyle(
           color: Colors.white,
           fontSize: (14.0 * scale).clamp(10.0, 14.0),

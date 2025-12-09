@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../common/extensions/l10n_extension.dart';
 import '../domain/pokemon.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'pokemon_list_provider.dart';
@@ -307,7 +308,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Text(
-                            'Mostrando: Generación ${state.selectedGeneration}',
+                            context.l10n.showingGeneration(state.selectedGeneration.toString()),
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -395,7 +396,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
             ElevatedButton.icon(
               onPressed: () => notifier.loadInitial(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(context.l10n.retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: hex('#9e1932'),
@@ -408,19 +409,19 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
 
     // Lista vacía
     if (state.pokemons.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.search_off,
               color: Colors.white70,
               size: 64,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
-              'No se encontraron Pokémon',
-              style: TextStyle(color: Colors.white),
+              context.l10n.noPokemonFound,
+              style: const TextStyle(color: Colors.white),
             ),
           ],
         ),

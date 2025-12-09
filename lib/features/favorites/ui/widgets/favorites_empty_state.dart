@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/extensions/l10n_extension.dart';
+
 /// Widget that displays an empty state message when there are no favorites.
 ///
 /// Shows a friendly message and icon to encourage users to add favorites.
@@ -31,9 +33,9 @@ class FavoritesEmptyState extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            const Text(
-              '¡Aún no tienes favoritos!',
-              style: TextStyle(
+            Text(
+              context.l10n.noFavoritesYet,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -43,7 +45,7 @@ class FavoritesEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Explora la Pokédex y marca tus Pokémon favoritos tocando el corazón en la pantalla de detalles.',
+              context.l10n.exploreFavoritesHint,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 16,
@@ -63,7 +65,7 @@ class FavoritesEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Toca el corazón para agregar favoritos',
+                  context.l10n.tapHeartToAddFavorites,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.6),
                     fontSize: 14,

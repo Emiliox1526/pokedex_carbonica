@@ -61,9 +61,8 @@ class LanguageSelector extends ConsumerWidget {
       child: GestureDetector(
         onTap: () {
           if (!isActive) {
-            // 👇 Aquí está la funcionalidad real de cambio de idioma
-            // Asumiendo que localeProvider es un StateProvider<Locale?>
-            ref.read(localeProvider.notifier).state = Locale(code);
+            // Update the locale using the notifier's setLocale method
+            ref.read(localeProvider.notifier).setLocale(Locale(code));
           }
         },
         child: AnimatedContainer(

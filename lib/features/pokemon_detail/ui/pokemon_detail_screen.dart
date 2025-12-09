@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
+import '../../../common/extensions/l10n_extension.dart';
 import '../../pokemon_list/domain/pokemon.dart';
 import '../domain/pokemon_form_variant.dart';
 import 'pokemon_detail_provider.dart';
@@ -166,8 +167,8 @@ class _PokemonDetailScreenNewState
     if (detail == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Carga el Pokémon antes de compartir su tarjeta.'),
+          SnackBar(
+            content: Text(context.l10n.shareBeforeLoading),
           ),
         );
       }
@@ -207,8 +208,8 @@ class _PokemonDetailScreenNewState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo compartir la tarjeta. Intenta nuevamente.'),
+        SnackBar(
+          content: Text(context.l10n.shareError),
         ),
       );
     } finally {
@@ -295,8 +296,8 @@ class _PokemonDetailScreenNewState
 
     final detail = state.activeDetail;
     if (detail == null) {
-      return const Scaffold(
-        body: Center(child: Text('Pokémon not found')),
+      return Scaffold(
+        body: Center(child: Text(context.l10n.pokemonNotFound)),
       );
     }
 

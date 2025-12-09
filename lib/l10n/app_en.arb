@@ -107,5 +107,65 @@
   "silhouetteRevealedLabel": "Pokémon image revealed",
   "languageToggle": "Language",
   "speedBonusLabel": "Speed bonus",
-  "streakMultiplier": "x1.5"
+  "streakMultiplier": "x1.5",
+  
+  "pokedexRegional": "Regional Pokédex",
+  "myFavorites": "My Favorites",
+  "whoIsPokemonGame": "Who is this Pokémon?",
+  "triviaGame": "Trivia game",
+  "appLanguage": "App Language",
+  "configuration": "Settings",
+  "generation": "Generation",
+  "showingGeneration": "Showing: Generation {generation}",
+  "@showingGeneration": {
+    "placeholders": {
+      "generation": {}
+    }
+  },
+  "searchByNameOrId": "Search by name or #ID",
+  "pageOf": "Page {current} of {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
+  "loading": "Loading...",
+  "retry": "Retry",
+  "noPokemonFound": "No Pokémon found",
+  "pokemonCount": "{count} favorite Pokémon{plural}",
+  "@pokemonCount": {
+    "placeholders": {
+      "count": {},
+      "plural": {}
+    }
+  },
+  "noFavoritesYet": "No favorites yet!",
+  "exploreFavoritesHint": "Explore the Pokédex and mark your favorite Pokémon by tapping the heart on the details screen.",
+  "tapHeartToAddFavorites": "Tap the heart to add favorites",
+  "shareBeforeLoading": "Load the Pokémon before sharing its card.",
+  "shareError": "Could not share the card. Please try again.",
+  "pokemonNotFound": "Pokémon not found",
+  
+  "typeNormal": "Normal",
+  "typeFire": "Fire",
+  "typeWater": "Water",
+  "typeGrass": "Grass",
+  "typeElectric": "Electric",
+  "typeIce": "Ice",
+  "typeFighting": "Fighting",
+  "typePoison": "Poison",
+  "typeGround": "Ground",
+  "typeFlying": "Flying",
+  "typePsychic": "Psychic",
+  "typeBug": "Bug",
+  "typeRock": "Rock",
+  "typeGhost": "Ghost",
+  "typeDragon": "Dragon",
+  "typeDark": "Dark",
+  "typeSteel": "Steel",
+  "typeFairy": "Fairy",
+  
+  "copiedToClipboard": "Pokémon info copied to clipboard",
+  "noEvolutionData": "No evolution data available"
 }

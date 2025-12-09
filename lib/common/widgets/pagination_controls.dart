@@ -1,6 +1,8 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
+import '../extensions/l10n_extension.dart';
+
 class PaginationControls extends StatelessWidget {
   final int currentPage;
   final int totalPages;
@@ -59,13 +61,15 @@ class PaginationControls extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Página $currentPage de $totalPages',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                    Builder(
+                      builder: (context) => Text(
+                        context.l10n.pageOf(currentPage.toString(), totalPages.toString()),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),

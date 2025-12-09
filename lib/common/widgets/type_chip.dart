@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/type_translation.dart';
+
 /// Widget de chip de tipo de Pokémon.
 /// 
 /// Muestra un tipo de Pokémon con su icono y nombre en un
@@ -68,18 +70,20 @@ class TypeChip extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    _capitalize(label),
-                    style: TextStyle(
-                      color: isSelected ?  Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      letterSpacing: 0.2,
+                child: Builder(
+                  builder: (context) => FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      translateType(context, label),
+                      style: TextStyle(
+                        color: isSelected ?  Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -88,11 +92,6 @@ class TypeChip extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
   }
 }
 
