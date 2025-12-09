@@ -505,6 +505,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'x1.5'**
   String get streakMultiplier;
+
+  /// No description provided for @pokedexRegional.
+  ///
+  /// In en, this message translates to:
+  /// **'Regional Pokédex'**
+  String get pokedexRegional;
+
+  /// No description provided for @myFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'My Favorites'**
+  String get myFavorites;
+
+  /// No description provided for @whoIsPokemonGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is this Pokémon?'**
+  String get whoIsPokemonGame;
+
+  /// No description provided for @triviaGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Trivia game'**
+  String get triviaGame;
+
+  /// No description provided for @appLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'App Language'**
+  String get appLanguage;
+
+  /// No description provided for @configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get configuration;
+
+  /// No description provided for @generation.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get generation;
+
+  /// No description provided for @showingGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing: Generation {generation}'**
+  String showingGeneration(Object generation);
+
+  /// No description provided for @searchByNameOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or #ID'**
+  String get searchByNameOrId;
+
+  /// No description provided for @pageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {current} of {total}'**
+  String pageOf(Object current, Object total);
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @noPokemonFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Pokémon found'**
+  String get noPokemonFound;
+
+  /// No description provided for @pokemonCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} favorite Pokémon{plural}'**
+  String pokemonCount(Object count, Object plural);
+
+  /// No description provided for @noFavoritesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet!'**
+  String get noFavoritesYet;
+
+  /// No description provided for @exploreFavoritesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore the Pokédex and mark your favorite Pokémon by tapping the heart on the details screen.'**
+  String get exploreFavoritesHint;
+
+  /// No description provided for @tapHeartToAddFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the heart to add favorites'**
+  String get tapHeartToAddFavorites;
+
+  /// No description provided for @shareBeforeLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the Pokémon before sharing its card.'**
+  String get shareBeforeLoading;
+
+  /// No description provided for @shareError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the card. Please try again.'**
+  String get shareError;
+
+  /// No description provided for @pokemonNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pokémon not found'**
+  String get pokemonNotFound;
+
+  /// No description provided for @typeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get typeNormal;
+
+  /// No description provided for @typeFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire'**
+  String get typeFire;
+
+  /// No description provided for @typeWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get typeWater;
+
+  /// No description provided for @typeGrass.
+  ///
+  /// In en, this message translates to:
+  /// **'Grass'**
+  String get typeGrass;
+
+  /// No description provided for @typeElectric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get typeElectric;
+
+  /// No description provided for @typeIce.
+  ///
+  /// In en, this message translates to:
+  /// **'Ice'**
+  String get typeIce;
+
+  /// No description provided for @typeFighting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fighting'**
+  String get typeFighting;
+
+  /// No description provided for @typePoison.
+  ///
+  /// In en, this message translates to:
+  /// **'Poison'**
+  String get typePoison;
+
+  /// No description provided for @typeGround.
+  ///
+  /// In en, this message translates to:
+  /// **'Ground'**
+  String get typeGround;
+
+  /// No description provided for @typeFlying.
+  ///
+  /// In en, this message translates to:
+  /// **'Flying'**
+  String get typeFlying;
+
+  /// No description provided for @typePsychic.
+  ///
+  /// In en, this message translates to:
+  /// **'Psychic'**
+  String get typePsychic;
+
+  /// No description provided for @typeBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get typeBug;
+
+  /// No description provided for @typeRock.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock'**
+  String get typeRock;
+
+  /// No description provided for @typeGhost.
+  ///
+  /// In en, this message translates to:
+  /// **'Ghost'**
+  String get typeGhost;
+
+  /// No description provided for @typeDragon.
+  ///
+  /// In en, this message translates to:
+  /// **'Dragon'**
+  String get typeDragon;
+
+  /// No description provided for @typeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get typeDark;
+
+  /// No description provided for @typeSteel.
+  ///
+  /// In en, this message translates to:
+  /// **'Steel'**
+  String get typeSteel;
+
+  /// No description provided for @typeFairy.
+  ///
+  /// In en, this message translates to:
+  /// **'Fairy'**
+  String get typeFairy;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Pokémon info copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @noEvolutionData.
+  ///
+  /// In en, this message translates to:
+  /// **'No evolution data available'**
+  String get noEvolutionData;
 }
 
 class _AppLocalizationsDelegate

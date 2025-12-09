@@ -229,4 +229,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get streakMultiplier => 'x1.5';
+
+  @override
+  String get pokedexRegional => 'Regional Pokédex';
+
+  @override
+  String get myFavorites => 'My Favorites';
+
+  @override
+  String get whoIsPokemonGame => 'Who is this Pokémon?';
+
+  @override
+  String get triviaGame => 'Trivia game';
+
+  @override
+  String get appLanguage => 'App Language';
+
+  @override
+  String get configuration => 'Settings';
+
+  @override
+  String get generation => 'Generation';
+
+  @override
+  String showingGeneration(Object generation) {
+    return 'Showing: Generation $generation';
+  }
+
+  @override
+  String get searchByNameOrId => 'Search by name or #ID';
+
+  @override
+  String pageOf(Object current, Object total) {
+    return 'Page $current of $total';
+  }
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get noPokemonFound => 'No Pokémon found';
+
+  @override
+  String pokemonCount(Object count, Object plural) {
+    return '$count favorite Pokémon$plural';
+  }
+
+  @override
+  String get noFavoritesYet => 'No favorites yet!';
+
+  @override
+  String get exploreFavoritesHint =>
+      'Explore the Pokédex and mark your favorite Pokémon by tapping the heart on the details screen.';
+
+  @override
+  String get tapHeartToAddFavorites => 'Tap the heart to add favorites';
+
+  @override
+  String get shareBeforeLoading => 'Load the Pokémon before sharing its card.';
+
+  @override
+  String get shareError => 'Could not share the card. Please try again.';
+
+  @override
+  String get pokemonNotFound => 'Pokémon not found';
+
+  @override
+  String get typeNormal => 'Normal';
+
+  @override
+  String get typeFire => 'Fire';
+
+  @override
+  String get typeWater => 'Water';
+
+  @override
+  String get typeGrass => 'Grass';
+
+  @override
+  String get typeElectric => 'Electric';
+
+  @override
+  String get typeIce => 'Ice';
+
+  @override
+  String get typeFighting => 'Fighting';
+
+  @override
+  String get typePoison => 'Poison';
+
+  @override
+  String get typeGround => 'Ground';
+
+  @override
+  String get typeFlying => 'Flying';
+
+  @override
+  String get typePsychic => 'Psychic';
+
+  @override
+  String get typeBug => 'Bug';
+
+  @override
+  String get typeRock => 'Rock';
+
+  @override
+  String get typeGhost => 'Ghost';
+
+  @override
+  String get typeDragon => 'Dragon';
+
+  @override
+  String get typeDark => 'Dark';
+
+  @override
+  String get typeSteel => 'Steel';
+
+  @override
+  String get typeFairy => 'Fairy';
+
+  @override
+  String get copiedToClipboard => 'Pokémon info copied to clipboard';
+
+  @override
+  String get noEvolutionData => 'No evolution data available';
 }

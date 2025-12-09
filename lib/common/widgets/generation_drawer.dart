@@ -36,9 +36,9 @@ class GenerationDrawer extends StatelessWidget {
   });
 
   // Colores del tema Pokédex
-  static const Color _dexBurgundy = Color(0xFF7A0A16);
-  static const Color _dexDeep = Color(0xFF4E0911);
-  static const Color _dexDark = Color(0xFF240507);
+  static const Color _dexBurgundy = Color(0xFF102A40);
+  static const Color _dexDeep = Color(0xFF09174E);
+  static const Color _dexDark = Color(0xFF050A24);
   static const Color _dexWhite = Color(0xFFFFFFFF);
 
   @override
@@ -99,44 +99,46 @@ class GenerationDrawer extends StatelessWidget {
                 Container(height: 1.4, color: _dexWhite),
                 const SizedBox(height: 14),
 
-                // Favorites option
-                _FavoritesOption(
-                  onTap: () {
-                    Navigator.of(context).pop(); // Close drawer
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const FavoritesScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-
-// Game option - ¿Quién es este Pokémon?
-                _GameOption(
-                  onTap: () {
-                    Navigator.of(context).pop(); // Close drawer
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const WhoIsPokemonScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                const _LanguageOption(),
-                const SizedBox(height: 18),
-
-                Container(height: 1.4, color: _dexWhite),
-
-
+                // 🔁 Todo lo que va debajo del título entra en el scroll
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Favorites option
+                        _FavoritesOption(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const FavoritesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Game option - ¿Quién es este Pokémon?
+                        _GameOption(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const WhoIsPokemonScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // App language toggle
+                        const _LanguageOption(),
+                        const SizedBox(height: 18),
+
+                        Container(height: 1.4, color: _dexWhite),
+                        const SizedBox(height: 14),
+
                         // Sección de configuración
                         Text(
                           context.l10n.configuration,
@@ -178,13 +180,15 @@ class GenerationDrawer extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
                           itemCount: regionBanners.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) =>
+                          const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final region = regionBanners[index];
                             return _RegionBanner(
                               title: region["title"]!,
                               imagePath: region["image"]!,
-                              onTap: () => onSelectGeneration(index == 0 ? 0 : index),
+                              onTap: () =>
+                                  onSelectGeneration(index == 0 ? 0 : index),
                             );
                           },
                         ),
@@ -192,6 +196,7 @@ class GenerationDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
+
               ],
             ),
           ),
@@ -290,8 +295,8 @@ class _FavoritesOption extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xCC7A0A16),
-                Color(0xCC4E0911),
+                Color(0x2C939393),
+                Color(0x2C939393),
               ],
             ),
             border: Border.all(color: _dexWhite.withOpacity(0.5), width: 1),
@@ -367,11 +372,11 @@ class _GameOption extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xCC7A0A16),
-                Color(0xCC4E0911),
+                Color(0x2C939393),
+                Color(0x2C939393),
               ],
             ),
-            border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
             boxShadow: const [
               BoxShadow(
                 color: Colors.black26,
@@ -385,12 +390,12 @@ class _GameOption extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.help_outline,
-                  color: Colors.amber,
+                  color: _dexWhite,
                   size: 24,
                 ),
               ),
@@ -413,7 +418,7 @@ class _GameOption extends StatelessWidget {
                       Text(
                         context.l10n.triviaGame,
                         style: const TextStyle(
-                          color: Colors.amber,
+                          color: _dexWhite,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -424,7 +429,7 @@ class _GameOption extends StatelessWidget {
               ),
               const Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.amber,
+                color: Colors.white,
                 size: 24,
               ),
             ],
@@ -434,67 +439,7 @@ class _GameOption extends StatelessWidget {
     );
   }
 }
-class _LanguageToggleOption extends StatelessWidget {
-  const _LanguageToggleOption();
 
-  static const Color _dexWhite = Color(0xFFFFFFFF);
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context);
-    final String currentCode =
-    locale.languageCode.toLowerCase() == 'en' ? 'en' : 'es';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _dexWhite.withOpacity(0.24),
-          width: 1.2,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.language,
-            color: _dexWhite.withOpacity(0.95),
-            size: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Idioma',
-                  style: TextStyle(
-                    color: _dexWhite,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  currentCode == 'es' ? 'Español / English' : 'English / Español',
-                  style: TextStyle(
-                    color: _dexWhite.withOpacity(0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-
-
-        ],
-      ),
-    );
-  }
-}
 
 
 /// Banner de región individual.

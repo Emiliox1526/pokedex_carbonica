@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../common/extensions/l10n_extension.dart';
+import '/../../common/extensions/l10n_extension.dart';
 
 /// Widget that displays an empty state message when there are no favorites.
 ///
