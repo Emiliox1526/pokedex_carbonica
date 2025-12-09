@@ -79,14 +79,10 @@ class PaginationControls extends StatelessWidget {
                           height: 4,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(999),
-                            gradient: LinearGradient(
-                              colors: [
-                                accent.withOpacity(1),
-
-                              ],
-                            ),
+                            color: accent, // o primaryColor
                           ),
                         ),
+
                         if (isLoading) ...[
                           const SizedBox(width: 8),
                           SizedBox(

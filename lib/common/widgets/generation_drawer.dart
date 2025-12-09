@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'type_chip.dart';
 import '../../features/favorites/ui/favorites_screen.dart';
 import '../../features/game/ui/who_is_pokemon_screen.dart';
-
+import 'language_selector.dart';
 /// Drawer de generaciones y filtros para la Pokédex.
 /// 
 /// Permite al usuario filtrar Pokémon por generación y tipos.
@@ -110,8 +110,8 @@ class GenerationDrawer extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 10),
-                
-                // Game option - ¿Quién es este Pokémon?
+
+// Game option - ¿Quién es este Pokémon?
                 _GameOption(
                   onTap: () {
                     Navigator.of(context).pop(); // Close drawer
@@ -122,9 +122,13 @@ class GenerationDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
+
+                const _LanguageOption(),
+                const SizedBox(height: 18),
+
                 Container(height: 1.4, color: _dexWhite),
-                const SizedBox(height: 14),
+
 
                 Expanded(
                   child: SingleChildScrollView(
@@ -191,6 +195,70 @@ class GenerationDrawer extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption();
+
+  static const Color _dexWhite = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final String code = locale.languageCode.toLowerCase();
+    final String label = code == 'en' ? 'English' : 'Español';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _dexWhite.withOpacity(0.24),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.language,
+            color: _dexWhite.withOpacity(0.95),
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Idioma de la Aplicacion',
+                  style: TextStyle(
+                    color: _dexWhite,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: _dexWhite.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // 🔁 Toggle ES / EN con tu selector
+          const LanguageSelector(
+            iconColor: _dexWhite,
+          ),
+        ],
       ),
     );
   }
@@ -359,6 +427,68 @@ class _GameOption extends StatelessWidget {
     );
   }
 }
+class _LanguageToggleOption extends StatelessWidget {
+  const _LanguageToggleOption();
+
+  static const Color _dexWhite = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final String currentCode =
+    locale.languageCode.toLowerCase() == 'en' ? 'en' : 'es';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _dexWhite.withOpacity(0.24),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.language,
+            color: _dexWhite.withOpacity(0.95),
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Idioma',
+                  style: TextStyle(
+                    color: _dexWhite,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  currentCode == 'es' ? 'Español / English' : 'English / Español',
+                  style: TextStyle(
+                    color: _dexWhite.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+
+
+        ],
+      ),
+    );
+  }
+}
+
 
 /// Banner de región individual.
 class _RegionBanner extends StatelessWidget {

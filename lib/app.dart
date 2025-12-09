@@ -44,9 +44,7 @@ class PokedexApp extends ConsumerWidget {
                 child: SafeArea(
                   child: Material(
                     color: Colors.transparent,
-                    child: LanguageSelector(
-                      iconColor: Theme.of(context).colorScheme.primary,
-                    ),
+
                   ),
                 ),
               ),

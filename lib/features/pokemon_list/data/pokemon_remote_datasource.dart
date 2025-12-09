@@ -31,8 +31,7 @@ const String _pokemonCountQuery = r'''
   }
 ''';
 
-/// Consulta GraphQL para obtener Pokémon para el juego.
-/// Obtiene un rango amplio de Pokémon ordenados por ID.
+
 const String _pokemonForGameQuery = r'''
   query PokemonForGame($limit: Int!, $offset: Int!) {
     pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}) {
@@ -47,10 +46,7 @@ const String _pokemonForGameQuery = r'''
   }
 ''';
 
-/// Data source remoto para obtener datos de Pokémon desde PokeAPI GraphQL.
-/// 
-/// Esta clase maneja la comunicación con la API GraphQL de PokeAPI,
-/// incluyendo el manejo de errores, timeouts y rate limits.
+
 class PokemonRemoteDataSource {
   /// Cliente GraphQL para realizar las consultas.
   final GraphQLClient _client;
@@ -61,13 +57,6 @@ class PokemonRemoteDataSource {
   /// Constructor que inyecta el cliente GraphQL.
   PokemonRemoteDataSource(this._client);
 
-  /// Obtiene una lista de Pokémon desde la API GraphQL.
-  /// 
-  /// [filter] contiene los parámetros de filtrado y paginación.
-  /// 
-  /// Retorna una lista de [PokemonDTO].
-  /// 
-  /// Puede lanzar [PokemonRemoteException] en caso de error.
   Future<List<PokemonDTO>> getPokemonList(PokemonFilter filter) async {
     try {
       final result = await _client

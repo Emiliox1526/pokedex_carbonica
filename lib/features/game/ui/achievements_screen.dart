@@ -112,7 +112,7 @@ class AchievementsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const LanguageSelector(),
+
         ],
       ),
     );

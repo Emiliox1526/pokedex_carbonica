@@ -113,7 +113,7 @@ class GameResultsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const LanguageSelector(iconColor: Colors.white),
+
         ],
       ),
     );
