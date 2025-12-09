@@ -1,151 +1,118 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
-/// Controles de paginación para la lista de Pokémon.
-/// 
-/// Muestra botones de navegación y la información de página actual.
-/// Formato: `[←] Página 1 de 45 [→]`
 class PaginationControls extends StatelessWidget {
-  /// Página actual (base 1).
   final int currentPage;
-  
-  /// Total de páginas.
   final int totalPages;
-  
-  /// Indica si hay página anterior.
   final bool hasPreviousPage;
-  
-  /// Indica si hay página siguiente.
   final bool hasNextPage;
-  
-  /// Indica si está cargando.
   final bool isLoading;
-  
-  /// Callback para ir a la página anterior.
-  final VoidCallback? onPreviousPage;
-  
-  /// Callback para ir a la página siguiente.
-  final VoidCallback? onNextPage;
-  
-  /// Color principal para los controles.
+  final VoidCallback onPreviousPage;
+  final VoidCallback onNextPage;
   final Color primaryColor;
 
-  /// Constructor del widget.
   const PaginationControls({
-    super.key,
+    Key? key,
     required this.currentPage,
     required this.totalPages,
     required this.hasPreviousPage,
     required this.hasNextPage,
-    this.isLoading = false,
-    this.onPreviousPage,
-    this.onNextPage,
-    this.primaryColor = Colors.white,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.red,
-        borderRadius: BorderRadius.circular(20),
-
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Botón anterior
-          _PaginationButton(
-            icon: Icons.chevron_left,
-            enabled: hasPreviousPage && !isLoading,
-            onPressed: onPreviousPage,
-            primaryColor: Colors.white,
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Indicador de página
-          if (isLoading)
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-              ),
-            )
-          else
-            Text(
-              totalPages > 0
-                  ? 'Page $currentPage of $totalPages'
-                  : 'No results',
-              style: TextStyle(
-                color: primaryColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                letterSpacing: 0.3,
-              ),
-            ),
-          
-          const SizedBox(width: 16),
-          
-          // Botón siguiente
-          _PaginationButton(
-            icon: Icons.chevron_right,
-            enabled: hasNextPage && !isLoading,
-            onPressed: onNextPage,
-            primaryColor: Colors.white,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Botón individual de paginación.
-class _PaginationButton extends StatelessWidget {
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback? onPressed;
-  final Color primaryColor;
-
-  const _PaginationButton({
-    required this.icon,
-    required this.enabled,
-    this.onPressed,
+    required this.isLoading,
+    required this.onPreviousPage,
+    required this.onNextPage,
     required this.primaryColor,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onPressed : null,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 40,
-          height: 40,
+    final accent = primaryColor;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(64),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: enabled
-                ? primaryColor.withOpacity(0.2)
-                : Colors.grey.withOpacity(0.1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: enabled
-                  ? primaryColor.withOpacity(0.5)
-                  : Colors.grey.withOpacity(0.2),
-              width: 1.5,
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accent.withOpacity(0.15),
+                accent.withOpacity(0.65),
+
+              ],
             ),
           ),
-          child: Icon(
-            icon,
-            color: enabled
-                ? primaryColor
-                : Colors.grey.withOpacity(0.4),
-            size: 24,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _NavButton(
+                icon: Icons.chevron_left_rounded,
+                enabled: hasPreviousPage && !isLoading,
+                onTap: onPreviousPage,
+                accent: accent,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Página $currentPage de $totalPages',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            gradient: LinearGradient(
+                              colors: [
+                                accent.withOpacity(1),
+
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isLoading) ...[
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white.withOpacity(1),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _NavButton(
+                icon: Icons.chevron_right_rounded,
+                enabled: hasNextPage && !isLoading,
+                onTap: onNextPage,
+                accent: accent,
+              ),
+            ],
           ),
         ),
       ),
@@ -153,41 +120,63 @@ class _PaginationButton extends StatelessWidget {
   }
 }
 
-/// Widget compacto de información de paginación para mostrar en el header.
-class PaginationInfo extends StatelessWidget {
-  /// Página actual.
-  final int currentPage;
-  
-  /// Total de páginas.
-  final int totalPages;
-  
-  /// Total de elementos.
-  final int totalCount;
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+  final Color accent;
 
-  /// Constructor del widget.
-  const PaginationInfo({
-    super.key,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalCount,
-  });
+  const _NavButton({
+    Key? key,
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+    required this.accent,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        totalCount > 0
-            ? '$totalCount Pokémon encontrados'
-            : 'Sin resultados',
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+    final baseColor = enabled
+        ? null
+        : Colors.white.withOpacity(0.10);
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: enabled ? 1.0 : 0.4,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: baseColor,
+            gradient: enabled
+                ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accent.withOpacity(0.95),
+                accent.withOpacity(0.65),
+              ],
+            )
+                : null,
+            boxShadow: enabled
+                ? [
+              BoxShadow(
+                color: accent.withOpacity(0.45),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ]
+                : [],
+          ),
+          child: Icon(
+            icon,
+            size: 22,
+            color: Colors.white,
+          ),
         ),
       ),
     );

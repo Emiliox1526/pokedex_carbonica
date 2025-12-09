@@ -33,8 +33,7 @@ class PokemonListScreenNew extends ConsumerStatefulWidget {
 
 class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   /// Colores de fondo del gradiente.
-  final Color _bg1 = hex('#ff365a');
-  final Color _bg2 = hex('#8c0025');
+
   static const Map<int, String> _generationBackgroundImages = {
     1: 'lib/assets/kanto.png',
     2: 'lib/assets/johto.png',
@@ -82,7 +81,40 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
     'steel': hex('#8AA4C1'),
     'fairy': hex('#FF78D5'),
   };
+// Color representativo por generación / región
+  static const Map<int, Color> _regionColors = {
+    // 1 = Kanto
+    1: Color(0xFFEF5350), // rojo Pokéball
 
+    // 2 = Johto
+    2: Color(0xFFFFCA28), // dorado
+
+    // 3 = Hoenn
+    3: Color(0xFF26A69A), // teal
+
+    // 4 = Sinnoh
+    4: Color(0xFF42A5F5), // azul
+
+    // 5 = Unova
+    5: Color(0xFF7E57C2), // púrpura
+
+    // 6 = Kalos
+    6: Color(0xFFEC407A), // rosa fuerte
+
+    // 7 = Alola
+    7: Color(0xFF26C6DA), // turquesa
+
+    // 8 = Galar
+    8: Color(0xFFD81B60), // magenta
+
+    // 9 = Paldea
+    9: Color(0xFFFF7043), // naranja
+  };
+
+  Color _regionColorForGeneration(int? generation) {
+    // Color por defecto si no hay generación seleccionada
+    return _regionColors[generation] ?? const Color(0xFFEF5350);
+  }
 
   /// Retorna el icono correspondiente a un tipo de Pokémon.
   IconData iconForType(String type) {
@@ -155,6 +187,11 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(pokemonListProvider);
+    final Color _bg1 =
+    _regionColorForGeneration(state.selectedGeneration).withOpacity(0.85);
+
+    final Color _bg2 =
+    _regionColorForGeneration(state.selectedGeneration).withOpacity(0.55);
     final notifier = ref.read(pokemonListProvider.notifier);
 
     // Detectar cambio de página y hacer scroll hacia arriba
@@ -179,17 +216,71 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
       ),
       body: Stack(
         children: [
-          // Fondo con imagen de región + blur + opacidad
+          // Fondo con imagen de región + blur
           Positioned.fill(
             child: ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
               child: Opacity(
-                opacity: 0.80, // qué tan visible es la foto
+                opacity: 0.55, // intensidad de la foto de fondo
                 child: Image.asset(
                   _assetForGeneration(state.selectedGeneration),
                   fit: BoxFit.cover,
                 ),
               ),
+            ),
+          ),
+
+          // Diseños decorativos detrás del contenido
+          IgnorePointer(
+            child: Stack(
+              children: [
+                // Círculo grande tipo Pokébola arriba a la izquierda
+                Positioned(
+                  top: -120,
+                  left: -40,
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.08),
+                        width: 18,
+                      ),
+                    ),
+                  ),
+                ),
+
+
+
+                // Rectángulo diagonal suave en el centro
+                Positioned(
+                  top: 600,
+                  right: -150,
+                  child: Transform.rotate(
+                    angle: -0.35,
+                    child: Container(
+                      width: 260,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.07),
+                            Colors.white.withOpacity(0.02),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.10),
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -244,16 +335,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
                 // Controles de paginación en la parte inferior
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        _bg2.withOpacity(0.8),
-                        _bg2,
-                      ],
-                    ),
-                  ),
+
                   child: SafeArea(
                     top: false,
                     child: PaginationControls(
@@ -264,7 +346,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
                       isLoading: state.isLoading,
                       onPreviousPage: notifier.previousPage,
                       onNextPage: notifier.nextPage,
-                      primaryColor: Colors.white,
+                      primaryColor: _regionColorForGeneration(state.selectedGeneration),
                     ),
                   ),
                 ),
