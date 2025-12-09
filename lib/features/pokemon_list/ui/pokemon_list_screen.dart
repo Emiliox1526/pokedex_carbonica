@@ -214,6 +214,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
         selectedTypes: state.selectedTypes,
         onToggleType: notifier.toggleType,
         iconForType: iconForType,
+        selectedGeneration: state.selectedGeneration,
       ),
       body: Stack(
         children: [

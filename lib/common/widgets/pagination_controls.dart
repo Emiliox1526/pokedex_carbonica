@@ -41,8 +41,10 @@ class PaginationControls extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                accent.withOpacity(0.15),
-                accent.withOpacity(0.65),
+                const Color(0xFF050A24),
+                accent.withOpacity(0.35),
+                accent.withOpacity(0.35),
+                const Color(0xFF050A24),
 
               ],
             ),

@@ -12,19 +12,20 @@ import '../extensions/l10n_extension.dart';
 class GenerationDrawer extends StatelessWidget {
   /// Callback cuando se selecciona una generación.
   final ValueChanged<int> onSelectGeneration;
-  
+
   /// Mapa de colores por tipo.
   final Map<String, Color> typeColors;
-  
+
   /// Tipos actualmente seleccionados.
   final Set<String> selectedTypes;
-  
+
   /// Callback cuando se activa/desactiva un tipo.
   final void Function(String type, bool selected) onToggleType;
-  
+
   /// Función para obtener el icono de un tipo.
   final IconData Function(String type) iconForType;
 
+  final int? selectedGeneration;
   /// Constructor del widget.
   const GenerationDrawer({
     super.key,
@@ -33,6 +34,7 @@ class GenerationDrawer extends StatelessWidget {
     required this.selectedTypes,
     required this.onToggleType,
     required this.iconForType,
+    this.selectedGeneration,
   });
 
   // Colores del tema Pokédex
@@ -40,7 +42,39 @@ class GenerationDrawer extends StatelessWidget {
   static const Color _dexDeep = Color(0xFF09174E);
   static const Color _dexDark = Color(0xFF050A24);
   static const Color _dexWhite = Color(0xFFFFFFFF);
+  static const Map<int, Color> _regionColors = {
+    // 1 = Kanto
+    1: Color(0xFFEF5350),
 
+    // 2 = Johto
+    2: Color(0xFFFFCA28),
+
+    // 3 = Hoenn
+    3: Color(0xFF26A69A),
+
+    // 4 = Sinnoh
+    4: Color(0xFF42A5F5),
+
+    // 5 = Unova
+    5: Color(0xFF7E57C2),
+
+    // 6 = Kalos
+    6: Color(0xFFEC407A),
+
+    // 7 = Alola
+    7: Color(0xFF26C6DA),
+
+    // 8 = Galar
+    8: Color(0xFFD81B60),
+
+    // 9 = Paldea
+    9: Color(0xFFFF7043),
+  };
+
+  static Color _regionColorForGeneration(int? generation) {
+    // mismo fallback que usas en _regionColorForGeneration del screen
+    return _regionColors[generation] ?? const Color(0xFFEF5350);
+  }
   @override
   Widget build(BuildContext context) {
     // Configuración de banners de regiones
@@ -56,16 +90,18 @@ class GenerationDrawer extends StatelessWidget {
       {"title": "", "image": "lib/assets/galar.png"},
       {"title": "", "image": "lib/assets/paldea.png"},
     ];
-
+    final Color regionAccent = _regionColorForGeneration(selectedGeneration);
     return Drawer(
-      elevation: 0,
-      backgroundColor: Colors.transparent,
+      elevation: 16,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [_dexBurgundy, _dexDeep, _dexDark],
+            colors: [
+              regionAccent.withOpacity(1),
+              const Color(0xFF050A24),
+            ],
           ),
         ),
         child: SafeArea(
