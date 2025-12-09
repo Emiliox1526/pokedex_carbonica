@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/utils/type_translation.dart';
+import '../../../../core/utils/type_translation.dart';
 
 /// Widget de chip de tipo de Pokémon.
 /// 

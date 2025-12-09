@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../features/pokemon_list/domain/pokemon.dart';
-import '../../core/utils/type_translation.dart';
+import '../../domain/pokemon.dart';
+import '../../../../core/utils/type_translation.dart';
 
 /// Extensión para oscurecer colores.
 extension ColorDarken on Color {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
 
-import '../../core/providers/locale_provider.dart';
+import '../../../../core/providers/locale_provider.dart';
 
 class LanguageSelector extends ConsumerWidget {
   const LanguageSelector({

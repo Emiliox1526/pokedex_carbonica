@@ -1,7 +1,7 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
-import '../extensions/l10n_extension.dart';
+import '../../../../common/extensions/l10n_extension.dart';
 
 class PaginationControls extends StatelessWidget {
   final int currentPage;

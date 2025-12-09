@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'type_chip.dart';
-import '../../features/favorites/ui/favorites_screen.dart';
-import '../../features/game/ui/who_is_pokemon_screen.dart';
+import '../../../favorites/ui/favorites_screen.dart';
+import '../../../game/ui/who_is_pokemon_screen.dart';
 import 'language_selector.dart';
-import '../extensions/l10n_extension.dart';
+import '../../../../common/extensions/l10n_extension.dart';
 /// Drawer de generaciones y filtros para la Pokédex.
 /// 
 /// Permite al usuario filtrar Pokémon por generación y tipos.

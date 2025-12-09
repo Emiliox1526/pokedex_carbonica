@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import 'common/widgets/language_selector.dart';
+import 'features/pokemon_list/ui/widgets/language_selector.dart';
 import 'core/providers/locale_provider.dart';
 import 'features/pokemon_list/ui/pokemon_list_screen.dart';
 

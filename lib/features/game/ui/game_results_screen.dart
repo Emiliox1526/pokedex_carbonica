@@ -7,7 +7,7 @@ import 'game_provider.dart';
 import 'widgets/ranking_list.dart';
 import 'who_is_pokemon_screen.dart';
 import 'package:pokedex_carbonica/common/extensions/l10n_extension.dart';
-import 'package:pokedex_carbonica/common/widgets/language_selector.dart';
+import 'package:pokedex_carbonica/features/pokemon_list/ui/widgets/language_selector.dart';
 
 /// Pantalla de resultados del juego.
 ///

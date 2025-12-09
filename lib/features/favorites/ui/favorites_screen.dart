@@ -6,8 +6,8 @@ import '../../../common/extensions/l10n_extension.dart';
 import '../../pokemon_list/domain/pokemon.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'favorites_provider.dart';
-import '../../../common/widgets/pokemon_card.dart';
-import '../../../common/widgets/pokemon_card_skeleton.dart';
+import '../../pokemon_list/ui/widgets/pokemon_card.dart';
+import '../../pokemon_list/ui/widgets/pokemon_card_skeleton.dart';
 import 'widgets/favorites_empty_state.dart';
 
 /// Converts a hex string to a Color.

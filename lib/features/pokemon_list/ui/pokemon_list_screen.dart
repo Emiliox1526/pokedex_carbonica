@@ -8,11 +8,11 @@ import '../../../common/extensions/l10n_extension.dart';
 import '../domain/pokemon.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'pokemon_list_provider.dart';
-import '../../../common/widgets/pokemon_card.dart';
-import '../../../common/widgets/pokemon_card_skeleton.dart';
-import '../../../common/widgets/search_bar.dart';
-import '../../../common/widgets/generation_drawer.dart';
-import '../../../common/widgets/pagination_controls.dart';
+import 'widgets/pokemon_card.dart';
+import 'widgets/pokemon_card_skeleton.dart';
+import 'widgets/search_bar.dart';
+import 'widgets/generation_drawer.dart';
+import 'widgets/pagination_controls.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 
 /// Función helper para convertir hex a Color.
