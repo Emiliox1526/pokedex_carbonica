@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/extensions/l10n_extension.dart';
+import '../../../../l10n/l10n_extension.dart';
 
 /// Barra de búsqueda personalizada para la Pokédex.
 

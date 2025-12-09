@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../common/extensions/l10n_extension.dart';
+import '../../../../l10n/l10n_extension.dart';
 import 'circle_button.dart';
 
 /// Header widget for the Pokemon detail screen.

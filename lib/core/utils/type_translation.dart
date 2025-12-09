@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../../gen/l10n/app_localizations.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Translates Pokemon type names to the current locale.
 String translateType(BuildContext context, String type) {

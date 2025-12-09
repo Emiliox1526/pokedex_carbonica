@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokedex_carbonica/features/pokemon_list/ui/widgets/language_selector.dart';
-import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
-import '../../../common/extensions/l10n_extension.dart';
+import 'package:pokedex_carbonica/l10n/app_localizations.dart';
+import '../../../l10n/l10n_extension.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../domain/game_state.dart';
 import '../domain/game_achievement.dart';

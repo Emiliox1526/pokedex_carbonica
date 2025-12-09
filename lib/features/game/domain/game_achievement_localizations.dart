@@ -1,4 +1,4 @@
-import 'package:pokedex_carbonica/gen/l10n/app_localizations.dart';
+import 'package:pokedex_carbonica/l10n/app_localizations.dart';
 
 import 'game_achievement.dart';
 

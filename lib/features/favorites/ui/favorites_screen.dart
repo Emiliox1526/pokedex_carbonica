@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/type_utils.dart';
-import '../../../common/extensions/l10n_extension.dart';
+import '../../../l10n/l10n_extension.dart';
 import '../../pokemon_list/domain/pokemon.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'favorites_provider.dart';
