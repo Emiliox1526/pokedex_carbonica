@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../common/extensions/l10n_extension.dart';
 import 'circle_button.dart';
 
 /// Header widget for the Pokemon detail screen.
@@ -50,7 +51,7 @@ class DetailHeader extends StatelessWidget {
       final txt = '$pokemonName $idLabel\n${imageUrl ?? ''}';
       Clipboard.setData(ClipboardData(text: txt));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Copied Pokémon info to clipboard')),
+        SnackBar(content: Text(context.l10n.copiedToClipboard)),
       );
     }
   }

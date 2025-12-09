@@ -164,5 +164,8 @@
   "typeDragon": "Dragón",
   "typeDark": "Siniestro",
   "typeSteel": "Acero",
-  "typeFairy": "Hada"
+  "typeFairy": "Hada",
+  
+  "copiedToClipboard": "Información del Pokémon copiada al portapapeles",
+  "noEvolutionData": "No hay datos de evolución disponibles"
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/extensions/l10n_extension.dart';
+
 /// A card container for detail section content.
 class DetailCard extends StatelessWidget {
   /// The background color of the card.
@@ -153,7 +155,7 @@ class ErrorBanner extends StatelessWidget {
               ),
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(context.l10n.retry),
             ),
           ],
         ],

@@ -164,5 +164,8 @@
   "typeDragon": "Dragon",
   "typeDark": "Dark",
   "typeSteel": "Steel",
-  "typeFairy": "Fairy"
+  "typeFairy": "Fairy",
+  
+  "copiedToClipboard": "Pokémon info copied to clipboard",
+  "noEvolutionData": "No evolution data available"
 }
