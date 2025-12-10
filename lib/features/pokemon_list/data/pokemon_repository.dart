@@ -355,14 +355,43 @@ class PokemonRepositoryImpl implements PokemonRepository {
     final hasConnection = connectivityResult != ConnectivityResult.none;
     if (hasConnection) {
       try {
-        final remotePokemon = await _remoteDataSource.getPokemonForGame(count, generation: generation);
-        return remotePokemon.map((dto) => dto.toEntity()).toList();
+        // Calculate the range of Pokemon IDs based on generation
+        int totalAvailable;
+        if (generation != null && generation > 0) {
+          // For specific generation, get count for that generation
+          final start = _getStartIdForGeneration(generation);
+          final end = _getEndIdForGeneration(generation);
+          totalAvailable = end - start + 1;
+        } else {
+          // For all generations, we have all Pokemon (1-1025)
+          totalAvailable = 1025;
+        }
+        
+        // Fetch more Pokemon than needed to have a good pool for randomization
+        // But cap it to avoid fetching too much data
+        final fetchCount = (totalAvailable < count * 3) ? totalAvailable : count * 3;
+        final remotePokemon = await _remoteDataSource.getPokemonForGame(fetchCount, generation: generation);
+        
+        // Shuffle and return the requested count
+        final shuffled = remotePokemon.toList()..shuffle();
+        final selected = shuffled.take(count).toList();
+        return selected.map((dto) => dto.toEntity()).toList();
       } on PokemonRemoteException {
         return [];
       }
     } else {
       return [];
     }
+  }
+  
+  int _getStartIdForGeneration(int gen) {
+    const startIds = [1, 152, 252, 387, 494, 650, 722, 810, 906];
+    return gen >= 1 && gen <= startIds.length ? startIds[gen - 1] : 1;
+  }
+
+  int _getEndIdForGeneration(int gen) {
+    const endIds = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
+    return gen >= 1 && gen <= endIds.length ? endIds[gen - 1] : 1025;
   }
 
   Future<PaginatedPokemonList> _tryLocalFallback(
