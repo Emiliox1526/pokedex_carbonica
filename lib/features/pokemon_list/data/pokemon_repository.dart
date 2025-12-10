@@ -295,6 +295,10 @@ class PokemonRepositoryImpl implements PokemonRepository {
   final PokemonLocalDataSource _localDataSource;
   final Connectivity _connectivity;
   static const int pageSize = 20;
+  
+  /// Multiplier for fetching extra Pokemon to ensure good randomization.
+  /// We fetch 3x the requested count to have a diverse pool for shuffling.
+  static const int _randomizationPoolMultiplier = 3;
 
   PokemonRepositoryImpl({
     required PokemonRemoteDataSource remoteDataSource,
@@ -369,7 +373,9 @@ class PokemonRepositoryImpl implements PokemonRepository {
         
         // Fetch more Pokemon than needed to have a good pool for randomization
         // But cap it to avoid fetching too much data
-        final fetchCount = (totalAvailable < count * 3) ? totalAvailable : count * 3;
+        final fetchCount = (totalAvailable < count * _randomizationPoolMultiplier) 
+            ? totalAvailable 
+            : count * _randomizationPoolMultiplier;
         final remotePokemon = await _remoteDataSource.getPokemonForGame(fetchCount, generation: generation);
         
         // Shuffle and return the requested count
@@ -384,11 +390,17 @@ class PokemonRepositoryImpl implements PokemonRepository {
     }
   }
   
+  /// Returns the starting Pokemon ID for a given generation.
+  /// Generation ranges as of Gen 9:
+  /// Gen 1: 1-151, Gen 2: 152-251, Gen 3: 252-386, Gen 4: 387-493,
+  /// Gen 5: 494-649, Gen 6: 650-721, Gen 7: 722-809, Gen 8: 810-905, Gen 9: 906-1025
   int _getStartIdForGeneration(int gen) {
     const startIds = [1, 152, 252, 387, 494, 650, 722, 810, 906];
     return gen >= 1 && gen <= startIds.length ? startIds[gen - 1] : 1;
   }
 
+  /// Returns the ending Pokemon ID for a given generation.
+  /// See _getStartIdForGeneration for complete generation ranges.
   int _getEndIdForGeneration(int gen) {
     const endIds = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
     return gen >= 1 && gen <= endIds.length ? endIds[gen - 1] : 1025;
