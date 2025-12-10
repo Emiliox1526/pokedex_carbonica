@@ -82,12 +82,12 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Imagen blur por generación KANTO=1, etc
+          // Fondo con imagen de región + blur
           Positioned.fill(
             child: ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
               child: Opacity(
-                opacity: 0.55,
+                opacity: 0.55, // intensidad de la foto de fondo
                 child: Image.asset(
                   _assetForGeneration(selectedGeneration),
                   fit: BoxFit.cover,
@@ -95,11 +95,13 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ),
             ),
           ),
-          // Decorativos igual que lista
+
+          // --- 2) Decorativos detrás (círculo + rectángulo diagonal) ---
+          // Diseños decorativos detrás del contenido
           IgnorePointer(
             child: Stack(
               children: [
-                // Círculo arriba izquierda
+                // Círculo grande tipo Pokébola arriba a la izquierda
                 Positioned(
                   top: -120,
                   left: -40,
@@ -115,7 +117,10 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                     ),
                   ),
                 ),
-                // Rectángulo diagonal en el centro-derecha
+
+
+
+                // Rectángulo diagonal suave en el centro
                 Positioned(
                   top: 600,
                   right: -150,
@@ -145,7 +150,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ],
             ),
           ),
-          // Gradiente color región por generación seleccionada
+          // Capa oscura ligera para mejorar contraste del contenido
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -153,22 +158,15 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _regionColorForGeneration(selectedGeneration)
-                        .withOpacity(0.85),
-                    _regionColorForGeneration(selectedGeneration)
-                        .withOpacity(0.55),
+                    _regionColorForGeneration(selectedGeneration).withOpacity(0.13),
+                    Colors.black.withOpacity(0.15),
                   ],
                 ),
               ),
             ),
           ),
-          // Overlay oscuro igual a lista principal
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.25),
-            ),
-          ),
-          // Contenido principal
+
+
           SafeArea(
             child: Column(
               children: [
