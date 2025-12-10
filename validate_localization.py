@@ -60,19 +60,29 @@ def validate_arb_file(filepath):
     # (Python's json.loads would fail if there were exact duplicates at same level)
     key_pattern = r'^\s*"([^"@][^"]*)"\s*:'
     key_occurrences = {}
+    brace_level = 0
     
     for i, line in enumerate(lines, 1):
+        # First check for key pattern before updating brace level
         match = re.match(key_pattern, line)
+        
+        # Track brace nesting level for more robust top-level detection
+        open_braces_before = line[:line.find('"')] if '"' in line else line
+        brace_level += open_braces_before.count('{') - open_braces_before.count('}')
+        
         if match:
             key = match.group(1)
-            # Calculate indentation to detect nesting level
-            indent = len(line) - len(line.lstrip())
             
-            # Only track top-level keys (indent <= 2 spaces)
-            if indent <= 2:
+            # Only track top-level keys (brace_level == 1)
+            # Metadata keys start with @ and are already in a separate dict
+            if brace_level == 1:
                 if key not in key_occurrences:
                     key_occurrences[key] = []
                 key_occurrences[key].append(i)
+        
+        # Update brace level for rest of line
+        rest_of_line = line[line.find('"'):] if '"' in line else ''
+        brace_level += rest_of_line.count('{') - rest_of_line.count('}')
     
     # Find any keys that appear more than once at top level
     duplicates = {k: v for k, v in key_occurrences.items() if len(v) > 1}
@@ -86,8 +96,14 @@ def validate_arb_file(filepath):
     
     # Check for specific key if needed
     if 'allGenerations' in translation_keys:
-        count = content.count('"allGenerations"')
-        print(f"✓ Key 'allGenerations' found (appears {count} time(s) in file)")
+        # Check if it appears multiple times in top-level keys (not in metadata)
+        top_level_count = key_occurrences.get('allGenerations', [])
+        if len(top_level_count) == 1:
+            print(f"✓ Key 'allGenerations' found at line {top_level_count[0]} (unique)")
+        elif len(top_level_count) > 1:
+            print(f"✗ Key 'allGenerations' appears {len(top_level_count)} times")
+        else:
+            print(f"✗ Key 'allGenerations' not found in top-level keys")
     
     # Check for trailing commas before closing braces (JSON syntax error in strict mode)
     for i, line in enumerate(lines, 1):
