@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../../../../l10n/l10n_extension.dart';
 
-/// Barra de búsqueda personalizada para la Pokédex.
-
 class PokemonSearchBar extends StatefulWidget {
-  /// Callback cuando cambia el texto de búsqueda.
   final ValueChanged<String>? onChanged;
 
-  /// Constructor del widget.
   const PokemonSearchBar({
     super.key,
-    this. onChanged,
+    this.onChanged,
   });
 
   @override
@@ -21,21 +18,30 @@ class PokemonSearchBar extends StatefulWidget {
 class _PokemonSearchBarState extends State<PokemonSearchBar> {
   final _controller = TextEditingController();
   bool _isFocused = false;
+  Timer? _debounce;
 
   @override
   void dispose() {
     _controller.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onChangedDebounced(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 150), () {
+      widget.onChanged?.call(value);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 56,
-      padding:  const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          // Botón de menú profesional
+          // Menú
           Container(
             width: 48,
             height: 48,
@@ -63,7 +69,7 @@ class _PokemonSearchBarState extends State<PokemonSearchBar> {
             ),
           ),
           const SizedBox(width: 12),
-          // Campo de búsqueda profesional
+          // Search
           Expanded(
             child: Focus(
               onFocusChange: (hasFocus) {
@@ -79,36 +85,36 @@ class _PokemonSearchBarState extends State<PokemonSearchBar> {
                       ? [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.35),
-                      blurRadius:  12,
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ]
                       : [
                     BoxShadow(
-                      color:  Colors.black.withOpacity(0.25),
-                      blurRadius:  8,
-                      offset:  const Offset(0, 2),
+                      color: Colors.black.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child:  TextField(
+                child: TextField(
                   controller: _controller,
-                  onChanged:  widget.onChanged,
+                  onChanged: _onChangedDebounced, // <-- CAMBIA ESTO
                   style: const TextStyle(
-                    fontSize:  15,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF454545),
                     letterSpacing: 0.2,
                   ),
                   decoration: InputDecoration(
                     hintText: context.l10n.searchByNameOrId,
-                    hintStyle:  TextStyle(
+                    hintStyle: TextStyle(
                       fontSize: 15,
-                      fontWeight:  FontWeight.w400,
+                      fontWeight: FontWeight.w400,
                       color: Colors.grey,
-                      letterSpacing:  0.2,
+                      letterSpacing: 0.2,
                     ),
-                    prefixIcon:  Padding(
+                    prefixIcon: Padding(
                       padding: const EdgeInsets.only(left: 16, right: 12),
                       child: Icon(
                         Icons.search_rounded,
@@ -117,7 +123,7 @@ class _PokemonSearchBarState extends State<PokemonSearchBar> {
                       ),
                     ),
                     suffixIcon: _controller.text.isNotEmpty
-                        ?  Padding(
+                        ? Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: IconButton(
                         icon: Icon(
@@ -142,16 +148,16 @@ class _PokemonSearchBarState extends State<PokemonSearchBar> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(32),
-                      borderSide: BorderSide. none,
+                      borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius:  BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(32),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius. circular(32),
+                      borderRadius: BorderRadius.circular(32),
                       borderSide: BorderSide(
-                        color: Colors.blue.shade400. withOpacity(0.3),
+                        color: Colors.blue.shade400.withOpacity(0.3),
                         width: 2,
                       ),
                     ),

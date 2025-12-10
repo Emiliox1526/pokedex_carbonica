@@ -36,6 +36,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   /// Colores de fondo del gradiente.
 
   static const Map<int, String> _generationBackgroundImages = {
+    0: 'lib/assets/AllGenerations.png',
     1: 'lib/assets/kanto.png',
     2: 'lib/assets/johto.png',
     3: 'lib/assets/hoenn.png',
@@ -49,7 +50,7 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
 
   String _assetForGeneration(int? generation) {
     // Si no hay generación seleccionada, usa Kanto por defecto
-    return _generationBackgroundImages[generation] ?? _generationBackgroundImages[1]!;
+    return _generationBackgroundImages[generation] ?? _generationBackgroundImages[0]!;
   }
 
   /// Set de URLs de imágenes ya precargadas.
@@ -162,10 +163,29 @@ class _PokemonListScreenNewState extends ConsumerState<PokemonListScreenNew> {
   @override
   void initState() {
     super.initState();
-    // Cargar datos iniciales después de que el widget esté montado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(pokemonListProvider.notifier).loadInitial();
+      _precacheDrawerImages(context); // <- Aquí haces el precache
     });
+  }
+
+  void _precacheDrawerImages(BuildContext ctx) {
+    // Lista de banners usados en el drawer
+    final List<String> drawerImages = [
+      "lib/assets/AllGenerations.png",
+      "lib/assets/kanto.png",
+      "lib/assets/johto.png",
+      "lib/assets/hoenn.png",
+      "lib/assets/sinnoh.png",
+      "lib/assets/unova.png",
+      "lib/assets/kalos.png",
+      "lib/assets/alola.png",
+      "lib/assets/galar.png",
+      "lib/assets/paldea.png",
+    ];
+    for (final img in drawerImages) {
+      precacheImage(AssetImage(img), ctx);
+    }
   }
 
   @override

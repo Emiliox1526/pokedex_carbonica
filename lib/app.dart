@@ -37,17 +37,7 @@ class PokedexApp extends ConsumerWidget {
           home: Stack(
             children: [
               const PokemonListScreenNew(),
-              // Selector flotante para cambiar de idioma rápidamente
-              Positioned(
-                right: 12,
-                top: 12,
-                child: SafeArea(
-                  child: Material(
-                    color: Colors.transparent,
 
-                  ),
-                ),
-              ),
             ],
           ),
         ),

@@ -213,6 +213,7 @@ class PokemonRemoteDataSource {
 
   Map<String, dynamic>? _buildWhereClause(PokemonFilter filter) {
     final List<Map<String, dynamic>> andConditions = [];
+    andConditions.add({'id': {'_gte': 1, '_lte': 1025}});
     if (filter.searchText != null && filter.searchText!.isNotEmpty) {
       final searchText = filter.searchText!.toLowerCase().trim();
       final parsedId = int.tryParse(searchText);
