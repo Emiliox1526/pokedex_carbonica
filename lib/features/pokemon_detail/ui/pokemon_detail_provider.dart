@@ -4,33 +4,28 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../domain/pokemon_detail.dart';
 import '../domain/pokemon_form_variant.dart';
 import '../domain/pokemon_detail_repository.dart';
+import '../data/pokemon_detail_data_repository.dart' as data;
 import '../domain/get_pokemon_detail_usecase.dart';
 import '../domain/get_form_detail_usecase.dart';
-import '../data/pokemon_detail_remote_datasource.dart';
-import '../data/pokemon_detail_local_datasource.dart';
-import '../data/pokemon_detail_repository_impl.dart';
 import '../../pokemon_list/ui/pokemon_list_provider.dart';
 
 // ============================================================================
 // Data Layer Providers
 // ============================================================================
 
-/// Provider for the Pokemon detail local data source.
-final pokemonDetailLocalDataSourceProvider = Provider<PokemonDetailLocalDataSource>((ref) {
-  return PokemonDetailLocalDataSource();
+final pokemonDetailLocalDataSourceProvider = Provider<data.PokemonDetailLocalDataSource>((ref) {
+  return data.PokemonDetailLocalDataSource();
 });
 
-/// Provider for the Pokemon detail remote data source.
-final pokemonDetailRemoteDataSourceProvider = Provider<PokemonDetailRemoteDataSource>((ref) {
+final pokemonDetailRemoteDataSourceProvider = Provider<data.PokemonDetailRemoteDataSource>((ref) {
   final client = ref.watch(graphQLClientProvider);
-  return PokemonDetailRemoteDataSource(client);
+  return data.PokemonDetailRemoteDataSource(client);
 });
 
-/// Provider for the Pokemon detail repository.
 final pokemonDetailRepositoryProvider = Provider<PokemonDetailRepository>((ref) {
   final remoteDataSource = ref.watch(pokemonDetailRemoteDataSourceProvider);
   final localDataSource = ref.watch(pokemonDetailLocalDataSourceProvider);
-  return PokemonDetailRepositoryImpl(
+  return data.PokemonDetailRepositoryImpl(
     remoteDataSource: remoteDataSource,
     localDataSource: localDataSource,
   );
@@ -40,18 +35,15 @@ final pokemonDetailRepositoryProvider = Provider<PokemonDetailRepository>((ref) 
 // Use Case Providers
 // ============================================================================
 
-/// Provider for the get Pokemon detail use case.
 final getPokemonDetailUseCaseProvider = Provider<GetPokemonDetailUseCase>((ref) {
   final repository = ref.watch(pokemonDetailRepositoryProvider);
   return GetPokemonDetailUseCase(repository);
 });
 
-/// Provider for the get form detail use case.
 final getFormDetailUseCaseProvider = Provider<GetFormDetailUseCase>((ref) {
   final repository = ref.watch(pokemonDetailRepositoryProvider);
   return GetFormDetailUseCase(repository);
 });
-
 // ============================================================================
 // State Classes
 // ============================================================================
@@ -208,7 +200,7 @@ class PokemonDetailNotifier extends StateNotifier<PokemonDetailState> {
         } else {
           // Priority 2: Default form
           final defaultForms = detail.forms.where(
-            (f) => f.isDefault && f.category == PokemonFormCategory.defaultForm,
+                (f) => f.isDefault && f.category == PokemonFormCategory.defaultForm,
           );
           defaultFormId = defaultForms.isNotEmpty
               ? defaultForms.first.id
