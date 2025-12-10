@@ -495,11 +495,12 @@ class _PokemonOptionsModalState extends State<PokemonOptionsModal>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final entry in groupedForms.entries) ...[
-                      _buildCategoryHeader(entry.key),
-                      for (final form in entry.value)
-                        _buildFormItem(form, form.id == _internalSelectedFormId),
-                    ],
+                    for (final category in PokemonFormCategory.values)
+                      if (groupedForms.containsKey(category)) ...[
+                        _buildCategoryHeader(category),
+                        for (final form in groupedForms[category]!)
+                          _buildFormItem(form, form.id == _internalSelectedFormId),
+                      ],
                   ],
                 ),
               ),

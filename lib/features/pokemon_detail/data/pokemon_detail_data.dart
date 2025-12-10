@@ -396,26 +396,41 @@ class PokemonDetailDTO {
           .toList();
       final variantSprites = _extractVariantSprites(variant);
 
+      // Dentro de _parseForms, reemplaza el bloque que obtiene formName y category:
+
       for (final form in variantForms) {
         final formId = (form['id'] as int?) ?? variantId;
-        final formName = (form['form_name'] as String?) ?? '';
+
+        // Nombres disponibles en la API:
+        // - name: slug completo, ej. 'pikachu-gmax', 'charizard-mega-x', 'meowth-galar'
+        // - form_name: etiqueta corta, ej. 'gigantamax', 'mega', 'alola' (a veces vacío)
+        final rawFormName = (form['name'] as String?) ?? '';
+        final shortFormName = (form['form_name'] as String?) ?? '';
+
+        // Nombre efectivo para clasificación: primero 'name', luego 'form_name', luego el nombre del variant
+        final effectiveName = rawFormName.isNotEmpty
+            ? rawFormName
+            : (shortFormName.isNotEmpty ? shortFormName : variantName);
+
         final isDefault = (form['is_default'] as bool?) ?? false;
         final isMega = (form['is_mega'] as bool?) ?? false;
+
         final formTypes = ((form['pokemon_v2_pokemonformtypes'] as List?) ?? [])
             .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? '')
             .where((t) => t.isNotEmpty)
             .cast<String>()
             .toList();
+
         final formSprites = _extractFormSpritesFromData(form);
-        PokemonFormCategory category;
-        if (isMega) {
-          category = PokemonFormCategory.mega;
-        } else {
-          category = PokemonFormVariant.getCategoryFromName(
-              formName.isNotEmpty ? formName : variantName);
-        }
+
+        // Clasificación: si la API marca mega, se fuerza mega. Si no, por nombre efectivo.
+        final PokemonFormCategory category = isMega
+            ? PokemonFormCategory.mega
+            : PokemonFormVariant.getCategoryFromName(effectiveName);
+
+        // Display: usa 'form_name' si existe y no es default; si no, el nombre capitalizado de la especie
         String displayName;
-        if (formName.isEmpty || isDefault) {
+        if (shortFormName.isEmpty || isDefault) {
           displayName = capitalize(speciesName);
         } else {
           displayName = '${category.displayName} ${capitalize(speciesName)}';
@@ -423,12 +438,16 @@ class PokemonDetailDTO {
 
         forms.add(PokemonFormVariant(
           id: formId,
-          name: formName.isNotEmpty ? formName : variantName,
+          name: effectiveName, // guarda el nombre efectivo
           displayName: displayName,
           category: category,
           pokemonId: variantId,
-          spriteUrl: formSprites.defaultUrl ?? variantSprites.defaultUrl ?? artworkUrlForId(variantId),
-          shinySpriteUrl: formSprites.shinyUrl ?? variantSprites.shinyUrl ?? artworkShinyUrlForId(variantId),
+          spriteUrl: formSprites.defaultUrl ??
+              variantSprites.defaultUrl ??
+              artworkUrlForId(variantId),
+          shinySpriteUrl: formSprites.shinyUrl ??
+              variantSprites.shinyUrl ??
+              artworkShinyUrlForId(variantId),
           types: formTypes.isNotEmpty ? formTypes : variantTypes,
           isDefault: isDefault,
         ));
@@ -914,28 +933,49 @@ class PokemonFormVariant {
   });
 
   /// Determines the category from a form name.
+  // Reemplaza toda la función getCategoryFromName por esta versión:
+
   static PokemonFormCategory getCategoryFromName(String formName) {
-    final lowerName = formName.toLowerCase();
-    // MEGA primero, para evitar solapamiento con alola/galar
-    if (lowerName.contains('mega') || lowerName.contains('-mega')) {
-      return PokemonFormCategory.mega;
-    } else if (lowerName.contains('alolan') || lowerName.contains('alola')) {
+    final lower = formName.toLowerCase().trim();
+
+    // Mega primero: coincide 'mega' como token o separado por guiones/espacios
+    final isMega = RegExp(r'(?:^|[-_\s])mega(?:$|[-_\s])').hasMatch(lower)
+        || lower.contains('-mega');
+    if (isMega) return PokemonFormCategory.mega;
+
+    // Gmax/Gigantamax después: tokens 'gmax' o palabra completa 'gigantamax'
+    final isGmax = RegExp(r'(?:^|[-_\s])gmax(?:$|[-_\s])').hasMatch(lower)
+        || lower.contains('gigantamax');
+    if (isGmax) return PokemonFormCategory.gigantamax;
+
+    // Regionales
+    if (lower.contains('alola') || lower.contains('alolan')) {
       return PokemonFormCategory.alolan;
-    } else if (lowerName.contains('galarian') || lowerName.contains('galar')) {
+    }
+    if (lower.contains('galar') || lower.contains('galarian')) {
       return PokemonFormCategory.galarian;
-    } else if (lowerName.contains('hisuian') || lowerName.contains('hisui')) {
+    }
+    if (lower.contains('hisui') || lower.contains('hisuian')) {
       return PokemonFormCategory.hisuian;
-    } else if (lowerName.contains('paldean') || lowerName.contains('paldea')) {
+    }
+    if (lower.contains('paldea') || lower.contains('paldean')) {
       return PokemonFormCategory.paldean;
-    } else if (lowerName.contains('gmax') || lowerName.contains('gigantamax')) {
-      return PokemonFormCategory.gigantamax;
-    } else if (formName.isEmpty || lowerName == 'default' || lowerName == 'normal') {
-      return PokemonFormCategory.defaultForm;
-    } else {
+    }
+
+    // Otras variantes conocidas marcadas como especiales
+    if (RegExp(r'dusk|dawn|midnight|midday|school|busted|therian|incarnate|totem|ash')
+        .hasMatch(lower)) {
       return PokemonFormCategory.special;
     }
-  }
 
+    // Default
+    if (lower.isEmpty || lower == 'default' || lower == 'normal') {
+      return PokemonFormCategory.defaultForm;
+    }
+
+    // Por defecto, especial
+    return PokemonFormCategory.special;
+  }
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
