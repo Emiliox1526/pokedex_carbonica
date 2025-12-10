@@ -114,8 +114,8 @@ const String _pokemonCountQuery = r'''
   }
 ''';
 const String _pokemonForGameQuery = r'''
-  query PokemonForGame($limit: Int!, $offset: Int!) {
-    pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}) {
+  query PokemonForGame($limit: Int!, $offset: Int!, $where: pokemon_v2_pokemon_bool_exp) {
+    pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}, where: $where) {
       id
       name
       pokemon_v2_pokemonabilities(limit: 2) { pokemon_v2_ability { name } }
@@ -185,12 +185,31 @@ class PokemonRemoteDataSource {
     }
   }
 
-  Future<List<PokemonDTO>> getPokemonForGame(int count, {int offset = 0}) async {
+  Future<List<PokemonDTO>> getPokemonForGame(int count, {int offset = 0, int? generation}) async {
     try {
+      // Build where clause for generation filter
+      Map<String, dynamic>? whereClause;
+      if (generation != null && generation > 0) {
+        final start = _startIdForGeneration(generation);
+        final end = _endIdForGeneration(generation);
+        whereClause = {
+          'id': {'_gte': start, '_lte': end}
+        };
+      } else {
+        // If no generation or generation is 0 (all), get all Pokemon
+        whereClause = {
+          'id': {'_gte': 1, '_lte': 1025}
+        };
+      }
+      
       final result = await _client.query(
         QueryOptions(
           document: gql(_pokemonForGameQuery),
-          variables: {'limit': count, 'offset': offset},
+          variables: {
+            'limit': count,
+            'offset': offset,
+            'where': whereClause,
+          },
           fetchPolicy: FetchPolicy.networkOnly,
         ),
       ).timeout(const Duration(seconds: _queryTimeoutSeconds));
@@ -331,12 +350,12 @@ class PokemonRepositoryImpl implements PokemonRepository {
   Future<bool> hasCachedData() async => _localDataSource.hasData();
 
   @override
-  Future<List<Pokemon>> getRandomPokemonsForGame(int count) async {
+  Future<List<Pokemon>> getRandomPokemonsForGame(int count, {int? generation}) async {
     final connectivityResult = await _connectivity.checkConnectivity();
     final hasConnection = connectivityResult != ConnectivityResult.none;
     if (hasConnection) {
       try {
-        final remotePokemon = await _remoteDataSource.getPokemonForGame(count);
+        final remotePokemon = await _remoteDataSource.getPokemonForGame(count, generation: generation);
         return remotePokemon.map((dto) => dto.toEntity()).toList();
       } on PokemonRemoteException {
         return [];

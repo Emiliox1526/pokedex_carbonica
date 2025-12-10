@@ -20,18 +20,19 @@ final gameLocalDataSourceProvider = Provider<GameLocalDataSource>((ref) {
 
 /// Provider que carga los Pokémon para el juego desde el repositorio.
 /// 
-/// Obtiene una cantidad amplia de Pokémon (150) para tener variedad en el juego,
-/// en lugar de depender de la lista paginada que solo tiene ~20 Pokémon.
-final gamePokemonsProvider = FutureProvider<List<Pokemon>>((ref) async {
+/// Acepta un parámetro opcional de generación para filtrar los Pokémon.
+/// Si no se especifica generación o es 0, obtiene Pokémon de todas las generaciones.
+final gamePokemonsProvider = FutureProvider.family<List<Pokemon>, int?>((ref, generation) async {
   final repository = ref.watch(pokemonRepositoryProvider);
-  return repository.getRandomPokemonsForGame(_gamePokemonCount);
+  return repository.getRandomPokemonsForGame(_gamePokemonCount, generation: generation);
 });
 
 /// Provider para el estado del juego "¿Quién es este Pokémon?".
+/// Acepta un parámetro opcional de generación para filtrar los Pokémon del juego.
 final gameProvider =
-    StateNotifierProvider<GameNotifier, GameState>((ref) {
+    StateNotifierProvider.family<GameNotifier, GameState, int?>((ref, generation) {
   final dataSource = ref.watch(gameLocalDataSourceProvider);
-  final gamePokemonsAsync = ref.watch(gamePokemonsProvider);
+  final gamePokemonsAsync = ref.watch(gamePokemonsProvider(generation));
   
   // Obtener la lista de Pokémon del provider asíncrono
   // Si aún está cargando o hay error, usar lista vacía

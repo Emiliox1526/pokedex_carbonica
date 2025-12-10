@@ -122,6 +122,7 @@
       "generation": {}
     }
   },
+  "allGenerations": "Todas las generaciones",
   "searchByNameOrId": "Buscar por nombre o #ID",
   "pageOf": "Página {current} de {total}",
   "@pageOf": {
