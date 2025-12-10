@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/sprite_utils.dart';
-import '../../domain/pokemon_detail.dart';
+import '../../data/pokemon_detail_data.dart';
 import 'type_chip.dart';
 
 /// Card layout used for sharing a Pokémon as an image.

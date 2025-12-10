@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../../domain/pokemon_evolution.dart';
+import '../../data/pokemon_detail_data.dart';
 import '../../../../core/utils/type_utils.dart';
 import '../../../../core/utils/sprite_utils.dart';
 import '../../../../l10n/l10n_extension.dart';

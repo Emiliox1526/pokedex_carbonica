@@ -6,11 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-
+import '../data/pokemon_detail_data.dart' as detail;
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../../../l10n/l10n_extension.dart';
-import '../../pokemon_list/data/pokemon_data.dart';
+import '../../pokemon_list/data/pokemon_data.dart' as list;
 import 'pokemon_detail_provider.dart';
 import '../../favorites/ui/favorites_provider.dart';
 import 'widgets/detail_header.dart';
@@ -82,16 +82,16 @@ class _PokemonDetailScreenNewState
 
     try {
       // Get Pokemon data from detail or initial data
-      final detail = state.detail;
-      Pokemon pokemon;
-      
-      if (detail != null) {
-        pokemon = Pokemon(
-          id: detail.id,
-          name: detail.name,
-          types: detail.types,
-          imageUrl: detail.defaultSpriteUrl,
-          abilities: detail.abilities.map((a) => a.name).toList(),
+      final detail.PokemonDetail? det = state.detail;
+      list.Pokemon pokemon;
+
+      if (det != null) {
+        pokemon = list.Pokemon(
+          id: det.id,
+          name: det.name,
+          types: det.types,
+          imageUrl: det.defaultSpriteUrl,
+          abilities: det.abilities.map((a) => a.name).toList(),
         );
       } else if (widget.initialPokemon != null) {
         // Fall back to initial Pokemon data
@@ -100,24 +100,24 @@ class _PokemonDetailScreenNewState
         final types = typesRaw
             .map((t) => (t['pokemon_v2_type']?['name'] as String?) ?? 'normal')
             .toList();
-        
+
         String? imageUrl;
         final spritesList = data['pokemon_v2_pokemonsprites'] as List?;
         if (spritesList != null && spritesList.isNotEmpty) {
           final sprites = spritesList.first['sprites'];
           if (sprites is Map) {
             imageUrl = sprites['other']?['official-artwork']?['front_default'] as String? ??
-                       sprites['front_default'] as String?;
+                sprites['front_default'] as String?;
           }
         }
-        
+
         final abilitiesRaw = data['pokemon_v2_pokemonabilities'] as List? ?? [];
         final abilities = abilitiesRaw
             .map((a) => (a['pokemon_v2_ability']?['name'] as String?) ?? '')
             .where((e) => e.isNotEmpty)
             .toList();
-        
-        pokemon = Pokemon(
+
+        pokemon = list.Pokemon(
           id: data['id'] as int,
           name: data['name'] as String,
           types: types,
@@ -126,7 +126,7 @@ class _PokemonDetailScreenNewState
         );
       } else {
         // Create minimal Pokemon object
-        pokemon = Pokemon(
+        pokemon = list.Pokemon(
           id: widget.pokemonId,
           name: 'Pokemon #${widget.pokemonId}',
           types: ['normal'],
@@ -158,13 +158,13 @@ class _PokemonDetailScreenNewState
 
   Future<void> _sharePokemonCard() async {
     final state = ref.read(pokemonDetailProvider(widget.pokemonId));
-    final detail = state.activeDetail;
+    final detail.PokemonDetail? detailEnt = state.activeDetail;
 
     if (_isSharing) {
       return;
     }
 
-    if (detail == null) {
+    if (detailEnt == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -181,7 +181,7 @@ class _PokemonDetailScreenNewState
       await WidgetsBinding.instance.endOfFrame;
 
       final boundary =
-          _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
 
       if (boundary == null) {
         throw Exception('Share card not ready');
@@ -196,14 +196,14 @@ class _PokemonDetailScreenNewState
 
       final pngBytes = byteData.buffer.asUint8List();
       final tempDir = await getTemporaryDirectory();
-      final filePath = '${tempDir.path}/pokemon_${detail.id}.png';
+      final filePath = '${tempDir.path}/pokemon_${detailEnt.id}.png';
       final file = await File(filePath).create(recursive: true);
       await file.writeAsBytes(pngBytes);
 
       await Share.shareXFiles(
         [XFile(file.path)],
         text:
-            '${detail.displayName} ${detail.formattedId} — ¡Mira mi Pokémon legendario! 🧬',
+        '${detailEnt.displayName} ${detailEnt.formattedId} — ¡Mira mi Pokémon legendario! 🧬',
       );
     } catch (_) {
       if (!mounted) return;
@@ -251,7 +251,7 @@ class _PokemonDetailScreenNewState
           },
           availableForms: state.availableForms,
           selectedFormId: state.selectedFormId,
-          onFormSelected: (form) => notifier.selectForm(form),
+          onFormSelected: (form) => notifier.selectForm(form as detail.PokemonFormVariant),
           pokemonName: pokemonName,
         ),
       ),
@@ -294,16 +294,16 @@ class _PokemonDetailScreenNewState
       );
     }
 
-    final detail = state.activeDetail;
-    if (detail == null) {
+    final detail.PokemonDetail? detailEnt = state.activeDetail;
+    if (detailEnt == null) {
       return Scaffold(
         body: Center(child: Text(context.l10n.pokemonNotFound)),
       );
     }
 
     // Determine colors based on types
-    final primaryType = detail.primaryType;
-    final secondaryTypeName = detail.secondaryType;
+    final primaryType = detailEnt.primaryType;
+    final secondaryTypeName = detailEnt.secondaryType;
     final baseColor = typeColor[primaryType] ?? typeColor['normal']!;
     final secondaryColor =
         typeColor[secondaryTypeName] ?? Color.lerp(baseColor, Colors.white, .35)!;
@@ -312,13 +312,13 @@ class _PokemonDetailScreenNewState
     String? displayedDefaultUrl;
     String? displayedShinyUrl;
 
-    final selectedForm = state.selectedForm;
+    final detail.PokemonFormVariant? selectedForm = state.selectedForm;
     if (selectedForm != null) {
-      displayedDefaultUrl = selectedForm.spriteUrl ?? detail.defaultSpriteUrl;
-      displayedShinyUrl = selectedForm.shinySpriteUrl ?? detail.shinySpriteUrl;
+      displayedDefaultUrl = selectedForm.spriteUrl ?? detailEnt.defaultSpriteUrl;
+      displayedShinyUrl = selectedForm.shinySpriteUrl ?? detailEnt.shinySpriteUrl;
     } else {
-      displayedDefaultUrl = detail.defaultSpriteUrl;
-      displayedShinyUrl = detail.shinySpriteUrl;
+      displayedDefaultUrl = detailEnt.defaultSpriteUrl;
+      displayedShinyUrl = detailEnt.shinySpriteUrl;
     }
 
     return Scaffold(
@@ -360,20 +360,20 @@ class _PokemonDetailScreenNewState
                     children: [
                       // Header
                       DetailHeader(
-                        pokemonName: detail.displayName,
-                        idLabel: detail.formattedId,
+                        pokemonName: detailEnt.displayName,
+                        idLabel: detailEnt.formattedId,
                         isFavorite: state.isFavorite,
                         onBack: () => Navigator.of(context).maybePop(),
                         onToggleFavorite: _toggleFavorite,
                         onShare: _sharePokemonCard,
                         isSharing: _isSharing,
-                        imageUrl: displayedDefaultUrl ?? artworkUrlForId(detail.id),
+                        imageUrl: displayedDefaultUrl ?? artworkUrlForId(detailEnt.id),
                       ),
                       const SizedBox(height: 18),
 
                       // Pokemon image with types
                       DetailImageSection(
-                        pokemonId: detail.id,
+                        pokemonId: detailEnt.id,
                         defaultImageUrl: displayedDefaultUrl,
                         shinyImageUrl: displayedShinyUrl,
                         showShiny: state.showShiny,
@@ -392,7 +392,7 @@ class _PokemonDetailScreenNewState
                         secondaryColor: secondaryColor,
                         onChanged: (index) => notifier.selectTab(index),
                         onOptionsPressed: () =>
-                            _openOptionsModal(baseColor, secondaryColor, detail.displayName),
+                            _openOptionsModal(baseColor, secondaryColor, detailEnt.displayName),
                       ),
                       const SizedBox(height: 18),
 
@@ -404,7 +404,7 @@ class _PokemonDetailScreenNewState
                         child: _buildTabContent(
                           key: ValueKey(state.selectedTab),
                           tabIndex: state.selectedTab,
-                          detail: detail,
+                          detail: detailEnt,
                           state: state,
                           notifier: notifier,
                           baseColor: baseColor,
@@ -423,14 +423,14 @@ class _PokemonDetailScreenNewState
                     opacity: 0.0,
                     child: Center(
                       child: PokemonShareCard(
-                        detail: detail,
+                        detail: detailEnt,
                         baseColor: baseColor,
                         secondaryColor: secondaryColor,
                         imageUrl: state.showShiny
                             ? displayedShinyUrl ??
-                                displayedDefaultUrl ??
-                                artworkUrlForId(detail.id)
-                            : displayedDefaultUrl ?? artworkUrlForId(detail.id),
+                            displayedDefaultUrl ??
+                            artworkUrlForId(detailEnt.id)
+                            : displayedDefaultUrl ?? artworkUrlForId(detailEnt.id),
                         showShiny: state.showShiny,
                         repaintBoundaryKey: _shareCardKey,
                       ),
@@ -489,9 +489,9 @@ class _PokemonDetailScreenNewState
   Widget _buildTabContent({
     required Key key,
     required int tabIndex,
-    required dynamic detail,
-    required PokemonDetailState state,
-    required PokemonDetailNotifier notifier,
+    required detail.PokemonDetail detail,
+    required dynamic state,
+    required dynamic notifier,
     required Color baseColor,
     required Color secondaryColor,
   }) {

@@ -1,12 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../domain/pokemon_detail.dart';
-import '../domain/pokemon_form_variant.dart';
+import '../data/pokemon_detail_data.dart';
 import '../domain/pokemon_detail_repository.dart';
 import '../data/pokemon_detail_data_repository.dart' as data;
-import '../domain/get_pokemon_detail_usecase.dart';
-import '../domain/get_form_detail_usecase.dart';
+import '../domain/pokemon_detail_usecase.dart';
 import '../../pokemon_list/ui/pokemon_list_provider.dart';
 
 // ============================================================================
@@ -144,7 +142,7 @@ class PokemonDetailState {
   PokemonDetail? get activeDetail => formDetail ?? detail;
 
   /// Gets available forms from the base detail.
-  List<PokemonFormVariant> get availableForms => detail?.forms ?? [];
+  List<PokemonFormVariant> get availableForms => detail?.forms.cast<PokemonFormVariant>() ?? [];
 
   /// Gets the currently selected form.
   PokemonFormVariant? get selectedForm {

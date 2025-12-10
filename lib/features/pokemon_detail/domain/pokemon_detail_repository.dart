@@ -1,4 +1,4 @@
-import 'pokemon_detail.dart';
+import '../data/pokemon_detail_data.dart';
 
 abstract class PokemonDetailRepository {
   /// Obtiene la información detallada de un Pokémon por ID.

@@ -3,9 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../../domain/pokemon_detail.dart';
-import '../../domain/pokemon_ability.dart';
-import '../../domain/pokemon_stat.dart';
+import '../../data/pokemon_detail_data.dart';
+
 import '../../../../core/utils/type_utils.dart';
 import '../../../../core/utils/string_utils.dart';
 import 'detail_card.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/pokemon_form_variant.dart';
+import '../../data/pokemon_detail_data.dart';
+
 
 class PokemonOptionsModal extends StatefulWidget {
   const PokemonOptionsModal({

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/pokemon_move.dart';
+import '../../data/pokemon_detail_data.dart';
 import '../../../../core/utils/type_utils.dart';
 import '../../../../core/utils/string_utils.dart';
 import 'detail_card.dart';

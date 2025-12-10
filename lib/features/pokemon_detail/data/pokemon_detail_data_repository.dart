@@ -3,14 +3,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import '../domain/pokemon_detail.dart' as domain;
 import '../data/pokemon_detail_data.dart' as data;
 import '../domain/pokemon_detail_repository.dart';
-import '../domain/pokemon_ability.dart';
-import '../domain/pokemon_stat.dart';
-import '../domain/pokemon_move.dart';
-import '../domain/pokemon_form_variant.dart';
-import '../domain/pokemon_evolution.dart';
+
+
 
 // ------------ LOCAL DATA SOURCE --------------
 
@@ -29,7 +25,7 @@ class PokemonDetailLocalDataSource {
     _metadataBox = await Hive.openBox<dynamic>(_metadataBoxName);
   }
 
-  Future<void> cachePokemonDetail(int id, domain.PokemonDetail detail) async {
+  Future<void> cachePokemonDetail(int id, data.PokemonDetail detail) async {
     await _ensureInitialized();
     try {
       final jsonString = _serializePokemonDetail(detail);
@@ -40,7 +36,7 @@ class PokemonDetailLocalDataSource {
     }
   }
 
-  Future<domain.PokemonDetail?> getCachedPokemonDetail(int id) async {
+  Future<data.PokemonDetail?> getCachedPokemonDetail(int id) async {
     await _ensureInitialized();
     if (!await isCacheValid(id)) return null;
     try {
@@ -87,7 +83,7 @@ class PokemonDetailLocalDataSource {
     }
   }
 
-  String _serializePokemonDetail(domain.PokemonDetail detail) {
+  String _serializePokemonDetail(data.PokemonDetail detail) {
     final map = {
       'id': detail.id,
       'name': detail.name,
@@ -152,9 +148,9 @@ class PokemonDetailLocalDataSource {
     return json.encode(map);
   }
 
-  domain.PokemonDetail _deserializePokemonDetail(String jsonString) {
+  data.PokemonDetail _deserializePokemonDetail(String jsonString) {
     final map = json.decode(jsonString) as Map<String, dynamic>;
-    return domain.PokemonDetail(
+    return data.PokemonDetail(
       id: map['id'] as int,
       name: map['name'] as String,
       heightMeters: (map['heightMeters'] as num).toDouble(),
@@ -162,20 +158,20 @@ class PokemonDetailLocalDataSource {
       baseExperience: map['baseExperience'] as int,
       types: (map['types'] as List).cast<String>(),
       abilities: (map['abilities'] as List)
-          .map((a) => PokemonAbility(
+          .map((a) => data.PokemonAbility(
         name: a['name'] as String,
         isHidden: a['isHidden'] as bool,
         shortEffect: a['shortEffect'] as String,
       ))
           .toList(),
       stats: (map['stats'] as List)
-          .map((s) => PokemonStat(
+          .map((s) => data.PokemonStat(
         name: s['name'] as String,
         value: s['value'] as int,
       ))
           .toList(),
       moves: (map['moves'] as List)
-          .map((m) => PokemonMove(
+          .map((m) => data.PokemonMove(
         name: m['name'] as String,
         type: m['type'] as String,
         damageClass: m['damageClass'] as String,
@@ -187,7 +183,7 @@ class PokemonDetailLocalDataSource {
       ))
           .toList(),
       forms: (map['forms'] as List)
-          .map((f) => PokemonFormVariant(
+          .map((f) => data.PokemonFormVariant(
         id: f['id'] as int,
         name: f['name'] as String,
         displayName: f['displayName'] as String,
@@ -196,11 +192,11 @@ class PokemonDetailLocalDataSource {
         shinySpriteUrl: f['shinySpriteUrl'] as String?,
         types: (f['types'] as List).cast<String>(),
         isDefault: f['isDefault'] as bool,
-        category: PokemonFormCategory.values[f['category'] as int],
+        category: data.PokemonFormCategory.values[f['category'] as int],
       ))
           .toList(),
       evolutionChain: (map['evolutionChain'] as List)
-          .map((e) => PokemonEvolution(
+          .map((e) => data.PokemonEvolution(
         speciesId: e['speciesId'] as int,
         name: e['name'] as String,
         minLevel: e['minLevel'] as int?,
@@ -496,10 +492,10 @@ class PokemonDetailRepositoryImpl implements PokemonDetailRepository {
         _localDataSource = localDataSource;
 
   @override
-  Future<domain.PokemonDetail> getPokemonDetail(int id) async {
+  Future<data.PokemonDetail> getPokemonDetail(int id) async {
     try {
       final dto = await _remoteDataSource.getPokemonDetail(id);
-      final entity = dto.toEntity() as domain.PokemonDetail;
+      final entity = dto.toEntity() as data.PokemonDetail;
       await _localDataSource.cachePokemonDetail(id, entity);
       return entity;
     } on data.PokemonDetailException catch (e) {
@@ -515,10 +511,10 @@ class PokemonDetailRepositoryImpl implements PokemonDetailRepository {
   }
 
   @override
-  Future<domain.PokemonDetail> getFormDetail(int pokemonId) async {
+  Future<data.PokemonDetail> getFormDetail(int pokemonId) async {
     try {
       final dto = await _remoteDataSource.getFormDetail(pokemonId);
-      final entity = dto.toEntity() as domain.PokemonDetail;
+      final entity = dto.toEntity() as data.PokemonDetail;
       await _localDataSource.cachePokemonDetail(pokemonId, entity);
       return entity;
     } on data.PokemonDetailException catch (e) {
@@ -544,7 +540,7 @@ class PokemonDetailRepositoryImpl implements PokemonDetailRepository {
   }
 
   @override
-  Future<domain.PokemonDetail?> getCachedDetail(int id) async {
+  Future<data.PokemonDetail?> getCachedDetail(int id) async {
     return await _localDataSource.getCachedPokemonDetail(id);
   }
 }

@@ -1,4 +1,4 @@
-import 'pokemon_detail.dart';
+import '../data/pokemon_detail_data.dart';
 import 'pokemon_detail_repository.dart';
 
 /// Use case for fetching Pokemon detail information.
@@ -11,12 +11,6 @@ class GetPokemonDetailUseCase {
   /// Creates a use case with the given repository.
   GetPokemonDetailUseCase(this._repository);
 
-  /// Executes the use case to get Pokemon detail.
-  ///
-  /// [id] is the Pokemon's ID.
-  /// [forceRefresh] if true, bypasses the cache.
-  ///
-  /// Returns a [PokemonDetail] with all information.
   Future<PokemonDetail> execute(int id, {bool forceRefresh = false}) async {
     if (!forceRefresh) {
       // Try to get cached data first
@@ -32,5 +26,21 @@ class GetPokemonDetailUseCase {
   /// Clears the cache for Pokemon details.
   Future<void> clearCache() async {
     await _repository.clearCache();
+  }
+}
+
+/// Use case for fetching Pokemon form variant details.
+///
+/// This class encapsulates the business logic for retrieving
+/// detailed information about a specific Pokemon form variant.
+class GetFormDetailUseCase {
+  final PokemonDetailRepository _repository;
+
+  /// Creates a use case with the given repository.
+  GetFormDetailUseCase(this._repository);
+
+
+  Future<PokemonDetail> execute(int pokemonId) async {
+    return _repository.getFormDetail(pokemonId);
   }
 }
