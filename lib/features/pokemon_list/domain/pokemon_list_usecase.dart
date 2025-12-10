@@ -1,5 +1,5 @@
-import 'pokemon.dart';
-import 'pokemon_repository.dart';
+import '../data/pokemon_data.dart';
+
 
 /// Caso de uso para obtener la lista paginada de Pokémon.
 class GetPokemonListUseCase {
@@ -20,31 +20,23 @@ class GetPokemonListUseCase {
   Future<PaginatedPokemonList> execute(PokemonFilter filter) async {
     final result = await _repository.getPokemonList(filter);
 
-    // Filtramos las formas especiales (IDs fuera de 1–1025)
+    // Filtramos las formas especiales (IDs del 1–1025)
     final filteredPokemons =
     result.pokemons.where(_isValidPokemon).toList();
 
-    // Construimos una nueva lista paginada con los pokémon filtrados
+    // Lista paginada con los pokémon filtrados
     return PaginatedPokemonList(
       pokemons: filteredPokemons,
       currentPage: result.currentPage,
       totalPages: result.totalPages,
-      // Si quieres que el total refleje solo los que se muestran en esta página
       totalCount: filteredPokemons.length,
       hasNextPage: result.hasNextPage,
       hasPreviousPage: result.hasPreviousPage,
     );
   }
 
-  /// Obtiene solo el conteo total de Pokémon.
-  ///
-  /// Útil para calcular el número de páginas sin cargar los datos.
+  // Obtiene solo el conteo total de Pokémon.
   Future<int> getTotalCount(PokemonFilter filter) async {
-    // Si quieres ignorar por completo los especiales y solo contar 1–1025:
     return _maxValidId;
-
-    // Alternativa (si el repo ya devuelve un total global):
-    // final total = await _repository.getTotalPokemonCount(filter);
-    // return total.clamp(_minValidId, _maxValidId);
   }
 }

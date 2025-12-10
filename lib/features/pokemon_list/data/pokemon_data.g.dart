@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pokemon_dto.dart';
+part of 'pokemon_data.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
@@ -47,7 +47,7 @@ class PokemonDTOAdapter extends TypeAdapter<PokemonDTO> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PokemonDTOAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+          other is PokemonDTOAdapter &&
+              runtimeType == other.runtimeType &&
+              typeId == other.typeId;
 }

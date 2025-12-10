@@ -7,7 +7,7 @@ import '../data/game_local_datasource.dart';
 import '../domain/game_state.dart';
 import '../domain/game_score.dart';
 import '../domain/game_achievement.dart';
-import '../../pokemon_list/domain/pokemon.dart';
+import '../../pokemon_list/data/pokemon_data.dart';
 import '../../pokemon_list/ui/pokemon_list_provider.dart';
 
 /// Cantidad de Pokémon a cargar para el juego.

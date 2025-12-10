@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/favorites_local_datasource.dart';
-import '../../pokemon_list/domain/pokemon.dart';
+import '../../pokemon_list/data/pokemon_data.dart';
 
 /// State for the favorites screen.
 class FavoritesState {

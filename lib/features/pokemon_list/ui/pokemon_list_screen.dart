@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../l10n/l10n_extension.dart';
-import '../domain/pokemon.dart';
+import '../data/pokemon_data.dart';
 import '../../pokemon_detail/ui/pokemon_detail_screen.dart';
 import 'pokemon_list_provider.dart';
 import 'widgets/pokemon_card.dart';

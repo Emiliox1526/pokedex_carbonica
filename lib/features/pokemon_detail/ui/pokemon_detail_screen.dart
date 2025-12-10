@@ -10,8 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/utils/type_utils.dart';
 import '../../../core/utils/sprite_utils.dart';
 import '../../../l10n/l10n_extension.dart';
-import '../../pokemon_list/domain/pokemon.dart';
-import '../domain/pokemon_form_variant.dart';
+import '../../pokemon_list/data/pokemon_data.dart';
 import 'pokemon_detail_provider.dart';
 import '../../favorites/ui/favorites_provider.dart';
 import 'widgets/detail_header.dart';
@@ -131,6 +130,7 @@ class _PokemonDetailScreenNewState
           id: widget.pokemonId,
           name: 'Pokemon #${widget.pokemonId}',
           types: ['normal'],
+          abilities: const [],
         );
       }
 

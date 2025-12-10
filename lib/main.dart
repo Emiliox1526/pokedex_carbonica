@@ -4,13 +4,14 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app.dart';
+import 'features/pokemon_list/data/pokemon_repository.dart';
 import 'features/pokemon_list/ui/splash_interactive.dart';
 
-import 'di/graphql_client.dart';
-import 'features/pokemon_list/data/pokemon_dto.dart';
+import 'graphql_client.dart';
+import 'features/pokemon_list/data/pokemon_data.dart';
 import 'features/game/data/game_score_dto.dart';
 import 'features/game/data/game_achievement_dto.dart';
-import 'features/pokemon_list/data/pokemon_local_datasource.dart';
+
 import 'features/pokemon_detail/data/pokemon_detail_local_datasource.dart';
 import 'features/favorites/data/favorites_local_datasource.dart';
 import 'features/game/data/game_local_datasource.dart';

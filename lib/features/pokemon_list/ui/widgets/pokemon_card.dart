@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../domain/pokemon.dart';
+import '../../data/pokemon_data.dart';
 import '../../../../core/utils/type_translation.dart';
 
 /// Extensión para oscurecer colores.
