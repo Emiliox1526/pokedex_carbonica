@@ -193,9 +193,7 @@ class PokemonRemoteDataSource {
         final start = _startIdForGeneration(generation);
         final end = _endIdForGeneration(generation);
         whereClause = {
-          '_and': [
-            {'id': {'_gte': start, '_lte': end}},
-          ]
+          'id': {'_gte': start, '_lte': end}
         };
       } else {
         // If no generation or generation is 0 (all), get all Pokemon

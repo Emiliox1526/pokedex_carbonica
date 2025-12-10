@@ -462,12 +462,12 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _regionColorForGeneration(widget.selectedGeneration).withOpacity(0.9),
+                color: _regionColorForGeneration(widget.selectedGeneration!).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: _regionColorForGeneration(widget.selectedGeneration).withOpacity(0.4),
+                    color: _regionColorForGeneration(widget.selectedGeneration!).withOpacity(0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
