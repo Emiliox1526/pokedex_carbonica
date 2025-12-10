@@ -733,9 +733,9 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              ref.read(gameProvider(widget.selectedGeneration).notifier).resetToMenu();
-              Navigator.of(context).pop();
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Exit game screen
+              // No need to reset state - provider will be disposed automatically
             },
             child: Text(
               l10n.exit,
