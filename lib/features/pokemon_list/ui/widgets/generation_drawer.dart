@@ -5,8 +5,8 @@ import '../../../favorites/ui/favorites_screen.dart';
 import '../../../game/ui/who_is_pokemon_screen.dart';
 import 'language_selector.dart';
 import '../../../../l10n/l10n_extension.dart';
+
 /// Drawer de generaciones y filtros para la Pokédex.
-/// 
 /// Permite al usuario filtrar Pokémon por generación y tipos.
 /// Muestra las imágenes de cada región como banners seleccionables.
 class GenerationDrawer extends StatelessWidget {
@@ -26,6 +26,7 @@ class GenerationDrawer extends StatelessWidget {
   final IconData Function(String type) iconForType;
 
   final int? selectedGeneration;
+
   /// Constructor del widget.
   const GenerationDrawer({
     super.key,
@@ -42,39 +43,41 @@ class GenerationDrawer extends StatelessWidget {
   static const Color _dexDeep = Color(0xFF09174E);
   static const Color _dexDark = Color(0xFF050A24);
   static const Color _dexWhite = Color(0xFFFFFFFF);
+
   static const Map<int, Color> _regionColors = {
-    // 1 = Kanto
     1: Color(0xFFEF5350),
-
-    // 2 = Johto
     2: Color(0xFFFFCA28),
-
-    // 3 = Hoenn
     3: Color(0xFF26A69A),
-
-    // 4 = Sinnoh
     4: Color(0xFF42A5F5),
-
-    // 5 = Unova
     5: Color(0xFF7E57C2),
-
-    // 6 = Kalos
     6: Color(0xFFEC407A),
-
-    // 7 = Alola
     7: Color(0xFF26C6DA),
-
-    // 8 = Galar
     8: Color(0xFFD81B60),
-
-    // 9 = Paldea
     9: Color(0xFFFF7043),
   };
 
   static Color _regionColorForGeneration(int? generation) {
-    // mismo fallback que usas en _regionColorForGeneration del screen
     return _regionColors[generation] ?? const Color(0xFFEF5350);
   }
+
+  static const Map<int, String> _generationBackgroundImages = {
+    0: 'lib/assets/AllGenerations.png',
+    1: 'lib/assets/kanto.png',
+    2: 'lib/assets/johto.png',
+    3: 'lib/assets/hoenn.png',
+    4: 'lib/assets/sinnoh.png',
+    5: 'lib/assets/unova.png',
+    6: 'lib/assets/kalos.png',
+    7: 'lib/assets/alola.png',
+    8: 'lib/assets/galar.png',
+    9: 'lib/assets/paldea.png',
+  };
+
+  static String _assetForGeneration(int? generation) {
+    return _generationBackgroundImages[generation] ??
+        _generationBackgroundImages[0]!;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Configuración de banners de regiones
@@ -110,7 +113,6 @@ class GenerationDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título
                 Row(
                   children: [
                     const Icon(
@@ -130,12 +132,9 @@ class GenerationDrawer extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 10),
                 Container(height: 1.4, color: _dexWhite),
                 const SizedBox(height: 14),
-
-                // 🔁 Todo lo que va debajo del título entra en el scroll
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -148,13 +147,14 @@ class GenerationDrawer extends StatelessWidget {
                             Navigator.of(context).pop();
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const FavoritesScreen(),
+                                builder: (_) => FavoritesScreen(
+                                  selectedGeneration: selectedGeneration,
+                                ),
                               ),
                             );
                           },
                         ),
                         const SizedBox(height: 10),
-
                         // Game option - ¿Quién es este Pokémon?
                         _GameOption(
                           onTap: () {
@@ -167,14 +167,11 @@ class GenerationDrawer extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 16),
-
                         // App language toggle
                         const _LanguageOption(),
                         const SizedBox(height: 18),
-
                         Container(height: 1.4, color: _dexWhite),
                         const SizedBox(height: 14),
-
                         // Sección de configuración
                         Text(
                           context.l10n.configuration,
@@ -186,7 +183,6 @@ class GenerationDrawer extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 14),
-
                         // Grid de filtros de tipos
                         TypeChipGrid(
                           selectedTypes: selectedTypes,
@@ -194,11 +190,9 @@ class GenerationDrawer extends StatelessWidget {
                           iconForType: iconForType,
                           onToggleType: onToggleType,
                         ),
-
                         const SizedBox(height: 16),
                         Container(height: 1.4, color: _dexWhite),
                         const SizedBox(height: 14),
-
                         // Sección de filtro por generación
                         Text(
                           context.l10n.generation,
@@ -210,7 +204,6 @@ class GenerationDrawer extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 14),
-
                         // Lista de regiones
                         ListView.separated(
                           physics: const NeverScrollableScrollPhysics(),
@@ -223,8 +216,8 @@ class GenerationDrawer extends StatelessWidget {
                             return _RegionBanner(
                               title: region["title"]!,
                               imagePath: region["image"]!,
-                              onTap: () =>
-                                  onSelectGeneration(index == 0 ? 0 : index),
+                              onTap: () => onSelectGeneration(
+                                  index == 0 ? 0 : index),
                             );
                           },
                         ),
@@ -232,7 +225,6 @@ class GenerationDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
-
               ],
             ),
           ),
@@ -241,6 +233,7 @@ class GenerationDrawer extends StatelessWidget {
     );
   }
 }
+
 class _LanguageOption extends StatelessWidget {
   const _LanguageOption();
 
@@ -250,8 +243,8 @@ class _LanguageOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context);
     final String code = locale.languageCode.toLowerCase();
-    final String label = code == 'en' 
-        ? context.l10n.languageEnglish 
+    final String label = code == 'en'
+        ? context.l10n.languageEnglish
         : context.l10n.languageSpanish;
 
     return Container(
@@ -297,8 +290,6 @@ class _LanguageOption extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-
-          // 🔁 Toggle ES / EN con tu selector
           const LanguageSelector(
             iconColor: _dexWhite,
           ),
@@ -476,8 +467,6 @@ class _GameOption extends StatelessWidget {
   }
 }
 
-
-
 /// Banner de región individual.
 class _RegionBanner extends StatelessWidget {
   final String title;
@@ -525,7 +514,6 @@ class _RegionBanner extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Imagen de la región
                 if (imagePath.isNotEmpty)
                   Image.asset(
                     imagePath,
@@ -533,8 +521,6 @@ class _RegionBanner extends StatelessWidget {
                     filterQuality: FilterQuality.high,
                     errorBuilder: (_, __, ___) => const SizedBox(),
                   ),
-
-                // Overlay de gradiente
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -548,8 +534,6 @@ class _RegionBanner extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // Contenido
                 Positioned.fill(
                   child: Row(
                     children: [

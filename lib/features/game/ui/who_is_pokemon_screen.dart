@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokedex_carbonica/features/pokemon_list/ui/widgets/language_selector.dart';
@@ -15,21 +16,46 @@ import 'widgets/achievement_unlock_modal.dart';
 import 'game_results_screen.dart';
 import 'achievements_screen.dart';
 
-/// Pantalla principal del juego "¿Quién es este Pokémon?".
-///
-/// Muestra el menú principal, la partida en curso y los resultados.
+// --- Configuración assets por generación (idéntico a lista principal) ---
+const Map<int, String> _generationBackgroundImages = {
+  0: 'lib/assets/AllGenerations.png',
+  1: 'lib/assets/kanto.png',
+  2: 'lib/assets/johto.png',
+  3: 'lib/assets/hoenn.png',
+  4: 'lib/assets/sinnoh.png',
+  5: 'lib/assets/unova.png',
+  6: 'lib/assets/kalos.png',
+  7: 'lib/assets/alola.png',
+  8: 'lib/assets/galar.png',
+  9: 'lib/assets/paldea.png',
+};
+String _assetForGeneration(int? generation) =>
+    _generationBackgroundImages[generation] ?? _generationBackgroundImages[0]!;
+
+const Map<int, Color> _regionColors = {
+  1: Color(0xFFEF5350),
+  2: Color(0xFFFFCA28),
+  3: Color(0xFF26A69A),
+  4: Color(0xFF42A5F5),
+  5: Color(0xFF7E57C2),
+  6: Color(0xFFEC407A),
+  7: Color(0xFF26C6DA),
+  8: Color(0xFFD81B60),
+  9: Color(0xFFFF7043),
+};
+Color _regionColorForGeneration(int? generation) =>
+    _regionColors[generation] ?? const Color(0xFFEF5350);
+
 class WhoIsPokemonScreen extends ConsumerStatefulWidget {
-  const WhoIsPokemonScreen({super.key});
+  final int? selectedGeneration;
+  const WhoIsPokemonScreen({super.key, this.selectedGeneration});
 
   @override
-  ConsumerState<WhoIsPokemonScreen> createState() => _WhoIsPokemonScreenState();
+  ConsumerState<WhoIsPokemonScreen> createState() =>
+      _WhoIsPokemonScreenState();
 }
 
 class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
-  /// Colores del tema.
-  final Color _bg1 = const Color(0xFFFF365A);
-  final Color _bg2 = const Color(0xFF8C0025);
-
   @override
   void initState() {
     super.initState();
@@ -42,6 +68,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final gameState = ref.watch(gameProvider);
+    final int? selectedGeneration = widget.selectedGeneration ?? 0;
 
     // Mostrar resultados si la partida terminó
     if (gameState.status == GameStatus.finished) {
@@ -50,32 +77,103 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
       });
     }
 
+    // --------------- FONDO VISUAL (idéntico lista principal y favoritos) ---------------
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Fondo con gradiente
+          // Imagen blur por generación KANTO=1, etc
+          Positioned.fill(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Opacity(
+                opacity: 0.55,
+                child: Image.asset(
+                  _assetForGeneration(selectedGeneration),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          // Decorativos igual que lista
+          IgnorePointer(
+            child: Stack(
+              children: [
+                // Círculo arriba izquierda
+                Positioned(
+                  top: -120,
+                  left: -40,
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.08),
+                        width: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                // Rectángulo diagonal en el centro-derecha
+                Positioned(
+                  top: 600,
+                  right: -150,
+                  child: Transform.rotate(
+                    angle: -0.35,
+                    child: Container(
+                      width: 260,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.07),
+                            Colors.white.withOpacity(0.02),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.10),
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Gradiente color región por generación seleccionada
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_bg1, _bg2],
+                  colors: [
+                    _regionColorForGeneration(selectedGeneration)
+                        .withOpacity(0.85),
+                    _regionColorForGeneration(selectedGeneration)
+                        .withOpacity(0.55),
+                  ],
                 ),
               ),
             ),
           ),
-
+          // Overlay oscuro igual a lista principal
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.25),
+            ),
+          ),
+          // Contenido principal
           SafeArea(
             child: Column(
               children: [
-                // Header
                 _buildHeader(gameState, l10n),
-
-                // Contenido principal
-                Expanded(
-                  child: _buildContent(gameState),
-                ),
+                Expanded(child: _buildContent(gameState)),
               ],
             ),
           ),
@@ -84,12 +182,12 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
     );
   }
 
+  // ---------- HEADER Y CONTENIDO DEL GAME ----------
   Widget _buildHeader(GameState gameState, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
       child: Row(
         children: [
-          // Botón de volver
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
@@ -102,8 +200,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             },
           ),
           const SizedBox(width: 8),
-
-          // Título
           Expanded(
             child: Text(
               l10n.whoIsPokemonTitle,
@@ -114,8 +210,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ),
             ),
           ),
-
-          // Botón de logros
           if (gameState.status == GameStatus.initial)
             IconButton(
               icon: const Icon(Icons.emoji_events, color: Colors.amber),
@@ -151,7 +245,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icono del juego
           Container(
             width: 120,
             height: 120,
@@ -169,8 +262,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             ),
           ),
           const SizedBox(height: 32),
-
-          // Descripción
           Text(
             l10n.whoIsPokemonDescription,
             style: TextStyle(
@@ -182,7 +273,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-
           Text(
             l10n.whoIsPokemonRules,
             style: TextStyle(
@@ -193,8 +283,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
-
-          // Mejor puntuación
           if (gameState.highScore > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -220,13 +308,11 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                 ],
               ),
             ),
-
-          // Botón de iniciar
           ElevatedButton(
             onPressed: () => ref.read(gameProvider.notifier).startGame(),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: _bg2,
+              foregroundColor: _regionColorForGeneration(widget.selectedGeneration ?? 0),
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -250,8 +336,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Botón de ver ranking
           TextButton.icon(
             onPressed: () => _navigateToResults(),
             icon: const Icon(Icons.leaderboard, color: Colors.white70),
@@ -279,7 +363,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Score display
           ScoreDisplay(
             score: gameState.score,
             currentQuestion: gameState.currentQuestion,
@@ -288,15 +371,11 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             highScore: gameState.highScore,
           ),
           const SizedBox(height: 16),
-
-          // Timer bar
           TimerBar(
             remainingSeconds: gameState.remainingTimeSeconds,
             maxSeconds: gameState.maxTimeSeconds,
           ),
           const SizedBox(height: 24),
-
-          // Silueta del Pokémon
           Expanded(
             child: Center(
               child: Column(
@@ -313,19 +392,13 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                       size: 180,
                     ),
                   ),
-
-                  // Mensaje de resultado
                   if (gameState.status == GameStatus.showingResult)
                     _buildResultMessage(gameState, l10n),
                 ],
               ),
             ),
           ),
-
-          // Opciones de respuesta
           _buildAnswerOptions(gameState),
-
-          // Botón de continuar
           if (gameState.status == GameStatus.showingResult)
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -334,7 +407,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                     ref.read(gameProvider.notifier).continueToNextQuestion(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: _bg2,
+                  foregroundColor: _regionColorForGeneration(widget.selectedGeneration ?? 0),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 12,
@@ -362,7 +435,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   Widget _buildResultMessage(GameState gameState, AppLocalizations l10n) {
     final isCorrect = gameState.lastAnswerCorrect ?? false;
     final pokemonName = gameState.currentPokemon?.name ?? '';
-    
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -390,8 +462,8 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
                 gameState.lastAnswerTimeSeconds! < 5
                     ? l10n.timeBonus
                     : l10n.timeElapsed(
-                        gameState.lastAnswerTimeSeconds!.toStringAsFixed(1),
-                      ),
+                  gameState.lastAnswerTimeSeconds!.toStringAsFixed(1),
+                ),
                 style: TextStyle(
                   color: gameState.lastAnswerTimeSeconds! < 5
                       ? Colors.amber
@@ -450,7 +522,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   void _showResultsScreen(GameState gameState) {
-    // Mostrar logros desbloqueados primero
     _showUnlockedAchievements(gameState.newlyUnlockedAchievements, () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -468,23 +539,19 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   }
 
   void _showUnlockedAchievements(
-    List<GameAchievement> achievements,
-    VoidCallback onComplete,
-  ) {
+      List<GameAchievement> achievements,
+      VoidCallback onComplete,
+      ) {
     if (achievements.isEmpty) {
       onComplete();
       return;
     }
-
-    // Mostrar cada logro secuencialmente
     int currentIndex = 0;
-
     void showNext() {
       if (currentIndex >= achievements.length) {
         onComplete();
         return;
       }
-
       AchievementUnlockModal.show(
         context,
         achievements[currentIndex],
@@ -494,7 +561,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
         },
       );
     }
-
     showNext();
   }
 
