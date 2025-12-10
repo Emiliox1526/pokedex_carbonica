@@ -26,7 +26,7 @@ Launch the app on your device or emulator.
 1. Tap "EN" to switch to English
 2. Notice that:
    - The drawer title changes to "Regional Pokédex"
-   - Menu items change to English ("My Favorites", "Who is this Pokémon?")
+   - Menu items change to English ("My Favorites", "Who is that Pokémon?")
    - The language label updates to show "English"
 3. Tap "ES" to switch back to Spanish
 4. Notice everything returns to Spanish
@@ -42,7 +42,7 @@ Launch the app on your device or emulator.
 ### Drawer
 - [ ] Title shows "Pokédex Regional" (ES) / "Regional Pokédex" (EN)
 - [ ] "Mis Favoritos" / "My Favorites" button
-- [ ] "¿Quién es este Pokémon?" / "Who is this Pokémon?" button with "Juego de trivia" / "Trivia game" subtitle
+- [ ] "¿Quién es este Pokémon?" / "Who is that Pokémon?" button with "Juego de trivia" / "Trivia game" subtitle
 - [ ] "Idioma de la Aplicación" / "App Language" label
 - [ ] Current language shown as "Español" / "English"
 - [ ] "Configuración" / "Settings" section title
@@ -198,7 +198,7 @@ If you find any issues:
 ### Drawer - English
 - Title: "Regional Pokédex"
 - Favorites: "My Favorites"
-- Game: "Who is this Pokémon?" / "Trivia game"
+- Game: "Who is that Pokémon?" / "Trivia game"
 - Language: "App Language"
 - Sections: "Settings" / "Generation"
 

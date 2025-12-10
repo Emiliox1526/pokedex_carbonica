@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +46,84 @@ const Map<int, Color> _regionColors = {
 };
 Color _regionColorForGeneration(int? generation) =>
     _regionColors[generation] ?? const Color(0xFFEF5350);
+
+/// ---- Widget carrusel de siluetas con animación ----
+class PokemonSilhouetteCarousel extends StatefulWidget {
+  final List<int> pokemonIds;
+  final double size;
+
+  const PokemonSilhouetteCarousel({
+    super.key,
+    required this.pokemonIds,
+    this.size = 210,
+  });
+
+  @override
+  State<PokemonSilhouetteCarousel> createState() =>
+      _PokemonSilhouetteCarouselState();
+}
+
+class _PokemonSilhouetteCarouselState extends State<PokemonSilhouetteCarousel>
+    with SingleTickerProviderStateMixin {
+  int _currentIndex = 0;
+  Timer? _timer;
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller =
+        AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _controller.forward();
+
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _controller.reverse().then((_) {
+        setState(() {
+          _currentIndex = (_currentIndex + 1) % widget.pokemonIds.length;
+        });
+        _controller.forward();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = artworkUrlForId(widget.pokemonIds[_currentIndex]);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: PokemonSilhouette(
+              imageUrl: imageUrl,
+              showSilhouette: true,
+              size: widget.size,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class WhoIsPokemonScreen extends ConsumerStatefulWidget {
   final int? selectedGeneration;
@@ -96,60 +175,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             ),
           ),
 
-          // --- 2) Decorativos detrás (círculo + rectángulo diagonal) ---
-          // Diseños decorativos detrás del contenido
-          IgnorePointer(
-            child: Stack(
-              children: [
-                // Círculo grande tipo Pokébola arriba a la izquierda
-                Positioned(
-                  top: -120,
-                  left: -40,
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
-                        width: 18,
-                      ),
-                    ),
-                  ),
-                ),
-
-
-
-                // Rectángulo diagonal suave en el centro
-                Positioned(
-                  top: 600,
-                  right: -150,
-                  child: Transform.rotate(
-                    angle: -0.35,
-                    child: Container(
-                      width: 260,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(40),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withOpacity(0.07),
-                            Colors.white.withOpacity(0.02),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.10),
-                          width: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Capa oscura ligera para mejorar contraste del contenido
           Positioned.fill(
             child: Container(
@@ -166,7 +191,6 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             ),
           ),
 
-
           SafeArea(
             child: Column(
               children: [
@@ -180,47 +204,109 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
     );
   }
 
-  // ---------- HEADER Y CONTENIDO DEL GAME ----------
   Widget _buildHeader(GameState gameState, AppLocalizations l10n) {
+    final selectedColor = _regionColorForGeneration(widget.selectedGeneration ?? 0);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: () {
-              if (gameState.isPlaying) {
-                _showExitConfirmation();
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l10n.whoIsPokemonTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 2),
+      child: Container(
+        decoration: BoxDecoration(
+          color: selectedColor.withOpacity(0.23),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: selectedColor.withOpacity(0.18),
+              blurRadius: 18,
+              offset: const Offset(2, 6),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 24),
+        child: Row(
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {
+                  if (gameState.isPlaying) {
+                    _showExitConfirmation();
+                  } else {
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 32),
+                ),
               ),
             ),
-          ),
-          if (gameState.status == GameStatus.initial)
-            IconButton(
-              icon: const Icon(Icons.emoji_events, color: Colors.amber),
-              tooltip: l10n.achievementsTitle,
-              onPressed: () => _navigateToAchievements(),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.whoIsPokemonTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: .15,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  if (gameState.status == GameStatus.initial)
+                    Tooltip(
+                      message: l10n.achievementsTitle,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => _navigateToAchievements(),
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 7),
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.amberAccent.shade200,
+                                  Colors.amber.withOpacity(0.95),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white70, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.amberAccent.withOpacity(0.65),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.emoji_events_rounded,
+                              color: Colors.deepOrange.shade400,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          const SizedBox(width: 4),
-          LanguageSelector(iconColor: Colors.white),
-        ],
+            const SizedBox(width: 8),
+            LanguageSelector(iconColor: Colors.white),
+          ],
+        ),
       ),
     );
   }
-
   Widget _buildContent(GameState gameState) {
     switch (gameState.status) {
       case GameStatus.initial:
@@ -244,22 +330,24 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 260,
+            height: 260,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white30,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white38, width: 3),
+              border: Border.all(
+                color: _regionColorForGeneration(widget.selectedGeneration ?? 0).withOpacity(0.5),
+                width: 16,
+              ),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.help_outline,
-                color: Colors.white,
-                size: 64,
+            child: Center(
+              child: PokemonSilhouetteCarousel(
+                pokemonIds: List.generate(9, (i) => i + 1), // IDs 1 al 9
+                size: 200,
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           Text(
             l10n.whoIsPokemonDescription,
             style: TextStyle(
@@ -280,7 +368,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
           if (gameState.highScore > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

@@ -141,7 +141,7 @@ Once the app is running, verify the following:
 ### Drawer
 - `pokedexRegional` - "Regional Pokédex" / "Pokédex Regional"
 - `myFavorites` - "My Favorites" / "Mis Favoritos"
-- `whoIsPokemonGame` - "Who is this Pokémon?" / "¿Quién es este Pokémon?"
+- `whoIsPokemonGame` - "Who is that Pokémon?" / "¿Quién es este Pokémon?"
 - `triviaGame` - "Trivia game" / "Juego de trivia"
 - `configuration` - "Settings" / "Configuración"
 - `generation` - "Generation" / "Generación"
@@ -177,7 +177,7 @@ To add a new translatable text:
 ## Known Considerations
 
 ### Game Screen
-The game screen (Who is this Pokémon) already had localization implemented in a previous update, so it was not modified in this implementation.
+The game screen (Who is that Pokémon) already had localization implemented in a previous update, so it was not modified in this implementation.
 
 ### Performance
 The localization system is highly optimized:

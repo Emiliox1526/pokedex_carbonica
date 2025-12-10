@@ -12,10 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Pokédex Carbonica';
 
   @override
-  String get whoIsPokemonTitle => 'Who is this Pokémon?';
+  String get whoIsPokemonTitle => 'Who is that Pokémon?';
 
   @override
-  String get whoIsPokemonDescription => 'Guess the Pokémon\nby its silhouette!';
+  String get whoIsPokemonDescription => 'Guess the Pokémon\nby its silhouette';
 
   @override
   String get whoIsPokemonRules =>
@@ -237,7 +237,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myFavorites => 'My Favorites';
 
   @override
-  String get whoIsPokemonGame => 'Who is this Pokémon?';
+  String get whoIsPokemonGame => 'Who is that Pokémon?';
 
   @override
   String get triviaGame => 'Trivia game';

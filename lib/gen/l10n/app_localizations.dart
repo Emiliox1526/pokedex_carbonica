@@ -107,13 +107,13 @@ abstract class AppLocalizations {
   /// No description provided for @whoIsPokemonTitle.
   ///
   /// In en, this message translates to:
-  /// **'Who is this Pokémon?'**
+  /// **'Who is that Pokémon?'**
   String get whoIsPokemonTitle;
 
   /// No description provided for @whoIsPokemonDescription.
   ///
   /// In en, this message translates to:
-  /// **'Guess the Pokémon\nby its silhouette!'**
+  /// **'Guess the Pokémon\nby its silhouette'**
   String get whoIsPokemonDescription;
 
   /// No description provided for @whoIsPokemonRules.
@@ -521,7 +521,7 @@ abstract class AppLocalizations {
   /// No description provided for @whoIsPokemonGame.
   ///
   /// In en, this message translates to:
-  /// **'Who is this Pokémon?'**
+  /// **'Who is that Pokémon?'**
   String get whoIsPokemonGame;
 
   /// No description provided for @triviaGame.

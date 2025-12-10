@@ -1,7 +1,7 @@
 {
   "appTitle": "Pokédex Carbonica",
-  "whoIsPokemonTitle": "Who is this Pokémon?",
-  "whoIsPokemonDescription": "Guess the Pokémon\nby its silhouette!",
+  "whoIsPokemonTitle": "Who is that Pokémon?",
+  "whoIsPokemonDescription": "Guess the Pokémon\nby its silhouette",
   "whoIsPokemonRules": "10 questions • 15 seconds each\n+10 points per correct answer • Speed bonus",
   "highScoreLabel": "Best score: {score}",
   "@highScoreLabel": {
@@ -111,7 +111,7 @@
   
   "pokedexRegional": "Regional Pokédex",
   "myFavorites": "My Favorites",
-  "whoIsPokemonGame": "Who is this Pokémon?",
+  "whoIsPokemonGame": "Who is that Pokémon?",
   "triviaGame": "Trivia game",
   "appLanguage": "App Language",
   "configuration": "Settings",
