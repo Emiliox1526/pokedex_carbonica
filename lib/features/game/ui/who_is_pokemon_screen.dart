@@ -139,14 +139,14 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(gameProvider.notifier).initialize();
+      ref.read(gameProvider(widget.selectedGeneration).notifier).initialize();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final gameState = ref.watch(gameProvider);
+    final gameState = ref.watch(gameProvider(widget.selectedGeneration));
     final int? selectedGeneration = widget.selectedGeneration ?? 0;
 
     // Mostrar resultados si la partida terminó
@@ -395,7 +395,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               ),
             ),
           ElevatedButton(
-            onPressed: () => ref.read(gameProvider.notifier).startGame(),
+            onPressed: () => ref.read(gameProvider(widget.selectedGeneration).notifier).startGame(),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: _regionColorForGeneration(widget.selectedGeneration ?? 0),
@@ -456,7 +456,64 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             currentStreak: gameState.currentStreak,
             highScore: gameState.highScore,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          // Generation filter indicator
+          if (widget.selectedGeneration != null && widget.selectedGeneration! > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _regionColorForGeneration(widget.selectedGeneration).withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: _regionColorForGeneration(widget.selectedGeneration).withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.filter_alt, color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.showingGeneration(widget.selectedGeneration!),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (widget.selectedGeneration == null || widget.selectedGeneration == 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.public, color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.allGenerations,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
           TimerBar(
             remainingSeconds: gameState.remainingTimeSeconds,
             maxSeconds: gameState.maxTimeSeconds,
@@ -490,7 +547,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
               padding: const EdgeInsets.only(top: 16),
               child: ElevatedButton(
                 onPressed: () =>
-                    ref.read(gameProvider.notifier).continueToNextQuestion(),
+                    ref.read(gameProvider(widget.selectedGeneration).notifier).continueToNextQuestion(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: _regionColorForGeneration(widget.selectedGeneration ?? 0),
@@ -576,7 +633,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           state: state,
           index: index,
           semanticsLabel: l10n.answerOption(pokemon.name),
-          onPressed: () => ref.read(gameProvider.notifier).submitAnswer(index),
+          onPressed: () => ref.read(gameProvider(widget.selectedGeneration).notifier).submitAnswer(index),
         );
       }).toList(),
     );
@@ -618,6 +675,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
             bestStreak: gameState.bestStreak,
             highScore: gameState.highScore,
             newlyUnlockedAchievements: gameState.newlyUnlockedAchievements,
+            selectedGeneration: widget.selectedGeneration,
           ),
         ),
       );
@@ -676,7 +734,7 @@ class _WhoIsPokemonScreenState extends ConsumerState<WhoIsPokemonScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(gameProvider.notifier).resetToMenu();
+              ref.read(gameProvider(widget.selectedGeneration).notifier).resetToMenu();
               Navigator.of(context).pop();
             },
             child: Text(

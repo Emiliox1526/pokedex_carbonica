@@ -196,7 +196,7 @@ abstract class PokemonRepository {
   Future<int> getTotalPokemonCount(PokemonFilter filter);
   Future<void> clearCache();
   Future<bool> hasCachedData();
-  Future<List<Pokemon>> getRandomPokemonsForGame(int count);
+  Future<List<Pokemon>> getRandomPokemonsForGame(int count, {int? generation});
 }
 
 // --------- Excepciones ----------

@@ -35,6 +35,9 @@ class GameResultsScreen extends ConsumerWidget {
   /// Si solo mostrar el ranking (sin resultados de partida).
   final bool showRankingOnly;
 
+  /// Generación seleccionada para filtrar el juego.
+  final int? selectedGeneration;
+
   const GameResultsScreen({
     super.key,
     required this.score,
@@ -44,6 +47,7 @@ class GameResultsScreen extends ConsumerWidget {
     required this.highScore,
     this.newlyUnlockedAchievements = const [],
     this.showRankingOnly = false,
+    this.selectedGeneration,
   });
 
   // Colores del tema
@@ -334,10 +338,12 @@ class GameResultsScreen extends ConsumerWidget {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    ref.read(gameProvider.notifier).startGame();
+                    ref.read(gameProvider(selectedGeneration).notifier).startGame();
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (_) => const WhoIsPokemonScreen(),
+                        builder: (_) => WhoIsPokemonScreen(
+                          selectedGeneration: selectedGeneration,
+                        ),
                       ),
                     );
                   },
