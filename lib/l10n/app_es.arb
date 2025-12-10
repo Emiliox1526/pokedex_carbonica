@@ -117,12 +117,12 @@
   "configuration": "Configuración",
   "generation": "Generación",
   "showingGeneration": "Mostrando: Generación {generation}",
+  "allGenerations": "Todas las generaciones",
   "@showingGeneration": {
     "placeholders": {
       "generation": {}
     }
   },
-  "allGenerations": "Todas las generaciones",
   "searchByNameOrId": "Buscar por nombre o #ID",
   "pageOf": "Página {current} de {total}",
   "@pageOf": {

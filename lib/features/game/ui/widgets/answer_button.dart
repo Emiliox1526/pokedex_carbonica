@@ -1,42 +1,22 @@
 import 'package:flutter/material.dart';
-
 import 'package:pokedex_carbonica/core/utils/string_utils.dart';
 
 /// Estado del botón de respuesta.
 enum AnswerButtonState {
-  /// Estado normal, esperando selección.
   idle,
-
-  /// Seleccionado como respuesta correcta.
   correct,
-
-  /// Seleccionado como respuesta incorrecta.
   incorrect,
-
-  /// Es la respuesta correcta pero el usuario eligió otra.
   revealedCorrect,
-
-  /// Deshabilitado mientras se muestra el resultado.
   disabled,
 }
 
-/// Botón de opción de respuesta para el juego.
-///
-/// Muestra el nombre del Pokémon y cambia de color según el estado.
+/// Botón de opción de respuesta (diseño clean y vibrante).
+/// Mantiene la misma API pública.
 class AnswerButton extends StatelessWidget {
-  /// Nombre del Pokémon a mostrar.
   final String pokemonName;
-
-  /// Estado actual del botón.
   final AnswerButtonState state;
-
-  /// Callback cuando se presiona el botón.
   final VoidCallback? onPressed;
-
-  /// Índice del botón (para animaciones escalonadas).
   final int index;
-
-  /// Etiqueta de accesibilidad opcional.
   final String? semanticsLabel;
 
   const AnswerButton({
@@ -48,78 +28,89 @@ class AnswerButton extends StatelessWidget {
     this.semanticsLabel,
   });
 
-  // Colores del tema
-  static const Color _dexBurgundy = Color(0xFF7A0A16);
-  static const Color _dexDeep = Color(0xFF4E0911);
-  static const Color _correctGreen = Color(0xFF2E7D32);
-  static const Color _incorrectRed = Color(0xFFB71C1C);
+  // Paleta vibrante
+  static const Color _baseBurgundy = Color(0xFF7A0A16);
+  static const Color _baseDeep = Color(0xFF4E0911);
+  static const Color _green = Color(0xFF00C853); // Green A700
+  static const Color _red = Color(0xFFFF1744); // Red A400
+  static const Color _orange = Color(0xFFFF6F00); // Orange A700
+  static const Color _cyan = Color(0xFF00E5FF); // Cyan A200
 
   @override
   Widget build(BuildContext context) {
+    final bool enabled = state == AnswerButtonState.idle;
+    final List<Color> gradient = _getGradientColors();
+    final Color borderColor = _getBorderColor();
+    final Color labelColor = _getLabelColor();
+    final IconData leadingIcon = _leadingIcon();
+    final Color leadingColor = _leadingColor();
+
     return Semantics(
       button: true,
-      enabled: state == AnswerButtonState.idle,
+      enabled: enabled,
       label: semanticsLabel ?? capitalize(pokemonName),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.symmetric(vertical: 7),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: state == AnswerButtonState.idle ? onPressed : null,
-            borderRadius: BorderRadius.circular(16),
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(14),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              constraints: const BoxConstraints(minHeight: 56),
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              constraints: const BoxConstraints(minHeight: 54),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
+                // Gradiente vibrante y limpio (flat, sin sombras pesadas)
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _getGradientColors(),
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: gradient,
                 ),
-                border: Border.all(
-                  color: _getBorderColor(),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getShadowColor(),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(color: borderColor, width: 1.4),
               ),
               child: Row(
                 children: [
-                  _buildStateIcon(),
+                  // Icono de estado
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Icon(
+                      leadingIcon,
+                      key: ValueKey(state),
+                      color: leadingColor,
+                      size: 24,
+                    ),
+                  ),
                   const SizedBox(width: 12),
+                  // Nombre del Pokémon
                   Expanded(
                     child: Text(
                       capitalize(pokemonName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: const Offset(0, 1),
-                            blurRadius: 2,
-                          ),
-                        ],
+                        color: labelColor,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ),
-                  if (state == AnswerButtonState.idle)
-                    const Icon(
+                  // Indicador discreto cuando está idle
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: state == AnswerButtonState.idle
+                        ? Icon(
                       Icons.chevron_right_rounded,
-                      color: Colors.white70,
-                      size: 24,
-                    ),
+                      key: const ValueKey('chev'),
+                      color: Colors.white.withOpacity(0.85),
+                      size: 22,
+                    )
+                        : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
@@ -129,79 +120,87 @@ class AnswerButton extends StatelessWidget {
     );
   }
 
-  Widget _buildStateIcon() {
-    IconData icon;
-    Color iconColor;
-
+  IconData _leadingIcon() {
     switch (state) {
       case AnswerButtonState.correct:
-        icon = Icons.check_circle;
-        iconColor = Colors.white;
-        break;
+        return Icons.check_circle_rounded;
       case AnswerButtonState.incorrect:
-        icon = Icons.cancel;
-        iconColor = Colors.white;
-        break;
+        return Icons.cancel_rounded;
       case AnswerButtonState.revealedCorrect:
-        icon = Icons.check_circle_outline;
-        iconColor = Colors.white;
-        break;
+        return Icons.check_circle_outline_rounded;
       case AnswerButtonState.idle:
       case AnswerButtonState.disabled:
-        icon = Icons.catching_pokemon;
-        iconColor = Colors.white70;
-        break;
+        return Icons.catching_pokemon;
     }
+  }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: Icon(
-        icon,
-        key: ValueKey(state),
-        color: iconColor,
-        size: 28,
-      ),
-    );
+  Color _leadingColor() {
+    switch (state) {
+      case AnswerButtonState.correct:
+        return Colors.white;
+      case AnswerButtonState.incorrect:
+        return Colors.white;
+      case AnswerButtonState.revealedCorrect:
+        return Colors.white;
+      case AnswerButtonState.idle:
+        return Colors.white.withOpacity(0.9);
+      case AnswerButtonState.disabled:
+        return Colors.white70;
+    }
   }
 
   List<Color> _getGradientColors() {
     switch (state) {
       case AnswerButtonState.correct:
-        return [_correctGreen, _correctGreen.withOpacity(0.8)];
+      // Verde → Cian (vibrante)
+        return [_green, _cyan];
       case AnswerButtonState.incorrect:
-        return [_incorrectRed, _incorrectRed.withOpacity(0.8)];
+      // Rojo → Naranja (vibrante)
+        return [_red, _orange];
       case AnswerButtonState.revealedCorrect:
-        return [_correctGreen.withOpacity(0.7), _correctGreen.withOpacity(0.5)];
+      // Verde suave → Cian suave
+        return [_green.withOpacity(0.75), _cyan.withOpacity(0.7)];
       case AnswerButtonState.disabled:
-        return [_dexDeep.withOpacity(0.5), _dexBurgundy.withOpacity(0.3)];
+      // Fondo tenue (clean)
+        return [
+          _baseDeep.withOpacity(0.45),
+          _baseBurgundy.withOpacity(0.30),
+        ];
       case AnswerButtonState.idle:
-        return [_dexDeep, _dexBurgundy];
+      // Burgundy profundo → Burgundy más claro (sutil pero vivo)
+        return [
+          _baseDeep.withOpacity(0.95),
+          _baseBurgundy.withOpacity(0.85),
+        ];
     }
   }
 
   Color _getBorderColor() {
     switch (state) {
       case AnswerButtonState.correct:
-        return Colors.white;
       case AnswerButtonState.incorrect:
-        return Colors.white;
+        return Colors.white.withOpacity(0.95);
       case AnswerButtonState.revealedCorrect:
         return Colors.white70;
       case AnswerButtonState.disabled:
         return Colors.white24;
       case AnswerButtonState.idle:
-        return Colors.white54;
+        return Colors.white38;
     }
   }
 
-  Color _getShadowColor() {
+  Color _getLabelColor() {
     switch (state) {
       case AnswerButtonState.correct:
-        return _correctGreen.withOpacity(0.5);
+        return Colors.white;
       case AnswerButtonState.incorrect:
-        return _incorrectRed.withOpacity(0.5);
-      default:
-        return Colors.black26;
+        return Colors.white;
+      case AnswerButtonState.revealedCorrect:
+        return Colors.white;
+      case AnswerButtonState.disabled:
+        return Colors.white60;
+      case AnswerButtonState.idle:
+        return Colors.white;
     }
   }
 }

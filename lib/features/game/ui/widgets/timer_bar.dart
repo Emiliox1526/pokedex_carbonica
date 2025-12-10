@@ -1,127 +1,127 @@
 import 'package:flutter/material.dart';
-
 import '../../../../l10n/l10n_extension.dart';
 
-/// Barra de progreso del tiempo restante.
-///
-/// Muestra visualmente el tiempo restante para responder
-/// la pregunta actual con un gradiente animado.
+/// TimerBar con colores vivos, tipografía mejorada y textos antiguos (compatibles).
+/// - Diseño cápsula con gradiente vibrante.
+/// - Transición de color suave según el tiempo restante.
+/// - Usa los textos ya existentes en l10n: `timerLabel`.
+/// - Mantiene la misma API pública.
 class TimerBar extends StatelessWidget {
-  /// Tiempo restante en segundos.
   final int remainingSeconds;
-
-  /// Tiempo máximo en segundos.
   final int maxSeconds;
-
-  /// Altura de la barra.
   final double height;
 
   const TimerBar({
     super.key,
     required this.remainingSeconds,
     required this.maxSeconds,
-    this.height = 12,
+    this.height = 16,
   });
+
+  double get _progress {
+    if (maxSeconds <= 0) return 0;
+    return (remainingSeconds / maxSeconds).clamp(0.0, 1.0);
+  }
+
+  String _formatLabel(BuildContext context) {
+    final secs = remainingSeconds.clamp(0, maxSeconds);
+    final minutes = secs ~/ 60;
+    final seconds = secs % 60;
+    if (minutes > 0) {
+      return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$secs s';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final progress = maxSeconds > 0
-        ? (remainingSeconds / maxSeconds).clamp(0.0, 1.0)
-        : 0.0;
-    
+    final p = _progress;
+
+    // Paleta vibrante con gradiente según progreso: rojo -> naranja -> amarillo -> verde/cian
+    final List<Color> gradientColors = _vibrantGradient(p);
+    final Color accentText = _accentForProgress(p);
+    final Color trackBg = Colors.white.withOpacity(0.10);
+
+    final label = _formatLabel(context);
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Texto del tiempo
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    color: _getTimerColor(progress),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.timerLabel,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        // Encabezado con icono + texto antiguo (timerLabel) + tiempo a la derecha
+        Row(
+          children: [
+            Icon(Icons.timer_rounded, color: accentText, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.timerLabel,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  color: _getTimerColor(progress),
-                  fontSize: progress < 0.3 ? 18 : 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                child: Text('${remainingSeconds}s'),
+            ),
+            const Spacer(),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: accentText.withOpacity(0.95),
+                fontSize: p < 0.2 ? 16 : 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
-            ],
-          ),
+              child: Text(label),
+            ),
+          ],
         ),
-        
-        // Barra de progreso
-        Container(
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(height / 2),
-            color: Colors.white.withOpacity(0.2),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(height / 2),
+        const SizedBox(height: 10),
+
+        // Barra tipo cápsula con gradiente vivo
+        ClipRRect(
+          borderRadius: BorderRadius.circular(height / 2),
+          child: SizedBox(
+            height: height,
             child: Stack(
+              alignment: Alignment.centerLeft,
               children: [
-                // Fondo animado
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: MediaQuery.of(context).size.width * progress * 0.85,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: _getGradientColors(progress),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getTimerColor(progress).withOpacity(0.5),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Efecto de brillo
-                if (progress > 0.1)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 20,
+                // Fondo neutro del track
+                Container(color: trackBg),
+
+                // Progreso con gradiente vibrante
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final w = constraints.maxWidth * p;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      width: w,
+                      height: height,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
+                          colors: gradientColors,
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withOpacity(0.3),
-                          ],
                         ),
                       ),
+                    );
+                  },
+                ),
+
+                // Etiqueta centrada con dígitos monoespaciados
+                Positioned.fill(
+                  child: Center(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.98),
+                        fontSize: p < 0.2 ? 13.5 : 12.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
+                      child: Text(label),
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -130,31 +130,32 @@ class TimerBar extends StatelessWidget {
     );
   }
 
-  Color _getTimerColor(double progress) {
-    if (progress > 0.5) {
-      return const Color(0xFF4CAF50); // Verde
-    } else if (progress > 0.25) {
-      return const Color(0xFFFFA726); // Naranja
-    } else {
-      return const Color(0xFFEF5350); // Rojo
-    }
+  // Color de texto/icónos según progreso (vibrante pero legible)
+  Color _accentForProgress(double p) {
+    if (p > 0.66) return const Color(0xFF00E5FF); // Cyan A200
+    if (p > 0.33) return const Color(0xFFFFD54F); // Amber 300
+    return const Color(0xFFFF5252); // Red A200
   }
 
-  List<Color> _getGradientColors(double progress) {
-    if (progress > 0.5) {
-      return [
-        const Color(0xFF66BB6A),
-        const Color(0xFF4CAF50),
+  // Gradiente vivo según progreso
+  List<Color> _vibrantGradient(double p) {
+    if (p <= 0.33) {
+      // Bajo tiempo: rojo → magenta
+      return const [
+        Color(0xFFFF1744), // Red A400
+        Color(0xFFF50057), // Pink A400
       ];
-    } else if (progress > 0.25) {
-      return [
-        const Color(0xFFFFB74D),
-        const Color(0xFFFFA726),
+    } else if (p <= 0.66) {
+      // Medio: naranja → amarillo
+      return const [
+        Color(0xFFFF6F00), // Orange A700
+        Color(0xFFFFD740), // Yellow A200
       ];
     } else {
-      return [
-        const Color(0xFFEF5350),
-        const Color(0xFFE53935),
+      // Alto: verde → cian
+      return const [
+        Color(0xFF00C853), // Green A700
+        Color(0xFF00E5FF), // Cyan A200
       ];
     }
   }

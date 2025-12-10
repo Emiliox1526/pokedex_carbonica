@@ -2,20 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 /// Widget que muestra la silueta de un Pokémon.
-///
-/// Usa ColorFiltered para mostrar la imagen en negro (silueta)
-/// y puede revelar la imagen original con una animación.
+/// Ajustado para que el borde/sombra no se corte en layouts estrechos.
 class PokemonSilhouette extends StatelessWidget {
-  /// URL de la imagen del Pokémon.
   final String? imageUrl;
-
-  /// Si debe mostrar la silueta (true) o la imagen original (false).
   final bool showSilhouette;
-
-  /// Tamaño del widget.
   final double size;
-
-  /// Duración de la animación de revelación.
   final Duration animationDuration;
 
   const PokemonSilhouette({
@@ -38,16 +29,14 @@ class PokemonSilhouette extends StatelessWidget {
         return FadeTransition(
           opacity: animation,
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(
               CurvedAnimation(parent: animation, curve: Curves.easeOut),
             ),
             child: child,
           ),
         );
       },
-      child: showSilhouette
-          ? _buildSilhouette()
-          : _buildRevealedImage(),
+      child: showSilhouette ? _buildSilhouette() : _buildRevealedImage(),
     );
   }
 
@@ -58,28 +47,34 @@ class PokemonSilhouette extends StatelessWidget {
         Colors.black,
         BlendMode.srcIn,
       ),
-      child: _buildImage(),
+      child: _buildImageContainer(),
     );
   }
 
   Widget _buildRevealedImage() {
-    return Container(
+    // Usamos ClipRRect para evitar que el boxShadow se "corte"
+    return ClipRRect(
       key: const ValueKey('revealed'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withOpacity(0.3),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        // Añadimos padding interno para que el shadow no se recorte visualmente
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.25),
+              blurRadius: 16,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: _buildImageContainer(),
       ),
-      child: _buildImage(),
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImageContainer() {
     return SizedBox(
       width: size,
       height: size,
@@ -93,18 +88,20 @@ class PokemonSilhouette extends StatelessWidget {
   }
 
   Widget _buildPlaceholder() {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.catching_pokemon,
-          size: 80,
-          color: Colors.white30,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.catching_pokemon,
+            size: 80,
+            color: Colors.white30,
+          ),
         ),
       ),
     );
@@ -112,9 +109,13 @@ class PokemonSilhouette extends StatelessWidget {
 
   Widget _buildLoadingIndicator() {
     return const Center(
-      child: CircularProgressIndicator(
-        color: Colors.white,
-        strokeWidth: 2,
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 2,
+        ),
       ),
     );
   }

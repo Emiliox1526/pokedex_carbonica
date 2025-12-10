@@ -257,6 +257,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get allGenerations => 'All generations';
+
+  @override
   String get searchByNameOrId => 'Search by name or #ID';
 
   @override
