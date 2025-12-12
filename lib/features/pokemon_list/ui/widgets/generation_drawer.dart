@@ -168,6 +168,14 @@ class GenerationDrawer extends StatelessWidget {
                             );
                           },
                         ),
+                        const SizedBox(height: 10),
+                        // Map option - Mapa interactivo
+                        _MapOption(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pushNamed('/map');
+                          },
+                        ),
                         const SizedBox(height: 16),
                         // App language toggle
                         const _LanguageOption(),
@@ -580,6 +588,80 @@ class _RegionBanner extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapOption extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _MapOption({required this.onTap});
+
+  static const Color _dexWhite = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0x2C939393),
+                Color(0x2C939393),
+              ],
+            ),
+            border: Border.all(color: _dexWhite.withOpacity(0.5), width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.map,
+                  color: _dexWhite,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Mapa',
+                  style: TextStyle(
+                    color: _dexWhite,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: _dexWhite,
+                size: 24,
+              ),
+            ],
           ),
         ),
       ),
