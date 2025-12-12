@@ -41,7 +41,7 @@ class _MapScreenState extends State<MapScreen> {
     _RouteArea(2, 'Ruta 2', const LatLng(67.553, 13.506), const LatLng(49.521, 18.889), const Color(0xFFD81B60)),
     _RouteArea(3, 'Ruta 3', const LatLng(74.251, 21.599), const LatLng(69.756, 40.504), const Color(0xFF43A047)),
     _RouteArea(4, 'Ruta 4', const LatLng(78.729, 35.097), const LatLng(74.215, 59.409), const Color(0xFFFB8C00)),
-    _RouteArea(5, 'Ruta 5', const LatLng(73.032, 60.719), const LatLng(63.082, 67.254), const Color(0xFF8E24AA)),
+    _RouteArea(5, 'Ruta 5', const LatLng(73.150, 59.343), const LatLng(63.113, 67.254), const Color(0xFF8E24AA)),
     _RouteArea(6, 'Ruta 6', const LatLng(54.477, 62.149), const LatLng(45.474, 67.495), const Color(0xFF5E35B1)),
     _RouteArea(7, 'Ruta 7', const LatLng(60.723, 54.009), const LatLng(56.227, 59.415), const Color(0xFF039BE5)),
     _RouteArea(8, 'Ruta 8', const LatLng(60.743, 72.374), const LatLng(56.237, 86.415), const Color(0xFF00897B)),
