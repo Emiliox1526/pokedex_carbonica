@@ -645,14 +645,16 @@ class _MapOption extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
-                child: Text(
-                  'Mapa',
-                  style: TextStyle(
-                    color: _dexWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+              Expanded(
+                child: Builder(
+                  builder: (context) => Text(
+                    context.l10n.map,
+                    style: const TextStyle(
+                      color: _dexWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),

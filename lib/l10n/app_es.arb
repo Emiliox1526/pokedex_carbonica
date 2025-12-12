@@ -168,5 +168,8 @@
   "typeFairy": "Hada",
   
   "copiedToClipboard": "Información del Pokémon copiada al portapapeles",
-  "noEvolutionData": "No hay datos de evolución disponibles"
+  "noEvolutionData": "No hay datos de evolución disponibles",
+  
+  "map": "Mapa",
+  "loadingMap": "Cargando mapa..."
 }

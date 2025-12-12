@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../l10n/l10n_extension.dart';
+
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -48,7 +50,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mapa'),
+        title: Text(context.l10n.map),
       ),
       body: _buildBody(),
     );
@@ -57,13 +59,13 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildBody() {
     final size = _imageSize;
     if (size == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 12),
-            Text('Cargando mapa...')
+            const CircularProgressIndicator(),
+            const SizedBox(height: 12),
+            Text(context.l10n.loadingMap)
           ],
         ),
       );
@@ -82,7 +84,7 @@ class _MapScreenState extends State<MapScreen> {
         minZoom: -4,
         maxZoom: 4,
         interactionOptions: const InteractionOptions(
-          flags: ~InteractiveFlag.doubleTapDragZoom, // Keep it simple
+          flags: ~InteractiveFlag.doubleTapDragZoom, // Disable double-tap-drag zoom for simpler interaction
         ),
         cameraConstraint: CameraConstraint.contain(bounds: bounds),
       ),

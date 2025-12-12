@@ -168,5 +168,8 @@
   "typeFairy": "Fairy",
   
   "copiedToClipboard": "Pokémon info copied to clipboard",
-  "noEvolutionData": "No evolution data available"
+  "noEvolutionData": "No evolution data available",
+  
+  "map": "Map",
+  "loadingMap": "Loading map..."
 }
