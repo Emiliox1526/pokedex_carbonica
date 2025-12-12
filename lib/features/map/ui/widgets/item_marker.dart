@@ -33,9 +33,6 @@ class ItemMarker extends StatelessWidget {
                 ? Colors.white.withOpacity(0.6)
                 : Colors.white,
             width: item.type == ItemType.hidden ? 1.5 * scale : 2 * scale,
-            style: item.type == ItemType.hidden
-                ? BorderStyle.solid
-                : BorderStyle.solid,
           ),
           boxShadow: [
             BoxShadow(
@@ -57,25 +54,35 @@ class ItemMarker extends StatelessWidget {
   }
 
   Color _getItemColor() {
-    switch (item.type) {
-      case ItemType.normal:
-        return Colors.blue;
-      case ItemType.hidden:
-        return Colors.teal.withOpacity(0.7);
-      case ItemType.tm:
-        return Colors.deepPurple;
-    }
+    return getItemColor(item.type);
   }
 
   IconData _getItemIcon() {
-    switch (item.type) {
-      case ItemType.normal:
-        return Icons.inventory_2;
-      case ItemType.hidden:
-        return Icons.visibility_off;
-      case ItemType.tm:
-        return Icons.stars;
-    }
+    return getItemIcon(item.type);
+  }
+}
+
+/// Get color for an item type
+Color getItemColor(ItemType type) {
+  switch (type) {
+    case ItemType.normal:
+      return Colors.blue;
+    case ItemType.hidden:
+      return Colors.teal.withOpacity(0.7);
+    case ItemType.tm:
+      return Colors.deepPurple;
+  }
+}
+
+/// Get icon for an item type
+IconData getItemIcon(ItemType type) {
+  switch (type) {
+    case ItemType.normal:
+      return Icons.inventory_2;
+    case ItemType.hidden:
+      return Icons.visibility_off;
+    case ItemType.tm:
+      return Icons.stars;
   }
 }
 
@@ -95,7 +102,7 @@ void showItemDetails(BuildContext context, ItemData item) {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _getItemColorStatic(item.type),
+                  color: getItemColor(item.type),
                   shape: item.type == ItemType.hidden
                       ? BoxShape.circle
                       : BoxShape.rectangle,
@@ -104,7 +111,7 @@ void showItemDetails(BuildContext context, ItemData item) {
                       : null,
                 ),
                 child: Icon(
-                  _getItemIconStatic(item.type),
+                  getItemIcon(item.type),
                   size: 28,
                   color: Colors.white,
                 ),
@@ -173,27 +180,5 @@ String _getItemTypeDescription(ItemType type) {
       return 'Requires Item Finder';
     case ItemType.tm:
       return 'Technical or Hidden Machine';
-  }
-}
-
-Color _getItemColorStatic(ItemType type) {
-  switch (type) {
-    case ItemType.normal:
-      return Colors.blue;
-    case ItemType.hidden:
-      return Colors.teal;
-    case ItemType.tm:
-      return Colors.deepPurple;
-  }
-}
-
-IconData _getItemIconStatic(ItemType type) {
-  switch (type) {
-    case ItemType.normal:
-      return Icons.inventory_2;
-    case ItemType.hidden:
-      return Icons.visibility_off;
-    case ItemType.tm:
-      return Icons.stars;
   }
 }
