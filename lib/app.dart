@@ -6,6 +6,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'features/pokemon_list/ui/widgets/language_selector.dart';
 import 'core/providers/locale_provider.dart';
 import 'features/pokemon_list/ui/pokemon_list_screen.dart';
+import 'features/map/ui/map_screen.dart';
 
 /// Widget principal de la aplicación Pokédex.
 ///
@@ -33,6 +34,9 @@ class PokedexApp extends ConsumerWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale,
+          routes: {
+            '/map': (_) => const MapScreen(),
+          },
           // Usar la nueva pantalla con Clean Architecture
           home: Stack(
             children: [
