@@ -171,5 +171,11 @@
   "noEvolutionData": "No hay datos de evolución disponibles",
   
   "map": "Mapa",
-  "loadingMap": "Cargando mapa..."
+  "loadingMap": "Cargando mapa...",
+  "mapLoadError": "No se pudo cargar el mapa. Asegúrate de que el asset exista: {path}",
+  "@mapLoadError": {
+    "placeholders": {
+      "path": {}
+    }
+  }
 }
