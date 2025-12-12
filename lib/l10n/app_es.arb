@@ -177,5 +177,11 @@
     "placeholders": {
       "path": {}
     }
-  }
+  },
+  "encountersInArea": "Apariciones en",
+  "loadingEncounters": "Cargando apariciones...",
+  "errorLoadingEncounters": "Error al cargar las apariciones",
+  "areaNotFound": "Área no encontrada",
+  "retry": "Reintentar",
+  "noEncountersData": "Sin datos de apariciones para esta área"
 }
