@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -18,87 +15,124 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   static const String _assetPath = 'lib/assets/maps/FullMap.png';
+
   Size? _imageSize;
+  bool _assetLoadFailed = false;
+
+  // Fallback logical size to avoid perpetual loading
+  static const Size _fallbackSize = Size(2048, 2048);
 
   @override
   void initState() {
     super.initState();
-    _loadImageSize();
-    // Optional precache for smoother first paint
+    // Non-blocking precache (won't throw)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      precacheImage(const AssetImage(_assetPath), context);
+      precacheImage(const AssetImage(_assetPath), context).catchError((_) {});
     });
+    _resolveImageSize();
   }
 
-  Future<void> _loadImageSize() async {
-    try {
-      final ByteData data = await rootBundle.load(_assetPath);
-      final Uint8List bytes = data.buffer.asUint8List();
-      final ui.Image image = await decodeImageFromList(bytes);
-      if (mounted) {
+  void _resolveImageSize() {
+    final ImageProvider provider = const AssetImage(_assetPath);
+    final ImageStream stream = provider.resolve(const ImageConfiguration());
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (imageInfo, _) {
+        final img = imageInfo.image;
         setState(() {
-          _imageSize = Size(image.width.toDouble(), image.height.toDouble());
+          _imageSize = Size(img.width.toDouble(), img.height.toDouble());
+          _assetLoadFailed = false;
         });
-      }
-    } catch (_) {
-      // If the asset is missing, keep _imageSize null and show an error UI below
-      if (mounted) setState(() {});
-    }
+        stream.removeListener(listener);
+      },
+      onError: (Object error, StackTrace? stackTrace) {
+        setState(() {
+          _assetLoadFailed = true;
+          // keep _imageSize null so we use fallback
+        });
+        stream.removeListener(listener);
+      },
+    );
+    stream.addListener(listener);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.map),
-      ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    final size = _imageSize;
-    if (size == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 12),
-            Text(context.l10n.loadingMap)
-          ],
-        ),
-      );
-    }
-
+    final Size logicalSize = _imageSize ?? _fallbackSize;
     final bounds = LatLngBounds(
       const LatLng(0, 0),
-      LatLng(size.height, size.width),
+      LatLng(logicalSize.height, logicalSize.width),
     );
 
-    return FlutterMap(
-      options: MapOptions(
-        crs: const CrsSimple(),
-        initialCenter: LatLng(size.height / 2, size.width / 2),
-        initialZoom: 0,
-        minZoom: -4,
-        maxZoom: 4,
-        interactionOptions: const InteractionOptions(
-          flags: ~InteractiveFlag.doubleTapDragZoom, // Disable double-tap-drag zoom for simpler interaction
-        ),
-        cameraConstraint: CameraConstraint.contain(bounds: bounds),
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.map)),
+      body: Stack(
+        children: [
+          FlutterMap(
+            options: MapOptions(
+              crs: const CrsSimple(),
+              initialCenter: LatLng(logicalSize.height / 2, logicalSize.width / 2),
+              initialZoom: 0,
+              minZoom: -4,
+              maxZoom: 4,
+              interactionOptions: const InteractionOptions(
+                flags: ~InteractiveFlag.doubleTapDragZoom,
+              ),
+              // Apply bounds even with fallback; it will update naturally when _imageSize arrives
+              cameraConstraint: CameraConstraint.contain(bounds: bounds),
+            ),
+            children: [
+              OverlayImageLayer(
+                overlayImages: [
+                  OverlayImage(
+                    bounds: bounds,
+                    opacity: 1.0,
+                    imageProvider: const AssetImage(_assetPath),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (_assetLoadFailed)
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: _ErrorBanner(path: _assetPath),
+            ),
+        ],
       ),
-      children: [
-        OverlayImageLayer(
-          overlayImages: [
-            OverlayImage(
-              bounds: bounds,
-              opacity: 1.0,
-              imageProvider: const AssetImage(_assetPath),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String path;
+  const _ErrorBanner({required this.path});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'No se pudo cargar el mapa. Asegúrate de que el asset exista: $path',
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
