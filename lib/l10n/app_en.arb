@@ -177,5 +177,11 @@
     "placeholders": {
       "path": {}
     }
-  }
+  },
+  "encountersInArea": "Encounters in",
+  "loadingEncounters": "Loading encounters...",
+  "errorLoadingEncounters": "Error loading encounters",
+  "areaNotFound": "Area not found",
+  "retry": "Retry",
+  "noEncountersData": "No encounter data for this area"
 }

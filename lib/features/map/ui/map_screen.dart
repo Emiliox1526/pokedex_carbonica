@@ -7,6 +7,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../l10n/l10n_extension.dart';
+import '../domain/route_area_mapping.dart';
+import 'widgets/area_encounters_modal.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -414,6 +416,28 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showRouteSheet(BuildContext context, _RouteArea r) {
+    // Get the PokeAPI area identifier for this route
+    final areaIdentifier = RouteAreaMapping.getAreaIdentifier(r.id);
+    
+    if (areaIdentifier == null) {
+      // Fallback to simple info sheet if no mapping exists
+      _showSimpleRouteInfo(context, r);
+      return;
+    }
+
+    // Show encounters modal
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => AreaEncountersModal(
+        areaIdentifier: areaIdentifier,
+        areaDisplayName: r.name,
+      ),
+    );
+  }
+
+  void _showSimpleRouteInfo(BuildContext context, _RouteArea r) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF121417),
