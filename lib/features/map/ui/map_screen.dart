@@ -101,7 +101,18 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.map)),
+      appBar: AppBar(
+        title: Text(context.l10n.map),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.explore),
+            tooltip: 'Interactive Map',
+            onPressed: () {
+              Navigator.pushNamed(context, '/interactive-map');
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           FlutterMap(
