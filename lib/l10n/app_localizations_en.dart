@@ -359,4 +359,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEvolutionData => 'No evolution data available';
+
+  @override
+  String get map => 'Map';
+
+  @override
+  String get loadingMap => 'Loading map...';
+
+  @override
+  String mapLoadError(Object path) {
+    return 'Could not load the map. Make sure the asset exists: $path';
+  }
 }

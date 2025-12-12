@@ -58,7 +58,7 @@ flutter:
 
   assets:
     - lib/assets/
-
+    - lib/assets/maps/FullMap.png
   # Carpeta de localización (ARB)
   # Asegúrate de tener tus archivos .arb dentro de /lib/l10n/
   # Ejemplo:

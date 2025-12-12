@@ -751,6 +751,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No evolution data available'**
   String get noEvolutionData;
+
+  /// No description provided for @map.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get map;
+
+  /// No description provided for @loadingMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading map...'**
+  String get loadingMap;
+
+  /// No description provided for @mapLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the map. Make sure the asset exists: {path}'**
+  String mapLoadError(Object path);
 }
 
 class _AppLocalizationsDelegate
