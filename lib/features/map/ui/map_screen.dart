@@ -20,7 +20,8 @@ class _MapScreenState extends State<MapScreen> {
   bool _assetLoadFailed = false;
 
   // Fallback logical size to avoid perpetual loading
-  static const Size _fallbackSize = Size(2048, 2048);
+  // Actual image size is 6527 x 6400
+  static const Size _fallbackSize = Size(6527, 6400);
 
   @override
   void initState() {
