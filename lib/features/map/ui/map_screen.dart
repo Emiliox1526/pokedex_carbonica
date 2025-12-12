@@ -36,22 +36,23 @@ class _MapScreenState extends State<MapScreen> {
   void _resolveImageSize() {
     final ImageProvider provider = const AssetImage(_assetPath);
     final ImageStream stream = provider.resolve(const ImageConfiguration());
-    late ImageStreamListener listener;
-    listener = ImageStreamListener(
+    final ImageStreamListener listener = ImageStreamListener(
       (imageInfo, _) {
         final img = imageInfo.image;
-        setState(() {
-          _imageSize = Size(img.width.toDouble(), img.height.toDouble());
-          _assetLoadFailed = false;
-        });
-        stream.removeListener(listener);
+        if (mounted) {
+          setState(() {
+            _imageSize = Size(img.width.toDouble(), img.height.toDouble());
+            _assetLoadFailed = false;
+          });
+        }
       },
       onError: (Object error, StackTrace? stackTrace) {
-        setState(() {
-          _assetLoadFailed = true;
-          // keep _imageSize null so we use fallback
-        });
-        stream.removeListener(listener);
+        if (mounted) {
+          setState(() {
+            _assetLoadFailed = true;
+            // keep _imageSize null so we use fallback
+          });
+        }
       },
     );
     stream.addListener(listener);
@@ -127,7 +128,7 @@ class _ErrorBanner extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'No se pudo cargar el mapa. Asegúrate de que el asset exista: $path',
+                context.l10n.mapLoadError(path),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
