@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models.dart';
+import 'map_utils.dart';
 
 /// Custom painter for drawing portal connections on the map
 class PortalPainter extends CustomPainter {
@@ -17,7 +18,7 @@ class PortalPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final group in portalGroups) {
       final paint = Paint()
-        ..color = _parseColor(group.color).withOpacity(0.6)
+        ..color = parseHexColor(group.color).withOpacity(0.6)
         ..strokeWidth = 3.0 * scale
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
@@ -39,7 +40,7 @@ class PortalPainter extends CustomPainter {
         // Draw endpoint circles
         final circleRadius = 6.0 * scale;
         final circlePaint = Paint()
-          ..color = _parseColor(group.color)
+          ..color = parseHexColor(group.color)
           ..style = PaintingStyle.fill;
 
         canvas.drawCircle(p1, circleRadius, circlePaint);
@@ -60,17 +61,6 @@ class PortalPainter extends CustomPainter {
   @override
   bool shouldRepaint(PortalPainter oldDelegate) {
     return oldDelegate.scale != scale || oldDelegate.offset != offset;
-  }
-
-  /// Parse hex color string to Color object
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    if (hex.length == 6) {
-      return Color(int.parse('FF$hex', radix: 16));
-    } else if (hex.length == 8) {
-      return Color(int.parse(hex, radix: 16));
-    }
-    return Colors.grey;
   }
 }
 
@@ -125,7 +115,7 @@ class PortalMarker extends StatelessWidget {
         width: 20 * scale,
         height: 20 * scale,
         decoration: BoxDecoration(
-          color: _parseColor(color),
+          color: parseHexColor(color),
           shape: BoxShape.circle,
           border: Border.all(
             color: Colors.white,
@@ -149,16 +139,7 @@ class PortalMarker extends StatelessWidget {
       ),
     );
   }
-
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    if (hex.length == 6) {
-      return Color(int.parse('FF$hex', radix: 16));
-    } else if (hex.length == 8) {
-      return Color(int.parse(hex, radix: 16));
-    }
-    return Colors.grey;
-  }
+}
 }
 
 /// Shows detailed information about a portal in a bottom sheet
@@ -177,7 +158,7 @@ void showPortalDetails(BuildContext context, MapPortalGroup group, Portal portal
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _parseColorStatic(group.color),
+                  color: parseHexColor(group.color),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -211,12 +192,12 @@ void showPortalDetails(BuildContext context, MapPortalGroup group, Portal portal
             ],
           ),
           const SizedBox(height: 16),
-          _InfoRow(
+          InfoRow(
             label: 'Point 1',
             value: 'X: ${portal.portal1.x.toInt()}, Y: ${portal.portal1.y.toInt()}',
           ),
           const SizedBox(height: 8),
-          _InfoRow(
+          InfoRow(
             label: 'Point 2',
             value: 'X: ${portal.portal2.x.toInt()}, Y: ${portal.portal2.y.toInt()}',
           ),
@@ -225,49 +206,4 @@ void showPortalDetails(BuildContext context, MapPortalGroup group, Portal portal
       ),
     ),
   );
-}
-
-Color _parseColorStatic(String hexColor) {
-  final hex = hexColor.replaceAll('#', '');
-  if (hex.length == 6) {
-    return Color(int.parse('FF$hex', radix: 16));
-  } else if (hex.length == 8) {
-    return Color(int.parse(hex, radix: 16));
-  }
-  return Colors.grey;
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-      ],
-    );
-  }
 }

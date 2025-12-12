@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models.dart';
+import 'map_utils.dart';
 
 /// Marker widget for displaying trainers on the map
 class TrainerMarker extends StatelessWidget {
@@ -119,12 +120,12 @@ void showTrainerDetails(BuildContext context, TrainerData trainer) {
             ],
           ),
           const SizedBox(height: 16),
-          _InfoRow(
+          InfoRow(
             label: 'Pokémon',
             value: '${trainer.numPokemon}',
           ),
           const SizedBox(height: 8),
-          _InfoRow(
+          InfoRow(
             label: 'Levels',
             value: trainer.levelsString,
           ),
@@ -133,39 +134,4 @@ void showTrainerDetails(BuildContext context, TrainerData trainer) {
       ),
     ),
   );
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-      ],
-    );
-  }
 }

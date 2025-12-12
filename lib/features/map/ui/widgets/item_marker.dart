@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models.dart';
+import 'map_utils.dart';
 
 /// Marker widget for displaying items on the map
 class ItemMarker extends StatelessWidget {
@@ -134,15 +135,17 @@ void showItemDetails(BuildContext context, ItemData item) {
           ),
           const SizedBox(height: 16),
           if (item.spawnInfo != null) ...[
-            _InfoRow(
+            InfoRow(
               label: 'Spawn Info',
               value: item.spawnInfo!,
+              labelWidth: 100,
             ),
             const SizedBox(height: 8),
           ],
-          _InfoRow(
+          InfoRow(
             label: 'Location',
             value: 'X: ${item.x.toInt()}, Y: ${item.y.toInt()}',
+            labelWidth: 100,
           ),
           const SizedBox(height: 16),
         ],
@@ -192,40 +195,5 @@ IconData _getItemIconStatic(ItemType type) {
       return Icons.visibility_off;
     case ItemType.tm:
       return Icons.stars;
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-      ],
-    );
   }
 }
