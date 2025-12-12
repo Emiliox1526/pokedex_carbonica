@@ -38,11 +38,12 @@ void main() {
       expect(find.text('Test Area'), findsOneWidget);
 
       // Should show loading state or error state (since we don't have network)
-      // Loading indicator or error message should be present
-      expect(
-        find.byType(CircularProgressIndicator).or(find.byIcon(Icons.error_outline)),
-        findsOneWidget,
-      );
+      // At least one of loading indicator or error icon should be present
+      final hasLoadingOrError = 
+          find.byType(CircularProgressIndicator).evaluate().isNotEmpty ||
+          find.byIcon(Icons.error_outline).evaluate().isNotEmpty;
+      expect(hasLoadingOrError, isTrue,
+          reason: 'Should show either loading indicator or error icon');
     });
 
     testWidgets('should show close button in header', (tester) async {
@@ -121,13 +122,4 @@ void main() {
       expect(find.text('Ruta 1'), findsNothing);
     });
   });
-}
-
-// Matcher extension for combining finders with OR logic
-extension FinderOr on Finder {
-  Finder or(Finder other) {
-    return find.byWidgetPredicate((widget) {
-      return evaluate().isNotEmpty || other.evaluate().isNotEmpty;
-    });
-  }
 }

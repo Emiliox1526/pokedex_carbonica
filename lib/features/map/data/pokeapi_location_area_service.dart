@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../domain/location_area_models.dart';
 
@@ -53,12 +54,21 @@ class PokeApiLocationAreaService {
           await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
           continue;
         }
+      } on SocketException catch (e) {
+        lastException = e;
+        if (attempt < retries) {
+          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+          continue;
+        }
       } on TimeoutException catch (e) {
         lastException = e;
         if (attempt < retries) {
           await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
           continue;
         }
+      } on FormatException catch (e) {
+        // JSON parsing errors should not be retried
+        throw ApiException('Invalid JSON response: ${e.message}');
       }
     }
 
